@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -23,15 +23,13 @@
             color: var(--text-main);
             margin: 0;
             padding: 0 0 90px 0;
-            /* Исправление ввода текста на iOS */
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- ВАЖНО: РАЗРЕШАЕМ ВВОД --- */
+        /* --- ВАЖНО: ИСПРАВЛЕНИЕ ВВОДА --- */
         input, textarea, select {
-            user-select: text;
-            -webkit-user-select: text;
-            /* Убираем стандартные стили iOS */
+            user-select: text !important;
+            -webkit-user-select: text !important;
             -webkit-appearance: none;
             appearance: none;
         }
@@ -151,6 +149,11 @@
         .modal { display: none; } 
         .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px;}
+        
+        .refresh-hint {
+            text-align: center; font-size: 12px; color: var(--primary); 
+            padding: 10px; cursor: pointer; opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -161,7 +164,11 @@
             <div class="wt-btn active" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
+        
         <div id="schedule-container"></div>
+        
+        <!-- Кнопка обновления, если данные устарели -->
+        <div class="refresh-hint" onclick="requestData()">🔄 Данные устарели? Нажми, чтобы обновить</div>
     </div>
 
     <!-- СТРАНИЦА 2: ДЗ -->
@@ -221,17 +228,20 @@
             <h3>Редактор расписания</h3>
             
             <div class="card">
-                <select id="ed-day" onchange="loadDayText()">
-                    <option value="Понедельник">Понедельник</option>
-                    <option value="Вторник">Вторник</option>
-                    <option value="Среда">Среда</option>
-                    <option value="Четверг">Четверг</option>
-                    <option value="Пятница">Пятница</option>
-                </select>
-                <select id="ed-week" onchange="loadDayText()">
-                    <option value="odd">Нечетная</option>
-                    <option value="even">Четная</option>
-                </select>
+                <label style="font-size: 12px; color: #888; margin-bottom: 5px; display:block;">Выбор дня:</label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="ed-day" onchange="loadDayText()">
+                        <option value="Понедельник">Понедельник</option>
+                        <option value="Вторник">Вторник</option>
+                        <option value="Среда">Среда</option>
+                        <option value="Четверг">Четверг</option>
+                        <option value="Пятница">Пятница</option>
+                    </select>
+                    <select id="ed-week" onchange="loadDayText()">
+                        <option value="odd">Нечетная</option>
+                        <option value="even">Четная</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Переключатель режимов -->
@@ -243,7 +253,7 @@
             <!-- Режим: ОДНА ПАРА -->
             <div id="edit-mode-pair">
                 <div class="card">
-                    <label style="font-size: 12px; color: #888;">Выберите пару:</label>
+                    <label style="font-size: 12px; color: #888;">Выберите номер пары:</label>
                     <select id="ed-pair-num">
                         <option value="1">1 пара (09:00)</option>
                         <option value="2">2 пара (10:45)</option>
@@ -308,7 +318,7 @@
         tg.expand();
 
         // --- КОНФИГУРАЦИЯ ---
-        const ADMIN_PASS = "0451"; // НОВЫЙ ПАРОЛЬ
+        const ADMIN_PASS = "0451"; 
         let dbData = { perm: {} };
         let currentWeek = 'odd';
 
@@ -370,8 +380,8 @@
             document.getElementById('schedule-container').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📂</div>
-                    <p>Нажмите "Загрузить", чтобы получить расписание.</p>
-                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить расписание</button>
+                    <p>Нажмите кнопку ниже, чтобы загрузить расписание.</p>
+                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
                     ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}
                 </div>`;
         }
@@ -410,7 +420,7 @@
             const d = document.getElementById('ed-day').value;
             const w = document.getElementById('ed-week').value;
             let txt = "";
-            if (dbData.perm[d]) {
+            if (dbData.perm && dbData.perm[d]) {
                 txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
             }
             document.getElementById('ed-text').value = txt;
@@ -419,8 +429,8 @@
         // === ЛОГИКА СОХРАНЕНИЯ ОДНОЙ ПАРЫ ===
         function saveSinglePair() {
             // 1. Берем текущий полный текст дня
-            loadDayText(); // Обновляет hidden textarea актуальными данными из памяти
-            let currentFullText = document.getElementById('ed-text').value;
+            loadDayText(); 
+            let currentFullText = document.getElementById('ed-text').value || "";
             
             const pairNum = document.getElementById('ed-pair-num').value;
             const subj = document.getElementById('ed-pair-subj').value.trim();
@@ -430,37 +440,25 @@
 
             if (!subj) return tg.showAlert("Введите название предмета!");
 
-            // 2. Формируем новый блок текста для пары
-            // Пример:
-            // 09:00 - 10:30
-            // 1 пара
-            // <b>Математика</b>
-            // Лекция
-            // Ауд: 101
-            // Иванов И.И.
+            // 2. Формируем новый блок текста
             let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
             if (type) newPairBlock += `\n${type}`;
             if (room) newPairBlock += `\nАуд: ${room}`;
             if (teach) newPairBlock += `\n${teach}`;
             newPairBlock += "\n\n";
 
-            // 3. Заменяем в полном тексте (Или добавляем, если нет)
-            // Ищем строку вида "09:00 - ... N пара"
-            const timeStart = PAIR_TIMES[pairNum].split(' - ')[0]; // "09:00"
+            // 3. Заменяем в полном тексте
+            const timeStart = PAIR_TIMES[pairNum].split(' - ')[0]; 
             const regex = new RegExp(`${timeStart}.*?${pairNum} пара[\\s\\S]*?(?=(\\d{2}:\\d{2} -|\\Z))`, "g");
             
             if (regex.test(currentFullText)) {
-                // Если пара уже есть - заменяем
                 currentFullText = currentFullText.replace(regex, newPairBlock);
             } else {
-                // Если нет - добавляем в конец (просто, но работает)
-                // Можно улучшить сортировку, но для простоты - append
-                currentFullText += newPairBlock;
+                currentFullText = currentFullText.trim() + "\n\n" + newPairBlock;
             }
 
-            // 4. Обновляем поле и отправляем
             document.getElementById('ed-text').value = currentFullText;
-            submitEditSchedule(); // Используем ту же функцию отправки
+            submitEditSchedule(); 
         }
 
         // --- ВЗАИМОДЕЙСТВИЕ С БОТОМ ---
@@ -542,7 +540,7 @@
             document.getElementById('adm-pass').value = '';
         }
         function openAdminSection(sectionId) {
-            if (sectionId === 'edit-sch') loadDayText(); // Подгружаем текст при открытии
+            if (sectionId === 'edit-sch') loadDayText(); 
             document.getElementById('dashboard-screen').style.display = 'none';
             document.getElementById('section-' + sectionId).classList.add('active');
         }
