@@ -161,6 +161,7 @@
 
     <!-- СТРАНИЦА 3: АДМИН -->
     <div id="admin-page" class="page">
+        <!-- Логин -->
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Панель Администратора</h3>
@@ -171,6 +172,7 @@
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
 
+        <!-- Меню -->
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Управление</div>
             <div class="admin-grid">
@@ -237,16 +239,18 @@
         let dbData = { perm: {} };
         let currentWeek = 'odd';
 
+        // Инициализация дат
         document.getElementById('hw-date').valueAsDate = new Date();
         document.getElementById('note-date').valueAsDate = new Date();
 
+        // Парсинг данных
         const urlParams = new URLSearchParams(window.location.search);
         const rawData = urlParams.get('data');
 
         if (rawData) {
             try {
                 const parsed = JSON.parse(decodeURIComponent(rawData));
-                // Проверяем, сжаты данные или нет
+                // Проверяем, сжаты данные или нет (если есть ключ "p", значит сжато)
                 if (parsed.p) {
                     dbData = unminifyData(parsed);
                 } else {
@@ -365,6 +369,7 @@
         }
 
         function requestData() {
+            // Запрашиваем ссылку у бота
             sendDataToBot({ action: "request_schedule_link" });
         }
 
