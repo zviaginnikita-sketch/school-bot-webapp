@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
+    <!-- Библиотека для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -25,6 +26,7 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
+            /* Разрешаем ввод текста */
             user-select: text;
             -webkit-user-select: text;
         }
@@ -32,7 +34,6 @@
         /* --- СТРАНИЦЫ --- */
         .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
         .page.active { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* --- КАРТОЧКИ --- */
@@ -45,10 +46,7 @@
         }
 
         .section-title {
-            font-size: 13px;
-            text-transform: uppercase;
-            color: var(--text-sec);
-            margin: 20px 0 8px 16px;
+            font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 20px 0 8px 16px;
         }
 
         /* --- ЭЛЕМЕНТЫ ВВОДА --- */
@@ -63,6 +61,7 @@
             margin-bottom: 10px;
             color: var(--text-main);
             outline: none;
+            /* Важно для работы на iOS */
             user-select: text !important;
             -webkit-user-select: text !important;
             -webkit-appearance: none;
@@ -97,46 +96,60 @@
             margin-bottom: 8px;
             transition: opacity 0.2s, transform 0.1s;
             user-select: none;
-            -webkit-user-select: none;
         }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
-        .btn-outline { background: transparent; border: 1px solid var(--text-sec); color: var(--text-sec); }
         
-        .force-show-btn {
-            font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1);
-            padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px;
+        /* --- СПЕЦ. ЭЛЕМЕНТЫ --- */
+        .global-notice-banner {
+            background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+            color: white; padding: 15px; border-radius: var(--radius);
+            margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+            display: none; animation: slideDown 0.3s ease-out;
+        }
+        .notice-icon { font-size: 20px; float: left; margin-right: 10px; }
+        .notice-text { font-size: 15px; font-weight: 500; line-height: 1.4; }
+
+        .countdown-card {
+            background: #333; color: #fff; text-align: center;
+            padding: 12px; margin-bottom: 15px; display: none;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .countdown-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+        .countdown-value { font-size: 24px; font-weight: 800; color: #ffd60a; }
+        .countdown-days { font-size: 14px; font-weight: normal; color: #fff; }
+
+        .refresh-hint {
+            background: var(--primary); color: white; border-radius: 10px;
+            text-align: center; font-size: 14px; font-weight: 600;
+            padding: 12px; cursor: pointer; margin-bottom: 5px;
+            box-shadow: 0 2px 5px rgba(0,122,255,0.2);
+            user-select: none;
+        }
+        .last-updated, .hint-text {
+            font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; margin-top: 0;
         }
 
-        /* --- АДМИН --- */
+        /* --- АДМИН МЕНЮ --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .admin-tile {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: var(--radius);
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius);
+            text-align: center; font-size: 14px; font-weight: 500; cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .admin-tile span { display: block; font-size: 24px; margin-bottom: 5px; }
 
-        .tabs-header { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn {
-            flex: 1; padding: 8px; text-align: center; background: #e5e5ea; 
-            border-radius: 8px; font-size: 13px; cursor: pointer;
-            user-select: none;
-        }
-        .tab-btn.active { background: var(--primary); color: white; }
-
-        /* --- РАСПИСАНИЕ --- */
+        /* --- РАСПИСАНИЕ UI --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
         .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tabs-header { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; text-align: center; background: #e5e5ea; border-radius: 8px; font-size: 13px; cursor: pointer; user-select: none; }
+        .tab-btn.active { background: var(--primary); color: white; }
 
         .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; display: flex; justify-content: space-between; }
         .date-badge { font-size: 12px; color: var(--text-sec); font-weight: normal; background: #f2f2f7; padding: 2px 6px; border-radius: 6px; }
@@ -148,79 +161,29 @@
         
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
         
-        .holiday-card { 
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
-            border: 2px solid #4caf50; 
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
-        }
-        .holiday-title { 
-            color: #1b5e20; font-weight: 800; font-size: 18px;
-            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px;
-        }
-        .holiday-reason { 
-            font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; 
-        }
+        .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
+        .holiday-title { color: #1b5e20; font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px; }
+        .holiday-reason { font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; }
+        
+        .force-show-btn { font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px; }
 
         /* --- НАВИГАЦИЯ --- */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid #c6c6c8;
-            display: flex; justify-content: space-around;
-            padding: 10px 0 25px 0;
-            z-index: 1000;
-        }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #c6c6c8; display: flex; justify-content: space-around; padding: 10px 0 25px 0; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; user-select: none;}
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
-        /* --- ПУСТОЕ СОСТОЯНИЕ --- */
-        .empty-state {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 60vh; text-align: center; color: var(--text-sec); padding: 20px;
-        }
+        /* --- ОБЩЕЕ --- */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
-        
-        /* --- МОДАЛКИ --- */
-        .modal { display: none; } 
-        .modal.open { display: block; }
+        .modal { display: none; } .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
         
-        .refresh-hint {
-            background: var(--primary); color: white; border-radius: 10px;
-            text-align: center; font-size: 14px; font-weight: 600;
-            padding: 12px; cursor: pointer; margin-bottom: 5px;
-            box-shadow: 0 2px 5px rgba(0,122,255,0.2);
-            user-select: none;
-        }
+        #confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
+        #confirm-box { background: #fff; width: 80%; max-width: 320px; padding: 20px; border-radius: 14px; text-align: center; }
+        #confirm-old-text { background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 13px; text-align: left; max-height: 100px; overflow-y: auto; }
         
-        .hint-text {
-            font-size: 11px; color: #999; text-align: center; 
-            margin-bottom: 15px; margin-top: 0;
-        }
-
-        .last-updated {
-            font-size: 11px; color: #8e8e93; text-align: center;
-            margin-bottom: 10px;
-        }
-
-        /* --- КАСТОМНЫЙ ДИАЛОГ (ПОДТВЕРЖДЕНИЕ) --- */
-        #confirm-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2000; display: none;
-            justify-content: center; align-items: center;
-        }
-        #confirm-box {
-            background: #fff; width: 80%; max-width: 320px; padding: 20px;
-            border-radius: 14px; text-align: center;
-        }
-        #confirm-old-text {
-            background: #f0f0f0; padding: 10px; border-radius: 8px;
-            margin: 10px 0; font-size: 13px; text-align: left; max-height: 100px; overflow-y: auto;
-        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -238,8 +201,19 @@
         </div>
     </div>
 
-    <!-- ПРОСМОТР -->
+    <!-- СТРАНИЦА 1: ПРОСМОТР -->
     <div id="view-page" class="page active">
+        <div id="global-notice" class="global-notice-banner">
+            <span class="notice-icon">🔔</span>
+            <div class="notice-text" id="global-notice-text"></div>
+        </div>
+
+        <div id="countdown-banner" class="countdown-card">
+            <div class="countdown-label" id="cd-label">До события:</div>
+            <span class="countdown-value" id="cd-days">0</span>
+            <span class="countdown-days">дн.</span>
+        </div>
+
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
         <div class="last-updated" id="last-updated-text">Данные еще не загружены</div>
         
@@ -251,35 +225,25 @@
         <div id="schedule-container"></div>
     </div>
 
-    <!-- ДЗ -->
+    <!-- СТРАНИЦА 2: ДЗ -->
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
             <input type="date" id="hw-date">
-            <select id="hw-pair">
-                <option value="1">1 пара (09:00)</option>
-                <option value="2">2 пара (10:45)</option>
-                <option value="3">3 пара (13:15)</option>
-                <option value="4">4 пара (15:00)</option>
-                <option value="5">5 пара (16:45)</option>
-            </select>
+            <select id="hw-pair"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
             <input type="text" id="hw-subject" placeholder="Предмет (необязательно)">
         </div>
         <div class="section-title">Содержание</div>
-        <div class="card">
-            <textarea id="hw-text" placeholder="Что задали?"></textarea>
-        </div>
+        <div class="card"><textarea id="hw-text" placeholder="Что задали?"></textarea></div>
         <button class="btn btn-primary" onclick="submitHomework()">Сохранить задание</button>
     </div>
 
-    <!-- АДМИН -->
+    <!-- СТРАНИЦА 3: АДМИН -->
     <div id="admin-page" class="page">
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Панель Администратора</h3>
-            <div class="card">
-                <input type="password" id="adm-pass" placeholder="пароль" style="text-align: center;">
-            </div>
+            <div class="card"><input type="password" id="adm-pass" placeholder="пароль" style="text-align: center;"></div>
             <button class="btn btn-primary" onclick="login()">Войти</button>
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
@@ -291,6 +255,8 @@
                 <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>Упр. ДЗ</div>
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
                 <div class="admin-tile" onclick="openAdminSection('add-holiday')"><span>🎉</span>Выходной</div>
+                <div class="admin-tile" onclick="openAdminSection('countdown-settings')"><span>⏳</span>Таймер</div>
+                <div class="admin-tile" onclick="openAdminSection('global-notice')"><span>🔔</span>Уведомление</div>
                 <div class="admin-tile" onclick="openAdminSection('broadcast')"><span>📢</span>Рассылка</div>
                 <div class="admin-tile" onclick="sendAction('reset_temp')"><span>🗑</span>Сброс</div>
             </div>
@@ -300,94 +266,41 @@
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактор расписания</h3>
-            <div class="card">
-                <label style="font-size: 12px; color: #888; margin-bottom: 5px; display:block;">Выбор дня:</label>
-                <div style="display: flex; gap: 10px;">
-                    <select id="ed-day" onchange="loadDayText()">
-                        <option value="Понедельник">Понедельник</option>
-                        <option value="Вторник">Вторник</option>
-                        <option value="Среда">Среда</option>
-                        <option value="Четверг">Четверг</option>
-                        <option value="Пятница">Пятница</option>
-                    </select>
-                    <select id="ed-week" onchange="loadDayText()">
-                        <option value="odd">Нечетная</option>
-                        <option value="even">Четная</option>
-                    </select>
-                </div>
-            </div>
-            <div class="tabs-header">
-                <div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div>
-                <div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div>
-            </div>
-            <div id="edit-mode-pair">
-                <div class="card">
-                    <label style="font-size: 12px; color: #888;">Выберите номер пары:</label>
-                    <select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
-                    <input type="text" id="ed-pair-subj" placeholder="Предмет">
-                    <input type="text" id="ed-pair-type" placeholder="Тип">
-                    <input type="text" id="ed-pair-room" placeholder="Аудитория">
-                    <input type="text" id="ed-pair-teach" placeholder="Преподаватель">
-                </div>
-                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
-                <button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button>
-            </div>
-            <div id="edit-mode-full" style="display: none;">
-                <div class="card"><textarea id="ed-text" rows="10" placeholder="Полный текст..."></textarea></div>
-                <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button>
-            </div>
+            <div class="card"><div style="display: flex; gap: 10px;"><select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Понедельник</option><option value="Вторник">Вторник</option><option value="Среда">Среда</option><option value="Четверг">Четверг</option><option value="Пятница">Пятница</option></select><select id="ed-week" onchange="loadDayText()"><option value="odd">Нечетная</option><option value="even">Четная</option></select></div></div>
+            <div class="tabs-header"><div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div><div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div></div>
+            <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Аудитория"><input type="text" id="ed-pair-teach" placeholder="Преподаватель"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button></div>
+            <div id="edit-mode-full" style="display: none;"><div class="card"><textarea id="ed-text" rows="10" placeholder="Полный текст..."></textarea></div><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button></div>
         </div>
 
         <div id="section-manage-hw" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Редактирование/Удаление ДЗ</h3>
-            <div class="card">
-                <label style="font-size: 12px; color: #888;">Выберите дату и пару:</label>
-                <input type="date" id="adm-hw-date" onchange="loadAdminHw()">
-                <select id="adm-hw-pair" onchange="loadAdminHw()">
-                    <option value="1">1 пара</option><option value="2">2 пара</option>
-                    <option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option>
-                </select>
-            </div>
-            <div class="section-title">Текущее задание</div>
-            <div class="card">
-                <input type="text" id="adm-hw-subj" placeholder="Предмет">
-                <textarea id="adm-hw-text" placeholder="Текст задания..."></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить изменения</button>
-            <button class="btn btn-danger" onclick="deleteAdminHw()">Удалить ДЗ</button>
+            <h3>Управление ДЗ</h3>
+            <div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select></div>
+            <div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text" placeholder="Текст задания..."></textarea></div>
+            <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button>
         </div>
 
-        <div id="section-add-note" class="modal page">
+        <div id="section-countdown-settings" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Временное изменение</h3>
-            <div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Пример: Пар нет, ко второй паре."></textarea></div>
-            <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
-        </div>
-
-        <div id="section-add-holiday" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Управление выходными</h3>
+            <h3>Настройки Таймера</h3>
             <div class="card">
-                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px;">С даты:</label>
-                <input type="date" id="holiday-date-start">
-                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px; margin-top:10px;">По дату (включительно):</label>
-                <input type="date" id="holiday-date-end">
-                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px; margin-top:10px;">Причина (для установки):</label>
-                <textarea id="holiday-reason" placeholder="Например: Праздники"></textarea>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><input type="checkbox" id="cd-active" style="width:20px; height:20px; margin:0;"><span>Включить счетчик</span></label>
+                <label style="font-size:12px; color:#888;">Текст заголовка:</label><input type="text" id="cd-title" placeholder="До сессии осталось">
+                <label style="font-size:12px; color:#888; margin-top:10px;">Дата события:</label><input type="date" id="cd-date">
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-success" onclick="submitHoliday()">Установить</button>
-                <button class="btn btn-danger" onclick="removeHoliday()">Снять</button>
-            </div>
+            <button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button>
         </div>
 
-        <div id="section-broadcast" class="modal page">
+        <div id="section-global-notice" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Рассылка всем</h3>
-            <div class="card"><textarea id="bc-text" placeholder="Текст сообщения..."></textarea><label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;"><input type="checkbox" id="bc-photo" style="width: 20px; height: 20px; margin: 0;"><span>Прикрепить фото (далее в боте)</span></label></div>
-            <button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button>
+            <h3>Уведомление</h3>
+            <div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div>
+            <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div>
         </div>
+
+        <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Временное изменение</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
+        <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label style="font-size:12px; color:#888;">С:</label><input type="date" id="holiday-date-start"><label style="font-size:12px; color:#888;">По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
+        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="bc-photo" style="width:20px; height:20px; margin:0;"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
@@ -403,7 +316,7 @@
         tg.expand();
 
         const ADMIN_PASS = "0451"; 
-        let dbData = { perm: {}, homework: {}, temporary: {} };
+        let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {} };
         let currentWeek = 'odd';
         let realCurrentWeek = 'odd'; 
         let confirmResolve = null;
@@ -445,7 +358,6 @@
         }
         updateWeekButtons();
 
-        // 1. ЧТЕНИЕ ДАННЫХ
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
         if (rawData) {
@@ -464,6 +376,8 @@
                     dbData.perm = unminifyPerm(parsed.p);
                     if (parsed.h) dbData.homework = parsed.h;
                     if (parsed.t) dbData.temporary = parsed.t;
+                    if (parsed.n) dbData.notice = parsed.n;
+                    if (parsed.c) dbData.countdown = parsed.c;
                 } else { dbData = parsed; }
                 
                 const updateDate = new Date();
@@ -472,6 +386,8 @@
                 document.getElementById('last-updated-text').innerText = `Обновлено в последний раз: ${updateDateStr} ${updateTimeStr}`;
 
                 renderSchedule();
+                renderGlobalNotice();
+                renderCountdown();
             } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
         } else { renderEmptyState(); }
 
@@ -484,85 +400,106 @@
             return fullPerm;
         }
 
-        // --- ЛОГИКА ДЗ ---
-        function getDateKey(dateElemId) {
-            const dateStr = document.getElementById(dateElemId).value;
-            if(!dateStr) return null;
-            const [y, m, d] = dateStr.split('-');
-            return `${d}.${m}.${y}`;
+        function renderCountdown() {
+            const banner = document.getElementById('countdown-banner');
+            const data = dbData.countdown;
+            if (!data || !data.active) { banner.style.display = 'none'; return; }
+            
+            document.getElementById('cd-active').checked = data.active;
+            document.getElementById('cd-title').value = data.title || "";
+            document.getElementById('cd-date').value = data.date || "";
+
+            const target = new Date(data.date);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24)); 
+
+            document.getElementById('cd-label').innerText = (data.title || "До события") + ":";
+            document.getElementById('cd-days').innerText = diffDays;
+            banner.style.display = 'block';
+        }
+        function saveCountdown() {
+            const active = document.getElementById('cd-active').checked;
+            const title = document.getElementById('cd-title').value;
+            const date = document.getElementById('cd-date').value;
+            if (active && !date) return tg.showAlert("Выберите дату события");
+            sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
         }
 
+        function renderGlobalNotice() {
+            const banner = document.getElementById('global-notice');
+            if (dbData.notice && dbData.notice.trim() !== "") {
+                document.getElementById('global-notice-text').innerText = dbData.notice;
+                banner.style.display = 'block';
+                document.getElementById('global-notice-input').value = dbData.notice;
+            } else { banner.style.display = 'none'; document.getElementById('global-notice-input').value = ""; }
+        }
+        function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
+        function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
+
+        function getDateKey(dateElemId) { const dateStr = document.getElementById(dateElemId).value; if(!dateStr) return null; const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; }
         async function submitHomework() {
-            const dateKey = getDateKey('hw-date');
-            if(!dateKey) return tg.showAlert("Выберите дату");
-            const pair = document.getElementById('hw-pair').value;
-            const newText = document.getElementById('hw-text').value.trim();
-            const newSubj = document.getElementById('hw-subject').value.trim();
-            if(!newText) return tg.showAlert("Введите текст задания");
-
-            let existingHw = null;
-            if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
-                existingHw = dbData.homework[dateKey][pair];
-            }
-
+            const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Выберите дату");
+            const pair = document.getElementById('hw-pair').value; const newText = document.getElementById('hw-text').value.trim(); const newSubj = document.getElementById('hw-subject').value.trim();
+            if(!newText) return tg.showAlert("Введите текст");
+            let existingHw = null; if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) existingHw = dbData.homework[dateKey][pair];
             let finalText = newText;
-            if (existingHw) {
-                const shouldAppend = await showConfirmModal(existingHw.text);
-                if (shouldAppend) finalText = existingHw.text + "\n\n" + newText;
-                else return;
-            }
-
-            sendDataToBot({
-                action: "add_homework",
-                date: dateKey,
-                pair: pair,
-                subject: newSubj || (existingHw ? existingHw.subject : ""),
-                text: finalText,
-                has_photo: false
-            });
+            if (existingHw) { const shouldAppend = await showConfirmModal(existingHw.text); if (shouldAppend) finalText = existingHw.text + "\n\n" + newText; else return; }
+            sendDataToBot({ action: "add_homework", date: dateKey, pair: pair, subject: newSubj || (existingHw ? existingHw.subject : ""), text: finalText, has_photo: false });
         }
-
-        function showConfirmModal(oldText) {
-            return new Promise((resolve) => {
-                confirmResolve = resolve;
-                document.getElementById('confirm-old-text').innerText = oldText;
-                document.getElementById('confirm-modal').style.display = 'flex';
-            });
-        }
-        function resolveConfirm(result) {
-            document.getElementById('confirm-modal').style.display = 'none';
-            if (confirmResolve) confirmResolve(result);
-        }
-
+        function showConfirmModal(oldText) { return new Promise((resolve) => { confirmResolve = resolve; document.getElementById('confirm-old-text').innerText = oldText; document.getElementById('confirm-modal').style.display = 'flex'; }); }
+        function resolveConfirm(result) { document.getElementById('confirm-modal').style.display = 'none'; if (confirmResolve) confirmResolve(result); }
         function loadAdminHw() {
-            const dateKey = getDateKey('adm-hw-date');
-            const pair = document.getElementById('adm-hw-pair').value;
+            const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value;
             if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
-                const hw = dbData.homework[dateKey][pair];
-                document.getElementById('adm-hw-subj').value = hw.subject || "";
-                document.getElementById('adm-hw-text').value = hw.text || "";
-            } else {
-                document.getElementById('adm-hw-subj').value = "";
-                document.getElementById('adm-hw-text').value = "";
-            }
+                const hw = dbData.homework[dateKey][pair]; document.getElementById('adm-hw-subj').value = hw.subject || ""; document.getElementById('adm-hw-text').value = hw.text || "";
+            } else { document.getElementById('adm-hw-subj').value = ""; document.getElementById('adm-hw-text').value = ""; }
         }
         function submitAdminHw() {
-            const dateKey = getDateKey('adm-hw-date');
-            const pair = document.getElementById('adm-hw-pair').value;
-            const text = document.getElementById('adm-hw-text').value.trim();
-            const subj = document.getElementById('adm-hw-subj').value.trim();
-            if(!text) return tg.showAlert("Текст задания пустой");
-            sendDataToBot({ action: "add_homework", date: dateKey, pair: pair, subject: subj, text: text, has_photo: false });
+            const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value; const text = document.getElementById('adm-hw-text').value.trim(); const subj = document.getElementById('adm-hw-subj').value.trim();
+            if(!text) return tg.showAlert("Пусто"); sendDataToBot({ action: "add_homework", date: dateKey, pair: pair, subject: subj, text: text, has_photo: false });
         }
-        function deleteAdminHw() {
-            const dateKey = getDateKey('adm-hw-date');
-            const pair = document.getElementById('adm-hw-pair').value;
-            if(confirm("Удалить домашнее задание на эту дату и пару?")) {
-                sendDataToBot({ action: "delete_homework", date: dateKey, pair: pair });
-            }
+        function deleteAdminHw() { const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value; if(confirm("Удалить?")) sendDataToBot({ action: "delete_homework", date: dateKey, pair: pair }); }
+        
+        function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
+        function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
+        function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
+        function saveSinglePair() {
+            loadDayText(); let currentFullText = document.getElementById('ed-text').value || "";
+            const pairNum = parseInt(document.getElementById('ed-pair-num').value); const subj = document.getElementById('ed-pair-subj').value.trim();
+            const type = document.getElementById('ed-pair-type').value.trim(); const room = document.getElementById('ed-pair-room').value.trim(); const teach = document.getElementById('ed-pair-teach').value.trim();
+            if (!subj) return tg.showAlert("Предмет?");
+            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`; if(type) newPairBlock+=`\n${type}`; if(room) newPairBlock+=`\nАуд: ${room}`; if(teach) newPairBlock+=`\n${teach}`;
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m); let pairMap = {};
+            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
+            pairMap[pairNum] = newPairBlock;
+            let sortedText = ""; Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; });
+            document.getElementById('ed-text').value = sortedText.trim(); submitEditSchedule(); 
         }
+        function deleteSinglePair() {
+            if(!confirm("Удалить?")) return; loadDayText(); let currentFullText = document.getElementById('ed-text').value || ""; const pairNum = parseInt(document.getElementById('ed-pair-num').value);
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m); let pairMap = {};
+            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
+            if (pairMap[pairNum]) { delete pairMap[pairNum]; let sortedText = ""; Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; }); document.getElementById('ed-text').value = sortedText.trim(); submitEditSchedule(); } 
+            else { tg.showAlert("Не найдено"); }
+        }
+        function submitNote() { const dateStr = document.getElementById('note-date').value; if(!dateStr) return tg.showAlert("Дата?"); const [y, m, d] = dateStr.split('-'); sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value }); }
+        function submitHoliday() {
+            const dateStart = document.getElementById('holiday-date-start').value; const dateEnd = document.getElementById('holiday-date-end').value; const reason = document.getElementById('holiday-reason').value.trim();
+            if(!dateStart) return tg.showAlert("Дата?"); if(!reason) return tg.showAlert("Причина?");
+            const dates = []; let current = new Date(dateStart); const end = new Date(dateEnd || dateStart);
+            while (current <= end) { const d = String(current.getDate()).padStart(2, '0'); const m = String(current.getMonth() + 1).padStart(2, '0'); const y = current.getFullYear(); dates.push(`${d}.${m}.${y}`); current.setDate(current.getDate() + 1); }
+            const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`; sendDataToBot({ action: "add_holiday_batch", dates: dates, text: holidayText });
+        }
+        function removeHoliday() {
+            const dateStart = document.getElementById('holiday-date-start').value; const dateEnd = document.getElementById('holiday-date-end').value; if(!dateStart) return tg.showAlert("Дата?");
+            if(!confirm("Убрать выходные?")) return; const dates = []; let current = new Date(dateStart); const end = new Date(dateEnd || dateStart);
+            while (current <= end) { const d = String(current.getDate()).padStart(2, '0'); const m = String(current.getMonth() + 1).padStart(2, '0'); const y = current.getFullYear(); dates.push(`${d}.${m}.${y}`); current.setDate(current.getDate() + 1); }
+            sendDataToBot({ action: "delete_note_batch", dates: dates });
+        }
+        function submitBroadcast() { sendDataToBot({ action: "broadcast", text: document.getElementById('bc-text').value, has_photo: document.getElementById('bc-photo').checked }); }
+        function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
 
-        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
         function renderEmptyState(msg) {
             document.getElementById('schedule-container').innerHTML = `
                 <div class="empty-state"><div class="empty-icon">📂</div>
@@ -570,25 +507,17 @@
                 <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
                 ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}</div>`;
         }
-
         function getDateForDay(dayIndex) {
             const d = new Date();
             const currentDay = d.getDay() || 7; 
             const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
             d.setDate(d.getDate() - currentDay + targetDay);
-            
-            // Если выбранная в UI неделя (currentWeek) не совпадает с РЕАЛЬНОЙ неделей (realCurrentWeek),
-            // значит мы сдвинули просмотр вперед/назад.
-            if (currentWeek !== realCurrentWeek) {
-                d.setDate(d.getDate() + 7);
-            }
-            
+            if (currentWeek !== realCurrentWeek) d.setDate(d.getDate() + 7);
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const y = d.getFullYear();
             return `${dd}.${mm}.${y}`;
         }
-
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
             if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
@@ -596,9 +525,6 @@
             }
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-            
-            let hasHolidays = false;
-
             days.forEach((day, idx) => {
                 const dayObj = dbData.perm[day];
                 if (!dayObj) return;
@@ -608,21 +534,13 @@
                 const hasHw = dbData.homework && dbData.homework[dateKey];
                 
                 if (note && note.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
-                    hasHolidays = true;
-                    const reason = note.split("\n")[2] || "Без причины"; 
+                    const reason = note.split("\n")[2] || ""; 
                     const card = document.createElement('div');
                     card.className = 'card holiday-card';
-                    card.innerHTML = `
-                        <div class="day-header" style="color: var(--success)">
-                            <span>${day}</span><span class="date-badge">${dateKey}</span>
-                        </div>
-                        <div class="holiday-title">🎉 ВЫХОДНОЙ</div>
-                        <div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>
-                    `;
+                    card.innerHTML = `<div class="day-header" style="color: var(--success)"><span>${day}</span><span class="date-badge">${dateKey}</span></div><div class="holiday-title">🎉 ВЫХОДНОЙ</div><div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>`;
                     container.appendChild(card);
                     return; 
                 }
-
                 if (!text && !note && !hasHw) return; 
                 text = text.replace(/<[^>]*>?/gm, ''); 
                 
@@ -643,110 +561,11 @@
                 card.innerHTML = html;
                 container.appendChild(card);
             });
-
-            if (hasHolidays) {
-                const btn = document.createElement('div');
-                btn.className = 'force-show-btn';
-                btn.innerText = '👁 Посмотреть расписание (скрыто из-за выходных)';
-                btn.onclick = function() { ignoreHolidays = true; renderSchedule(); };
-                container.appendChild(btn);
+            if (document.querySelector('.holiday-card')) {
+                const btn = document.createElement('div'); btn.className = 'force-show-btn'; btn.innerText = '👁 Посмотреть расписание (скрыто из-за выходных)';
+                btn.onclick = function() { ignoreHolidays = true; renderSchedule(); }; container.appendChild(btn);
             }
         }
-
-        function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
-        function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
-        
-        function submitEditSchedule() {
-            sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value });
-        }
-        function saveSinglePair() {
-            loadDayText(); 
-            let currentFullText = document.getElementById('ed-text').value || "";
-            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
-            const subj = document.getElementById('ed-pair-subj').value.trim();
-            const type = document.getElementById('ed-pair-type').value.trim();
-            const room = document.getElementById('ed-pair-room').value.trim();
-            const teach = document.getElementById('ed-pair-teach').value.trim();
-            if (!subj) return tg.showAlert("Введите название предмета!");
-            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
-            if (type) newPairBlock += `\n${type}`;
-            if (room) newPairBlock += `\nАуд: ${room}`;
-            if (teach) newPairBlock += `\n${teach}`;
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
-            let pairMap = {};
-            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
-            pairMap[pairNum] = newPairBlock;
-            let sortedText = "";
-            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
-            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
-            document.getElementById('ed-text').value = sortedText.trim();
-            submitEditSchedule(); 
-        }
-        function deleteSinglePair() {
-            if(!confirm("Удалить выбранную пару?")) return;
-            loadDayText();
-            let currentFullText = document.getElementById('ed-text').value || "";
-            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
-            let pairMap = {};
-            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
-            if (pairMap[pairNum]) { delete pairMap[pairNum];
-                let sortedText = "";
-                Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; });
-                document.getElementById('ed-text').value = sortedText.trim();
-                submitEditSchedule();
-            } else { tg.showAlert("Эта пара не найдена в расписании"); }
-        }
-
-        function submitNote() {
-            const dateStr = document.getElementById('note-date').value;
-            if(!dateStr) return tg.showAlert("Выберите дату");
-            const [y, m, d] = dateStr.split('-');
-            sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value });
-        }
-        function submitHoliday() {
-            const dateStart = document.getElementById('holiday-date-start').value;
-            const dateEnd = document.getElementById('holiday-date-end').value;
-            const reason = document.getElementById('holiday-reason').value.trim();
-            if(!dateStart) return tg.showAlert("Выберите дату начала");
-            const effectiveEnd = dateEnd || dateStart;
-            if(!reason) return tg.showAlert("Укажите причину");
-            const dates = [];
-            let current = new Date(dateStart);
-            const end = new Date(effectiveEnd);
-            while (current <= end) {
-                const d = String(current.getDate()).padStart(2, '0');
-                const m = String(current.getMonth() + 1).padStart(2, '0');
-                const y = current.getFullYear();
-                dates.push(`${d}.${m}.${y}`);
-                current.setDate(current.getDate() + 1);
-            }
-            const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`;
-            sendDataToBot({ action: "add_holiday_batch", dates: dates, text: holidayText });
-        }
-        function removeHoliday() {
-            const dateStart = document.getElementById('holiday-date-start').value;
-            const dateEnd = document.getElementById('holiday-date-end').value;
-            if(!dateStart) return tg.showAlert("Выберите дату начала");
-            const effectiveEnd = dateEnd || dateStart;
-            if(!confirm("Вы уверены, что хотите убрать выходные с этих дат?")) return;
-            const dates = [];
-            let current = new Date(dateStart);
-            const end = new Date(effectiveEnd);
-            while (current <= end) {
-                const d = String(current.getDate()).padStart(2, '0');
-                const m = String(current.getMonth() + 1).padStart(2, '0');
-                const y = current.getFullYear();
-                dates.push(`${d}.${m}.${y}`);
-                current.setDate(current.getDate() + 1);
-            }
-            sendDataToBot({ action: "delete_note_batch", dates: dates });
-        }
-
-        function submitBroadcast() {
-            sendDataToBot({ action: "broadcast", text: document.getElementById('bc-text').value, has_photo: document.getElementById('bc-photo').checked });
-        }
-        function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
 
         function switchTab(tabId, btn) {
             closeAdminSection();
@@ -756,42 +575,34 @@
             if(btn) btn.classList.add('active');
         }
         function setWeek(type) {
-            currentWeek = type;
-            ignoreHolidays = false; 
+            currentWeek = type; ignoreHolidays = false; 
             document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
             document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
-            updateWeekButtons(); 
-            renderSchedule();
+            updateWeekButtons(); renderSchedule();
         }
         function login() {
             if (document.getElementById('adm-pass').value === ADMIN_PASS) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('dashboard-screen').style.display = 'block';
-                document.getElementById('login-error').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'none'; document.getElementById('dashboard-screen').style.display = 'block'; document.getElementById('login-error').style.display = 'none';
+                if(dbData.countdown) {
+                    document.getElementById('cd-active').checked = dbData.countdown.active;
+                    document.getElementById('cd-title').value = dbData.countdown.title || "";
+                    document.getElementById('cd-date').value = dbData.countdown.date || "";
+                }
             } else { document.getElementById('login-error').style.display = 'block'; }
         }
-        function logout() {
-            document.getElementById('dashboard-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('adm-pass').value = '';
-        }
+        function logout() { document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'block'; document.getElementById('adm-pass').value = ''; }
         function openAdminSection(sectionId) {
-            if (sectionId === 'edit-sch') loadDayText();
-            if (sectionId === 'manage-hw') loadAdminHw(); 
-            document.getElementById('dashboard-screen').style.display = 'none';
-            document.getElementById('section-' + sectionId).classList.add('active');
+            if (sectionId === 'edit-sch') loadDayText(); if (sectionId === 'manage-hw') loadAdminHw(); 
+            document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('section-' + sectionId).classList.add('active');
         }
         function closeAdminSection() {
             document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-            // Если экран входа скрыт (значит мы внутри), показываем меню
-            if (document.getElementById('login-screen').style.display === 'none') {
-                document.getElementById('dashboard-screen').style.display = 'block';
+            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
+                 document.getElementById('dashboard-screen').style.display = 'block';
             }
         }
         function loadDayText() {
-            const d = document.getElementById('ed-day').value;
-            const w = document.getElementById('ed-week').value;
-            let txt = "";
+            const d = document.getElementById('ed-day').value; const w = document.getElementById('ed-week').value; let txt = "";
             if (dbData.perm && dbData.perm[d]) txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
             document.getElementById('ed-text').value = txt;
         }
