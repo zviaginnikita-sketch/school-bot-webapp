@@ -17,13 +17,16 @@
             --radius: 12px;
         }
 
-        body {
+        html, body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
+            /* Явно разрешаем ввод и выделение текста везде */
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         /* --- СТРАНИЦЫ --- */
@@ -49,7 +52,6 @@
         }
 
         /* --- ЭЛЕМЕНТЫ ВВОДА --- */
-        /* Убрали user-select: none, чтобы работал ввод */
         input, select, textarea {
             width: 100%;
             padding: 14px;
@@ -61,7 +63,11 @@
             margin-bottom: 10px;
             color: var(--text-main);
             outline: none;
+            /* Гарантируем работу ввода */
+            user-select: text !important;
+            -webkit-user-select: text !important;
             -webkit-appearance: none;
+            appearance: none;
         }
         
         /* Фикс для iOS select */
@@ -92,6 +98,9 @@
             text-align: center;
             margin-bottom: 8px;
             transition: opacity 0.2s, transform 0.1s;
+            /* Кнопки не должны выделяться как текст */
+            user-select: none;
+            -webkit-user-select: none;
         }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
@@ -116,12 +125,13 @@
         .tab-btn {
             flex: 1; padding: 8px; text-align: center; background: #e5e5ea; 
             border-radius: 8px; font-size: 13px; cursor: pointer;
+            user-select: none;
         }
         .tab-btn.active { background: var(--primary); color: white; }
 
         /* --- РАСПИСАНИЕ --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
-        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; display: flex; justify-content: space-between; }
@@ -143,7 +153,7 @@
             padding: 10px 0 25px 0;
             z-index: 1000;
         }
-        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; }
+        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; user-select: none;}
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
@@ -156,13 +166,14 @@
         
         .modal { display: none; } 
         .modal.open { display: block; }
-        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; }
+        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
         
         .refresh-hint {
             background: var(--primary); color: white; border-radius: 10px;
             text-align: center; font-size: 14px; font-weight: 600;
             padding: 12px; cursor: pointer; margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,122,255,0.2);
+            user-select: none;
         }
     </style>
 </head>
@@ -273,7 +284,8 @@
                     <input type="text" id="ed-pair-room" placeholder="Аудитория">
                     <input type="text" id="ed-pair-teach" placeholder="Преподаватель">
                 </div>
-                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить и отсортировать</button>
+                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
+                <button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button>
             </div>
 
             <!-- Режим: ВЕСЬ ДЕНЬ -->
@@ -410,6 +422,7 @@
                 <div class="empty-state">
                     <div class="empty-icon">📂</div>
                     <p>Нажмите "Загрузить", чтобы получить расписание.</p>
+                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
                     ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}
                 </div>`;
         }
@@ -540,6 +553,26 @@
             if(confirm("Вы уверены?")) sendDataToBot({ action: actName });
         }
 
+        // --- ФУНКЦИИ ДЛЯ РАБОТЫ С ПАРАМИ (СОХРАНЕНИЕ И УДАЛЕНИЕ) ---
+        function parsePairs(fullText) {
+            // Разбиваем текст на куски, начиная с времени "09:00 - ..."
+            let parts = fullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
+            let pairMap = {};
+            parts.forEach(part => {
+                if (!part.trim()) return;
+                const match = part.match(/\n(\d) пара/);
+                if (match) pairMap[parseInt(match[1])] = part.trim();
+            });
+            return pairMap;
+        }
+
+        function rebuildText(pairMap) {
+            let sortedText = "";
+            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
+            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
+            return sortedText.trim();
+        }
+
         function saveSinglePair() {
             loadDayText(); 
             let currentFullText = document.getElementById('ed-text').value || "";
@@ -556,22 +589,30 @@
             if (room) newPairBlock += `\nАуд: ${room}`;
             if (teach) newPairBlock += `\n${teach}`;
 
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
-            let pairMap = {};
-            parts.forEach(part => {
-                if (!part.trim()) return;
-                const match = part.match(/\n(\d) пара/);
-                if (match) pairMap[parseInt(match[1])] = part.trim();
-            });
-
+            // Получаем карту пар, обновляем нужную и собираем обратно
+            let pairMap = parsePairs(currentFullText);
             pairMap[pairNum] = newPairBlock;
-
-            let sortedText = "";
-            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
-            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
-
-            document.getElementById('ed-text').value = sortedText.trim();
+            
+            document.getElementById('ed-text').value = rebuildText(pairMap);
             submitEditSchedule(); 
+        }
+
+        function deleteSinglePair() {
+            if(!confirm("Удалить выбранную пару?")) return;
+            
+            loadDayText();
+            let currentFullText = document.getElementById('ed-text').value || "";
+            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
+            
+            let pairMap = parsePairs(currentFullText);
+            
+            if (pairMap[pairNum]) {
+                delete pairMap[pairNum]; // Удаляем пару из объекта
+                document.getElementById('ed-text').value = rebuildText(pairMap);
+                submitEditSchedule();
+            } else {
+                tg.showAlert("Эта пара не найдена в расписании");
+            }
         }
 
         // --- УТИЛИТЫ UI ---
