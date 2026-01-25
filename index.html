@@ -33,7 +33,7 @@
         select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius); font-size: 17px; font-weight: 600; cursor: pointer; text-align: center; margin-bottom: 8px; transition: opacity 0.2s; user-select: none; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius); font-size: 17px; font-weight: 600; cursor: pointer; text-align: center; margin-bottom: 8px; transition: opacity 0.2s, transform 0.1s; user-select: none; }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
@@ -69,7 +69,6 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
-        /* Пустое состояние / Загрузка */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
         .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
@@ -81,13 +80,15 @@
         .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
         .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
         .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 15px; }
+        
+        .debug-id { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; }
     </style>
 </head>
 <body>
 
     <div id="confirm-modal">
         <div id="confirm-box">
-            <h3 style="margin-top:0">ДЗ уже есть!</h3>
+            <h3 style="margin-top:0">ДЗ уже существует!</h3>
             <div id="confirm-old-text" style="background:#f0f0f0;padding:10px;border-radius:8px;margin:10px 0;text-align:left;max-height:100px;overflow-y:auto;font-size:13px;"></div>
             <div style="display:flex; gap:10px;"><button class="btn btn-secondary" onclick="resolveConfirm(false)">Отмена</button><button class="btn btn-primary" onclick="resolveConfirm(true)">Дополнить</button></div>
         </div>
@@ -96,10 +97,10 @@
     <!-- 1. ГЛАВНАЯ (РАСПИСАНИЕ) -->
     <div id="view-page" class="page active">
         <div id="global-notice" class="global-notice-banner">
-            <span style="font-size:20px;float:left;margin-right:10px">🔔</span><div class="notice-text" id="global-notice-text"></div>
+            <span class="notice-icon">🔔</span><div class="notice-text" id="global-notice-text"></div>
         </div>
         <div id="countdown-banner" class="countdown-card">
-            <div style="font-size:13px;opacity:0.8;text-transform:uppercase;" id="cd-label">Событие:</div>
+            <div class="countdown-label" id="cd-label">До события:</div>
             <span class="countdown-value" id="cd-days">0</span> <span style="font-size:14px">дн.</span>
         </div>
         
@@ -111,6 +112,8 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-container"></div>
+        <!-- ОТЛАДКА ID -->
+        <div class="debug-id" id="debug-footer"></div>
     </div>
 
     <!-- 2. ДЗ -->
@@ -118,8 +121,8 @@
         <div class="section-title">Новое задание</div>
         <div class="card">
             <input type="date" id="hw-date">
-            <select id="hw-pair"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select>
-            <input type="text" id="hw-subject" placeholder="Предмет">
+            <select id="hw-pair"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
+            <input type="text" id="hw-subject" placeholder="Предмет (необязательно)">
         </div>
         <div class="card"><textarea id="hw-text" placeholder="Текст задания..."></textarea></div>
         <button class="btn btn-primary" onclick="submitHomework()">Сохранить</button>
@@ -136,15 +139,14 @@
         <div id="access-denied" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Нет доступа</h3>
-            <p style="color:#888;">Этот раздел только для администратора.</p>
-            <p style="font-size:12px; color:#ccc" id="user-id-debug"></p>
+            <p style="color:#888;">Эта панель только для администратора.</p>
         </div>
 
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Панель управления</div>
             <div class="admin-grid">
                 <div class="admin-tile" onclick="openAdminSection('edit-sch')"><span>✏️</span>Редактор</div>
-                <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>ДЗ</div>
+                <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>Упр. ДЗ</div>
                 <div class="admin-tile" onclick="openAdminSection('edit-session')"><span>🎓</span>Сессия</div>
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
                 <div class="admin-tile" onclick="openAdminSection('add-holiday')"><span>🎉</span>Выходной</div>
@@ -175,14 +177,14 @@
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Редактор</h3>
             <div class="card"><div style="display: flex; gap: 10px;"><select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Понедельник</option><option value="Вторник">Вторник</option><option value="Среда">Среда</option><option value="Четверг">Четверг</option><option value="Пятница">Пятница</option></select><select id="ed-week" onchange="loadDayText()"><option value="odd">Нечетная</option><option value="even">Четная</option></select></div></div>
             <div class="tabs-header"><div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div><div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div></div>
-            <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Ауд"><input type="text" id="ed-pair-teach" placeholder="Препод"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить</button></div>
+            <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Аудитория"><input type="text" id="ed-pair-teach" placeholder="Препод"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button></div>
             <div id="edit-mode-full" style="display: none;"><div class="card"><textarea id="ed-text" rows="10" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить</button></div>
         </div>
 
-        <div id="section-manage-hw" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Управление ДЗ</h3><div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button></div>
+        <div id="section-manage-hw" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Управление ДЗ</h3><div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select></div><div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text" placeholder="Текст задания..."></textarea></div><button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button></div>
         <div id="section-stats" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Статистика</h3><div class="card"><div class="stat-row"><span>Пользователей:</span><b id="stat-users">0</b></div><div class="stat-row"><span>ДЗ:</span><b id="stat-hw">0</b></div><div class="stat-row"><span>Заметок:</span><b id="stat-notes">0</b></div></div></div>
         <div id="section-countdown-settings" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Таймер</h3><div class="card"><label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><input type="checkbox" id="cd-active"><span>Включить</span></label><input type="text" id="cd-title" placeholder="Заголовок"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button></div>
-        <div id="section-global-notice" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Инфо</h3><div class="card"><textarea id="global-notice-input" placeholder="Текст..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
+        <div id="section-global-notice" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Инфо</h3><div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
         <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Заметка</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
         <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label>С:</label><input type="date" id="holiday-date-start"><label>По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
         <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="bc-photo"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
@@ -200,9 +202,7 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        // ВАШ ID ДЛЯ АВТО-ВХОДА
         const HARDCODED_ADMIN_ID = "697543617";
-        
         let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [], aid: null, session: {}, stats: {} };
         let currentWeek='odd', realCurrentWeek='odd', confirmResolve=null, isNextWeek=false, ignoreHolidays=false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
@@ -214,13 +214,13 @@
         function checkAuth() {
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                // Показываем ID для отладки, если доступа нет
-                if (String(user.id) !== HARDCODED_ADMIN_ID) {
-                    document.getElementById('user-id-debug').innerText = "Ваш ID: " + user.id;
-                }
+                // ОТЛАДКА ID (УДАЛИТЬ ПОТОМ, ЕСЛИ МЕШАЕТ)
+                document.getElementById('debug-footer').innerText = "ID: " + user.id;
+
+                const myId = String(user.id);
+                const cloudAdminId = dbData.aid ? String(dbData.aid) : null;
                 
-                // Проверка прав
-                if (String(user.id) === HARDCODED_ADMIN_ID || (dbData.aid && String(user.id) === String(dbData.aid))) {
+                if (myId === cloudAdminId || myId === HARDCODED_ADMIN_ID) {
                     document.getElementById('nav-admin').style.display = 'block';
                     document.getElementById('access-denied').style.display = 'none';
                     document.getElementById('dashboard-screen').style.display = 'block';
@@ -324,18 +324,23 @@
         function sendAction(a) { if(confirm("Точно?")) sendDataToBot({action:a}); }
         function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
         
-        function switchTab(t,b) { closeAdminSection(); document.querySelectorAll('.page').forEach(e=>{if(!e.classList.contains('modal'))e.classList.remove('active')}); document.getElementById(t+'-page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); }
+        function switchTab(tabId, btn) {
+            closeAdminSection(); 
+            document.querySelectorAll('.page').forEach(e=> {if(!e.classList.contains('modal'))e.classList.remove('active')}); 
+            document.getElementById(tabId + '-page').classList.add('active'); 
+            document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); 
+            if(btn) btn.classList.add('active'); 
+        }
         function setWeek(t) { currentWeek=t; ignoreHolidays=false; document.getElementById('btn-odd').className=t==='odd'?'wt-btn active':'wt-btn'; document.getElementById('btn-even').className=t==='even'?'wt-btn active':'wt-btn'; updateWeekButtons(); renderSchedule(); }
+        
         function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
         function closeAdminSection() { 
             document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); 
-            // Возвращаемся в дашборд админа, если мы авторизованы (экран доступа скрыт)
             if(document.getElementById('access-denied').style.display === 'none') {
                 document.getElementById('dashboard-screen').style.display='block';
             }
         }
-        function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
-        function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
+        function renderEmptyState(m) { document.getElementById('schedule-container').innerHTML=`<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных</p><button class='btn btn-primary' onclick='requestData()'>🔄 Загрузить</button>${m?`<p style='color:red;font-size:12px'>${m}</p>`:''}</div>`; }
         function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
         function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
         function saveSinglePair() {
@@ -364,6 +369,8 @@
             const opts = []; document.querySelectorAll('.poll-option-input').forEach(i => { if(i.value.trim()) opts.push(i.value.trim()); });
             if(opts.length<2) return tg.showAlert("Мин 2 варианта"); sendDataToBot({ action: "create_poll", question: q, options: opts });
         }
+        function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
+        function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
 
         // --- INIT ---
         const now = new Date();
@@ -373,11 +380,10 @@
         else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
         currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
         setWeek(currentWeek);
-
         document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
         updateWeekButtons();
 
-        // 1. ЧТЕНИЕ ДАННЫХ
+        // 1. ЗАГРУЗКА
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
         if (rawData) {
@@ -402,11 +408,6 @@
 
         function renderAll() {
             renderSchedule(); renderGlobalNotice(); renderCountdown(); renderSession(); renderStats();
-            // Заполнение админки
-            if(dbData.countdown) { document.getElementById('cd-active').checked=dbData.countdown.active; document.getElementById('cd-title').value=dbData.countdown.title||""; document.getElementById('cd-date').value=dbData.countdown.date||""; }
-            if(dbData.notice) document.getElementById('global-notice-input').value=dbData.notice;
-            if(dbData.session) { document.getElementById('session-text').value=dbData.session.text||""; document.getElementById('session-active').checked=dbData.session.active; }
-            if(dbData.stats) { document.getElementById('stat-users').innerText = dbData.stats.u||0; document.getElementById('stat-hw').innerText = dbData.stats.h||0; document.getElementById('stat-notes').innerText = dbData.stats.t||0; }
         }
         function renderStats() { if(dbData.stats) { document.getElementById('stat-users').innerText = dbData.stats.u || 0; document.getElementById('stat-hw').innerText = dbData.stats.h || 0; document.getElementById('stat-notes').innerText = dbData.stats.t || 0; } }
 
