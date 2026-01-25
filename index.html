@@ -29,7 +29,7 @@
             color: var(--text-main); outline: none; user-select: text !important; -webkit-appearance: none; appearance: none;
         }
         input:focus, select:focus, textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
-        input[type="checkbox"] { width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary); }
+        input[type="checkbox"] { width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary); -webkit-appearance: checkbox; appearance: checkbox; }
         select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
@@ -73,10 +73,20 @@
         .stat-val { font-weight: 700; color: var(--primary); }
         
         .user-item { padding: 10px; border-radius: 8px; background: #f9f9f9; margin-bottom: 8px; font-size: 13px; }
-        .user-id { color: #8e8e93; font-family: monospace; }
         .last-seen { font-size: 11px; color: var(--success); }
 
-        .debug-footer { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; padding: 10px; }
+        .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
+        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
+        .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tabs-header { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; text-align: center; background: #e5e5ea; border-radius: 8px; font-size: 13px; cursor: pointer; user-select: none; }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
+        .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
+        .holiday-title { color: #1b5e20; font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px; }
+        .holiday-reason { font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; }
+        .force-show-btn { font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -103,7 +113,6 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-container"></div>
-        <div class="debug-footer" id="my-id-display">ID: загрузка...</div>
     </div>
 
     <!-- 2. ДЗ -->
@@ -151,7 +160,7 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
-        <!-- СЕКЦИЯ СТАТИСТИКИ (РАСШИРЕННАЯ) -->
+        <!-- СЕКЦИЯ СТАТИСТИКИ -->
         <div id="section-stats" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Статистика и Пользователи</h3>
@@ -171,7 +180,7 @@
                 <div class="stat-row"><span>Заметок сегодня:</span><span class="stat-val" id="st-day-n">0</span></div>
             </div>
 
-            <div class="section-title">Список пользователей</div>
+            <div class="section-title">Последние пользователи</div>
             <div id="users-list-container"></div>
         </div>
 
@@ -182,7 +191,7 @@
             <button class="btn btn-primary" onclick="saveSession()">Сохранить</button>
         </div>
 
-        <div id="section-manage-hw" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Упр. ДЗ</h3><div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text"></textarea></div><button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button></div>
+        <div id="section-manage-hw" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Управление ДЗ</h3><div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text"></textarea></div><button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button></div>
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Редактор</h3>
             <div class="card"><div style="display: flex; gap: 10px;"><select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Понедельник</option><option value="Вторник">Вторник</option><option value="Среда">Среда</option><option value="Четверг">Четверг</option><option value="Пятница">Пятница</option></select><select id="ed-week" onchange="loadDayText()"><option value="odd">Нечетная</option><option value="even">Четная</option></select></div></div>
@@ -193,7 +202,7 @@
         
         <div id="section-polls" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Опросы</h3><div class="tabs-header"><div class="tab-btn active" id="tab-poll-create" onclick="switchPollTab('create')">Создать</div><div class="tab-btn" id="tab-poll-results" onclick="switchPollTab('results')">Результаты</div></div><div id="poll-create-view"><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="add-option-btn" onclick="addPollOption()">+ Вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Отправить</button></div><div id="poll-results-view" style="display:none;"><button class="btn btn-secondary" onclick="requestData()" style="margin-bottom:15px;">🔄 Обновить данные</button><div id="polls-list-container"></div></div></div>
         <div id="section-countdown-settings" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Таймер</h3><div class="card"><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="cd-active"><span>Включить</span></label><input type="text" id="cd-title" placeholder="Заголовок"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button></div>
-        <div id="section-global-notice" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Инфо</h3><div class="card"><textarea id="global-notice-input" placeholder="Текст..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
+        <div id="section-global-notice" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Инфо</h3><div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
         <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Заметка</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text"></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
         <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label>С:</label><input type="date" id="holiday-date-start"><label>По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
         <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="bc-photo"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
@@ -215,34 +224,12 @@
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
         function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
-        
-        function unminifyPerm(min) {
-            const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={};
-            for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp;
-        }
+        function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
+        function isWeekend(dateStr) { const parts = dateStr.split('-'); const d = new Date(parts[0], parts[1]-1, parts[2]); const day = d.getDay(); return (day === 0 || day === 6); }
+        function updateWeekButtons() { const o=document.getElementById('btn-odd'), e=document.getElementById('btn-even'); o.innerText="Нечетная"; e.innerText="Четная"; if(realCurrentWeek==='odd'){ o.innerText+=" (Текущая)"; e.innerText+=" (Следующая)"; } else { e.innerText+=" (Текущая)"; o.innerText+=" (Следующая)"; } }
 
-        function isWeekend(dateStr) {
-            const parts = dateStr.split('-');
-            const d = new Date(parts[0], parts[1]-1, parts[2]);
-            const day = d.getDay();
-            return (day === 0 || day === 6);
-        }
-
-        function updateWeekButtons() {
-            const o=document.getElementById('btn-odd'), e=document.getElementById('btn-even'); o.innerText="Нечетная"; e.innerText="Четная";
-            if(realCurrentWeek==='odd'){ o.innerText+=" (Текущая)"; e.innerText+=" (Следующая)"; } else { e.innerText+=" (Текущая)"; o.innerText+=" (Следующая)"; }
-        }
-
-        // --- RENDER FUNCTIONS ---
-        function renderSession() {
-            if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Пусто"; } else document.getElementById('nav-session').style.display='none';
-        }
-        function renderCountdown() {
-            const b = document.getElementById('countdown-banner'), d = dbData.countdown;
-            if(!d || !d.active) { b.style.display='none'; return; }
-            const diff = Math.ceil((new Date(d.date) - new Date().setHours(0,0,0,0)) / (86400000));
-            document.getElementById('cd-label').innerText = (d.title||"Событие")+":"; document.getElementById('cd-days').innerText = diff; b.style.display='block';
-        }
+        function renderSession() { if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Пусто"; } else document.getElementById('nav-session').style.display='none'; }
+        function renderCountdown() { const b = document.getElementById('countdown-banner'), d = dbData.countdown; if(!d || !d.active) { b.style.display='none'; return; } const diff = Math.ceil((new Date(d.date) - new Date().setHours(0,0,0,0)) / (86400000)); document.getElementById('cd-label').innerText = (d.title||"Событие")+":"; document.getElementById('cd-days').innerText = diff; b.style.display='block'; }
         function renderGlobalNotice() { const b = document.getElementById('global-notice'); if(dbData.notice) { document.getElementById('global-notice-text').innerText=dbData.notice; b.style.display='block'; } else b.style.display='none'; }
         
         function renderStats() {
@@ -252,27 +239,17 @@
             document.getElementById('st-week-u').innerText = s.week_u || 0;
             document.getElementById('st-total-hw').innerText = s.total_hw || 0;
             document.getElementById('st-day-n').innerText = s.day_n || 0;
-
-            const list = document.getElementById('users-list-container');
-            list.innerHTML = "";
-            if(!s.users_list || !s.users_list.length) { list.innerHTML = "<p style='color:#999'>Нет данных о пользователях</p>"; return; }
-            
+            const list = document.getElementById('users-list-container'); list.innerHTML = "";
+            if(!s.users_list || !s.users_list.length) { list.innerHTML = "<p style='color:#999'>Нет данных</p>"; return; }
             s.users_list.forEach(u => {
-                const item = document.createElement('div');
-                item.className = 'user-item';
-                item.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                        <b>${u.name}</b> <span class="user-id">#${u.id}</span>
-                    </div>
-                    <div class="last-seen">В сети: ${u.last_seen}</div>
-                `;
+                const item = document.createElement('div'); item.className = 'user-item';
+                item.innerHTML = `<div style="display:flex;justify-content:space-between"><b>${u.name}</b></div><div class="last-seen">Активность: ${u.last_seen}</div>`;
                 list.appendChild(item);
             });
         }
 
         function renderSchedule() {
-            const c = document.getElementById('schedule-container');
-            if(!dbData.perm || !Object.keys(dbData.perm).length) { c.innerHTML="<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных. Нажмите обновить.</p></div>"; return; }
+            const c = document.getElementById('schedule-container'); if(!dbData.perm || !Object.keys(dbData.perm).length) { c.innerHTML="<div class='empty-state'><p>Нет данных</p></div>"; return; }
             c.innerHTML=""; const days=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
             let hasHol=false;
             days.forEach((day,i) => {
@@ -282,7 +259,7 @@
                 const nt = dbData.temporary ? dbData.temporary[dk] : null;
                 const hw = dbData.homework && dbData.homework[dk];
                 if(nt && nt.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
-                    hasHol=true; c.innerHTML+=`<div class='card holiday-card'><div class='holiday-title'>🎉 ВЫХОДНОЙ <span style='font-size:12px;margin-left:auto;color:#2e7d32'>${dk}</span></div><div class='holiday-reason'>${nt.split('\n')[2].replace('📍 Причина: ','')}</div></div>`; return;
+                    hasHol=true; c.innerHTML+=`<div class='card holiday-card'><div class='holiday-title'>🎉 ВЫХОДНОЙ</div><div class='holiday-reason'>${nt.split('\n')[2].replace('📍 Причина: ','')}</div></div>`; return;
                 }
                 if(!txt && !nt && !hw) return;
                 let h=`<div class='card'><div class='day-header'><span>${day}</span><span class='date-badge'>${dk}</span></div>`;
@@ -291,22 +268,20 @@
                 if(hw) { h+=`<div class='homework-block'><div class='hw-title'>ДЗ:</div>`; for(let p in hw) h+=`<div class='hw-item'><b>${p} пара</b>: ${hw[p].text}</div>`; h+="</div>"; }
                 h+="</div>"; c.innerHTML+=h;
             });
-            if(hasHol) { const b=document.createElement('div'); b.className='force-show-btn'; b.innerText='👁 Показать скрытое'; b.onclick=()=>{ignoreHolidays=true; renderSchedule()}; c.appendChild(b); }
+            if(hasHol) { const b=document.createElement('div'); b.className='force-show-btn'; b.innerText='👁 Показать расписание'; b.onclick=()=>{ignoreHolidays=true; renderSchedule()}; c.appendChild(b); }
         }
 
         function renderPolls() {
-            const c=document.getElementById('polls-list-container'); c.innerHTML="";
-            if(!dbData.polls || !dbData.polls.length) { c.innerHTML="<p style='text-align:center;color:#999'>Нет опросов</p>"; return; }
+            const c=document.getElementById('polls-list-container'); c.innerHTML=""; if(!dbData.polls || !dbData.polls.length) return;
             dbData.polls.forEach(p => {
                 let h=`<div class='card'><div style='font-weight:bold;margin-bottom:10px;'>${p.q}</div>`;
                 const v=p.v||{}, tot=Object.keys(v).length, cnt=new Array(p.o.length).fill(0), nms=new Array(p.o.length).fill().map(()=>[]);
                 for(let u in v) { if(cnt[v[u].idx]!==undefined){ cnt[v[u].idx]++; nms[v[u].idx].push(v[u].name); } }
-                p.o.forEach((o,i)=>{ const pct=tot>0?Math.round((cnt[i]/tot)*100):0; h+=`<div style='margin-bottom:10px;font-size:14px;'><div style='display:flex;justify-content:space-between'><span>${o}</span><span>${cnt[i]} (${pct}%)</span></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div style="font-size:11px;color:#888">${nms[i].join(', ')}</div></div>`; });
+                p.o.forEach((o,i)=>{ const pct=tot>0?Math.round((cnt[i]/tot)*100):0; h+=`<div style='margin-bottom:10px;font-size:14px;'><div style='display:flex;justify-content:space-between'><span>${o}</span><span>${cnt[i]} (${pct}%)</span></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div></div>`; });
                 h+="</div>"; c.innerHTML+=h;
             });
         }
 
-        // --- ACTIONS ---
         function getDateForDay(idx) { const d=new Date(); d.setDate(d.getDate()-(d.getDay()||7)+(idx===0?1:idx+1)); if(currentWeek!==realCurrentWeek)d.setDate(d.getDate()+7); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
         function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
         function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
@@ -315,66 +290,28 @@
         function saveCountdown() { const a=document.getElementById('cd-active').checked, d=document.getElementById('cd-date').value; if(a&&!d)return tg.showAlert("Дата?"); sendDataToBot({action:"update_countdown", active:a, title:document.getElementById('cd-title').value, date:d}); }
         function submitGlobalNotice() { const t=document.getElementById('global-notice-input').value.trim(); if(!t)return tg.showAlert("Текст?"); sendDataToBot({action:"set_global_notice", text:t}); }
         function deleteGlobalNotice() { if(confirm("Удалить?")) sendDataToBot({action:"delete_global_notice"}); }
-        
         async function submitHomework() {
-            const raw = document.getElementById('hw-date').value; if(!raw) return tg.showAlert("Дата?");
-            if(isWeekend(raw)) return tg.showAlert("Нельзя записывать ДЗ на выходные!");
+            const raw = document.getElementById('hw-date').value; if(!raw) return tg.showAlert("Дата?"); if(isWeekend(raw)) return tg.showAlert("Нельзя записывать ДЗ на выходные!");
             const d=getDateKey('hw-date'), p=document.getElementById('hw-pair').value, t=document.getElementById('hw-text').value.trim(), s=document.getElementById('hw-subject').value.trim();
             if(!t)return tg.showAlert("Текст?"); let ex=null; if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) ex=dbData.homework[d][p];
             let ft=t; if(ex) { if(await showConfirmModal(ex.text)) ft=ex.text+"\n\n"+t; else return; }
             sendDataToBot({action:"add_homework", date:d, pair:p, subject:s||(ex?ex.subject:""), text:ft, has_photo:false});
         }
-        function submitAdminHw() { 
-            const raw = document.getElementById('adm-hw-date').value; if(!raw) return tg.showAlert("Дата?");
-            if(isWeekend(raw)) return tg.showAlert("Нельзя записывать ДЗ на выходные!");
-            const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value, t=document.getElementById('adm-hw-text').value.trim();
-            if(!t)return tg.showAlert("Текст?"); sendDataToBot({action:"add_homework", date:d, pair:p, subject:document.getElementById('adm-hw-subj').value, text:t}); 
-        }
+        function submitAdminHw() { const raw = document.getElementById('adm-hw-date').value; if(!raw) return tg.showAlert("Дата?"); if(isWeekend(raw)) return tg.showAlert("Нельзя записывать ДЗ на выходные!"); const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value, t=document.getElementById('adm-hw-text').value.trim(); if(!t)return tg.showAlert("Пусто"); sendDataToBot({action:"add_homework", date:d, pair:p, subject:document.getElementById('adm-hw-subj').value, text:t}); }
         function deleteAdminHw() { if(confirm("Удалить?")) sendDataToBot({action:"delete_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value}); }
         function submitNote() { const d=getDateKey('note-date'); if(!d) return tg.showAlert("Дата?"); sendDataToBot({action:"add_note", date:d, text:document.getElementById('note-text').value}); }
-        function submitHoliday() {
-            const ds=getDateKey('holiday-date-start'), r=document.getElementById('holiday-reason').value.trim(); if(!ds||!r)return tg.showAlert("Данные?");
-            const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value), end=new Date(document.getElementById('holiday-date-end').value||document.getElementById('holiday-date-start').value);
-            while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); }
-            sendDataToBot({action:"add_holiday_batch", dates:dates, text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${r}`});
-        }
-        function removeHoliday() {
-             const ds=getDateKey('holiday-date-start'); if(!ds) return tg.showAlert("Дата?"); if(!confirm("Снять?")) return;
-             const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value), end=new Date(document.getElementById('holiday-date-end').value||document.getElementById('holiday-date-start').value);
-             while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); }
-             sendDataToBot({action:"delete_note_batch", dates:dates});
-        }
+        function submitHoliday() { const ds=getDateKey('holiday-date-start'), r=document.getElementById('holiday-reason').value.trim(); if(!ds||!r)return tg.showAlert("Данные?"); const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value), end=new Date(document.getElementById('holiday-date-end').value||document.getElementById('holiday-date-start').value); while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); } sendDataToBot({action:"add_holiday_batch", dates:dates, text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${r}`}); }
+        function removeHoliday() { const ds=getDateKey('holiday-date-start'); if(!ds) return tg.showAlert("Дата?"); if(!confirm("Снять?")) return; const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value), end=new Date(document.getElementById('holiday-date-end').value||document.getElementById('holiday-date-start').value); while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); } sendDataToBot({action:"delete_note_batch", dates:dates}); }
         function submitBroadcast() { sendDataToBot({action:"broadcast", text:document.getElementById('bc-text').value, has_photo:document.getElementById('bc-photo').checked}); }
         function sendAction(a) { if(confirm("Точно?")) sendDataToBot({action:a}); }
         function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
         function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
         function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
-        function saveSinglePair() {
-            loadDayText(); let txt=document.getElementById('ed-text').value||"", num=document.getElementById('ed-pair-num').value, s=document.getElementById('ed-pair-subj').value.trim();
-            if(!s)return tg.showAlert("Предмет?");
-            let blk=`${PAIR_TIMES[num]}\n${num} пара\n<b>${s}</b>\n${document.getElementById('ed-pair-type').value}\nАуд: ${document.getElementById('ed-pair-room').value}\n${document.getElementById('ed-pair-teach').value}`;
-            let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } });
-            pMap[parseInt(num)]=blk;
-            let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n");
-            document.getElementById('ed-text').value=res.trim(); submitEditSchedule();
-        }
-        function deleteSinglePair() {
-             if(!confirm("Удалить?"))return; loadDayText(); let txt=document.getElementById('ed-text').value||"", num=parseInt(document.getElementById('ed-pair-num').value);
-             let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } });
-             if(pMap[num]) { delete pMap[num]; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); } else tg.showAlert("Нет пары");
-        }
-        function switchPollTab(tab) {
-            document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active');
-            document.getElementById('poll-create-view').style.display = 'none'; document.getElementById('poll-results-view').style.display = 'none';
-            document.getElementById('tab-poll-' + tab).classList.add('active'); document.getElementById('poll-' + tab + '-view').style.display = 'block';
-            if (tab === 'results') renderPolls();
-        }
-        function addPollOption() { const c = document.getElementById('poll-options-container'); if(c.children.length>9) return; const i = document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант'; c.appendChild(i); }
-        function submitPoll() {
-            const q = document.getElementById('poll-question').value.trim(); if(!q) return tg.showAlert("Вопрос?");
-            const opts = []; document.querySelectorAll('.poll-option-input').forEach(i => { if(i.value.trim()) opts.push(i.value.trim()); });
-            if(opts.length<2) return tg.showAlert("Мин 2 варианта"); sendDataToBot({ action: "create_poll", question: q, options: opts });
-        }
+        function saveSinglePair() { loadDayText(); let txt=document.getElementById('ed-text').value||"", num=document.getElementById('ed-pair-num').value, s=document.getElementById('ed-pair-subj').value.trim(); if(!s)return tg.showAlert("Предмет?"); let blk=`${PAIR_TIMES[num]}\n${num} пара\n<b>${s}</b>\n${document.getElementById('ed-pair-type').value}\nАуд: ${document.getElementById('ed-pair-room').value}\n${document.getElementById('ed-pair-teach').value}`; let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } }); pMap[parseInt(num)]=blk; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); }
+        function deleteSinglePair() { if(!confirm("Удалить?"))return; loadDayText(); let txt=document.getElementById('ed-text').value||"", num=parseInt(document.getElementById('ed-pair-num').value); let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } }); if(pMap[num]) { delete pMap[num]; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); } else tg.showAlert("Нет пары"); }
+        function switchPollTab(t) { document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active'); document.getElementById('poll-create-view').style.display='none'; document.getElementById('poll-results-view').style.display='none'; document.getElementById('tab-poll-'+t).classList.add('active'); document.getElementById('poll-'+t+'-view').style.display='block'; if(t==='results')renderPolls(); }
+        function addPollOption() { const c=document.getElementById('poll-options-container'); if(c.children.length>9)return; const i=document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант'; c.appendChild(i); }
+        function submitPoll() { const q=document.getElementById('poll-question').value.trim(); if(!q)return tg.showAlert("Вопрос?"); const o=[]; document.querySelectorAll('.poll-option-input').forEach(i=>{if(i.value.trim())o.push(i.value.trim())}); if(o.length<2)return tg.showAlert("Мин 2 варианта"); sendDataToBot({action:"create_poll", question:q, options:o}); }
         function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
         function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
         function loadAdminHw() { const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value; if(dbData.homework&&dbData.homework[d]&&dbData.homework[d][p]) { const h=dbData.homework[d][p]; document.getElementById('adm-hw-subj').value=h.subject||""; document.getElementById('adm-hw-text').value=h.text||""; } else { document.getElementById('adm-hw-subj').value=""; document.getElementById('adm-hw-text').value=""; } }
@@ -399,11 +336,12 @@
         function closeAdminSection() { document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); if(document.getElementById('login-screen').style.display === 'none') document.getElementById('dashboard-screen').style.display='block'; }
 
         // --- INIT ---
-        const user = tg.initDataUnsafe?.user; if(user) document.getElementById('my-id-display').innerText = "Ваш ID: " + user.id;
         const nowInit = new Date(); realCurrentWeek = (getWeekNumber(nowInit)%2===0)?'even':'odd';
         let checkDate = new Date(nowInit); if(nowInit.getDay()===6){ checkDate.setDate(nowInit.getDate()+2); isNextWeek=true; } else if(nowInit.getDay()===0){ checkDate.setDate(nowInit.getDate()+1); isNextWeek=true; }
         currentWeek = (getWeekNumber(checkDate)%2===0)?'even':'odd';
         setWeek(currentWeek); updateWeekButtons();
+
+        function renderEmptyState(m) { document.getElementById('schedule-container').innerHTML=`<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных</p><button class='btn btn-primary' onclick='requestData()'>🔄 Загрузить</button>${m?`<p style='color:red;font-size:12px'>${m}</p>`:''}</div>`; }
 
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
@@ -418,8 +356,7 @@
                 if (parsed.p) {
                     dbData.perm = unminifyPerm(parsed.p); if (parsed.h) dbData.homework = parsed.h; if (parsed.t) dbData.temporary = parsed.t;
                     if (parsed.n) dbData.notice = parsed.n; if (parsed.c) dbData.countdown = parsed.c; 
-                    if (parsed.P) dbData.polls = parsed.P; if(parsed.aid) dbData.aid = parsed.aid;
-                    if (parsed.s) dbData.session = parsed.s; if(parsed.S)dbData.stats=parsed.S;
+                    if (parsed.P) dbData.polls = parsed.P; if(parsed.s) dbData.session = parsed.s; if(parsed.S)dbData.stats=parsed.S;
                 } else { dbData = parsed; }
                 const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                 renderSchedule(); renderGlobalNotice(); renderCountdown(); renderSession();
