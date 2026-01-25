@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
+    <!-- Библиотека для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -42,13 +43,21 @@
         .add-option-btn { font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; }
         
         .global-notice-banner { background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%); color: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3); }
+        .notice-icon { font-size: 20px; float: left; margin-right: 10px; }
         .notice-text { font-size: 15px; font-weight: 500; line-height: 1.4; white-space: pre-wrap; }
+
         .countdown-card { background: #333; color: #fff; text-align: center; padding: 12px; margin-bottom: 15px; display: none; border-radius: var(--radius); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .countdown-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .countdown-value { font-size: 24px; font-weight: 800; color: #ffd60a; }
+        .countdown-days { font-size: 14px; font-weight: normal; color: #fff; }
+
+        .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
+        .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
 
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .admin-tile { background: var(--card-bg); padding: 20px; border-radius: var(--radius); text-align: center; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
+        .admin-tile span { display: block; font-size: 24px; margin-bottom: 5px; }
+
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
         .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -60,8 +69,13 @@
         .date-badge { font-size: 12px; color: var(--text-sec); font-weight: normal; background: #f2f2f7; padding: 2px 6px; border-radius: 6px; }
         .lesson-text { white-space: pre-wrap; font-size: 15px; line-height: 1.4; }
         .homework-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .hw-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
+        .hw-item { font-size: 13px; margin-bottom: 4px; padding: 6px; background: #f9f9f9; border-radius: 6px; }
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
-        .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; }
+        .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
+        .holiday-title { color: #1b5e20; font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px; }
+        .holiday-reason { font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; }
+        
         .force-show-btn { font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #c6c6c8; display: flex; justify-content: space-around; padding: 10px 0 25px 0; z-index: 1000; }
@@ -70,18 +84,20 @@
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
-        .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
-        .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
-
+        .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
+        
         #confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
         #confirm-box { background: #fff; width: 80%; max-width: 320px; padding: 20px; border-radius: 14px; text-align: center; }
+        #confirm-old-text { background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 13px; text-align: left; max-height: 100px; overflow-y: auto; }
+        
         .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
         .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        .poll-voters { font-size: 11px; color: #8e8e93; margin-top: 2px; }
         .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 15px; }
         
-        .debug-id { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; }
+        .debug-id { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; padding-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -89,7 +105,7 @@
     <div id="confirm-modal">
         <div id="confirm-box">
             <h3 style="margin-top:0">ДЗ уже существует!</h3>
-            <div id="confirm-old-text" style="background:#f0f0f0;padding:10px;border-radius:8px;margin:10px 0;text-align:left;max-height:100px;overflow-y:auto;font-size:13px;"></div>
+            <div id="confirm-old-text"></div>
             <div style="display:flex; gap:10px;"><button class="btn btn-secondary" onclick="resolveConfirm(false)">Отмена</button><button class="btn btn-primary" onclick="resolveConfirm(true)">Дополнить</button></div>
         </div>
     </div>
@@ -112,8 +128,8 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-container"></div>
-        <!-- ОТЛАДКА ID -->
-        <div class="debug-id" id="debug-footer"></div>
+        <!-- ВЫВОД ID -->
+        <div class="debug-id" id="debug-footer">ID: не определен</div>
     </div>
 
     <!-- 2. ДЗ -->
@@ -177,7 +193,7 @@
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Редактор</h3>
             <div class="card"><div style="display: flex; gap: 10px;"><select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Понедельник</option><option value="Вторник">Вторник</option><option value="Среда">Среда</option><option value="Четверг">Четверг</option><option value="Пятница">Пятница</option></select><select id="ed-week" onchange="loadDayText()"><option value="odd">Нечетная</option><option value="even">Четная</option></select></div></div>
             <div class="tabs-header"><div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div><div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div></div>
-            <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Аудитория"><input type="text" id="ed-pair-teach" placeholder="Препод"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button></div>
+            <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Аудитория"><input type="text" id="ed-pair-teach" placeholder="Преподаватель"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button></div>
             <div id="edit-mode-full" style="display: none;"><div class="card"><textarea id="ed-text" rows="10" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить</button></div>
         </div>
 
@@ -207,16 +223,13 @@
         let currentWeek='odd', realCurrentWeek='odd', confirmResolve=null, isNextWeek=false, ignoreHolidays=false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
-        // 1. ФУНКЦИИ (ОБЪЯВЛЕНИЕ)
-        function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
-        function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
-
+        function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
+        
+        // --- FUNCTIONS ---
         function checkAuth() {
             const user = tg.initDataUnsafe?.user;
             if (user) {
-                // ОТЛАДКА ID (УДАЛИТЬ ПОТОМ, ЕСЛИ МЕШАЕТ)
-                document.getElementById('debug-footer').innerText = "ID: " + user.id;
-
+                document.getElementById('debug-footer').innerText = "ID: " + user.id; // DEBUG
                 const myId = String(user.id);
                 const cloudAdminId = dbData.aid ? String(dbData.aid) : null;
                 
@@ -225,7 +238,14 @@
                     document.getElementById('access-denied').style.display = 'none';
                     document.getElementById('dashboard-screen').style.display = 'block';
                     fillAdminData();
+                } else {
+                    // ЕСЛИ НЕ АДМИН
+                    document.getElementById('nav-admin').style.display = 'none';
+                    document.getElementById('access-denied').style.display = 'block';
+                    document.getElementById('dashboard-screen').style.display = 'none';
                 }
+            } else {
+                 document.getElementById('debug-footer').innerText = "Нет данных о пользователе (открыто в браузере?)";
             }
         }
         function fillAdminData() {
@@ -240,7 +260,6 @@
             if(realCurrentWeek==='odd'){ o.innerText+=" (Текущая)"; e.innerText+=" (Следующая)"; } else { e.innerText+=" (Текущая)"; o.innerText+=" (Следующая)"; }
         }
 
-        // --- RENDER ---
         function renderSession() {
             if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Пусто"; } else document.getElementById('nav-session').style.display='none';
         }
@@ -288,8 +307,9 @@
                 h+="</div>"; c.innerHTML+=h;
             });
         }
+        function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
 
-        // --- 3. ACTIONS ---
+        // --- ACTIONS ---
         function getDateForDay(idx) { const d=new Date(); d.setDate(d.getDate()-(d.getDay()||7)+(idx===0?1:idx+1)); if(currentWeek!==realCurrentWeek)d.setDate(d.getDate()+7); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
         function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
         function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
@@ -323,26 +343,6 @@
         function submitBroadcast() { sendDataToBot({action:"broadcast", text:document.getElementById('bc-text').value, has_photo:document.getElementById('bc-photo').checked}); }
         function sendAction(a) { if(confirm("Точно?")) sendDataToBot({action:a}); }
         function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
-        
-        function switchTab(tabId, btn) {
-            closeAdminSection(); 
-            document.querySelectorAll('.page').forEach(e=> {if(!e.classList.contains('modal'))e.classList.remove('active')}); 
-            document.getElementById(tabId + '-page').classList.add('active'); 
-            document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); 
-            if(btn) btn.classList.add('active'); 
-        }
-        function setWeek(t) { currentWeek=t; ignoreHolidays=false; document.getElementById('btn-odd').className=t==='odd'?'wt-btn active':'wt-btn'; document.getElementById('btn-even').className=t==='even'?'wt-btn active':'wt-btn'; updateWeekButtons(); renderSchedule(); }
-        
-        function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
-        function closeAdminSection() { 
-            document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); 
-            if(document.getElementById('access-denied').style.display === 'none') {
-                document.getElementById('dashboard-screen').style.display='block';
-            }
-        }
-        function renderEmptyState(m) { document.getElementById('schedule-container').innerHTML=`<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных</p><button class='btn btn-primary' onclick='requestData()'>🔄 Загрузить</button>${m?`<p style='color:red;font-size:12px'>${m}</p>`:''}</div>`; }
-        function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
-        function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
         function saveSinglePair() {
             loadDayText(); let txt=document.getElementById('ed-text').value||"", num=document.getElementById('ed-pair-num').value, s=document.getElementById('ed-pair-subj').value.trim();
             if(!s)return tg.showAlert("Предмет?");
@@ -372,6 +372,26 @@
         function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
         function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
 
+        function switchTab(t,b) { 
+            closeAdminSection(); 
+            document.querySelectorAll('.page').forEach(e=> {if(!e.classList.contains('modal'))e.classList.remove('active')}); 
+            document.getElementById(t+'-page').classList.add('active'); 
+            document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); 
+            if(b) b.classList.add('active'); 
+        }
+        function setWeek(t) { currentWeek=t; ignoreHolidays=false; document.getElementById('btn-odd').className=t==='odd'?'wt-btn active':'wt-btn'; document.getElementById('btn-even').className=t==='even'?'wt-btn active':'wt-btn'; updateWeekButtons(); renderSchedule(); }
+        
+        function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
+        function closeAdminSection() { 
+            document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); 
+            // Возвращаемся в дашборд админа, если мы авторизованы (экран доступа скрыт)
+            if(document.getElementById('access-denied').style.display === 'none') {
+                document.getElementById('dashboard-screen').style.display='block';
+            }
+        }
+        function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
+        function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
+
         // --- INIT ---
         const now = new Date();
         realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
@@ -380,6 +400,7 @@
         else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
         currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
         setWeek(currentWeek);
+
         document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
         updateWeekButtons();
 
