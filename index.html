@@ -24,7 +24,6 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
-            /* Явно разрешаем ввод и выделение текста везде */
             user-select: text;
             -webkit-user-select: text;
         }
@@ -63,14 +62,12 @@
             margin-bottom: 10px;
             color: var(--text-main);
             outline: none;
-            /* Гарантируем работу ввода */
             user-select: text !important;
             -webkit-user-select: text !important;
             -webkit-appearance: none;
             appearance: none;
         }
         
-        /* Фикс для iOS select */
         select {
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
@@ -98,7 +95,6 @@
             text-align: center;
             margin-bottom: 8px;
             transition: opacity 0.2s, transform 0.1s;
-            /* Кнопки не должны выделяться как текст */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -106,6 +102,7 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
+        .btn-outline { background: transparent; border: 1px solid var(--text-sec); color: var(--text-sec); }
         
         /* --- АДМИН --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -164,6 +161,7 @@
         }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal { display: none; } 
         .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
@@ -171,18 +169,52 @@
         .refresh-hint {
             background: var(--primary); color: white; border-radius: 10px;
             text-align: center; font-size: 14px; font-weight: 600;
-            padding: 12px; cursor: pointer; margin-bottom: 15px;
+            padding: 12px; cursor: pointer; margin-bottom: 5px;
             box-shadow: 0 2px 5px rgba(0,122,255,0.2);
             user-select: none;
+        }
+        
+        .hint-text {
+            font-size: 11px; color: #999; text-align: center; 
+            margin-bottom: 15px; margin-top: 0;
+        }
+
+        /* --- КАСТОМНЫЙ ДИАЛОГ (ПОДТВЕРЖДЕНИЕ) --- */
+        #confirm-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; display: none;
+            justify-content: center; align-items: center;
+        }
+        #confirm-box {
+            background: #fff; width: 80%; max-width: 320px; padding: 20px;
+            border-radius: 14px; text-align: center;
+        }
+        #confirm-old-text {
+            background: #f0f0f0; padding: 10px; border-radius: 8px;
+            margin: 10px 0; font-size: 13px; text-align: left; max-height: 100px; overflow-y: auto;
         }
     </style>
 </head>
 <body>
 
+    <!-- КАСТОМНОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
+    <div id="confirm-modal">
+        <div id="confirm-box">
+            <h3 style="margin-top:0">ДЗ уже существует!</h3>
+            <p style="font-size:14px; color:#666;">Текущее задание:</p>
+            <div id="confirm-old-text"></div>
+            <p style="font-size:14px; margin-bottom:15px;">Дополнить новым текстом?</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="resolveConfirm(false)">Отмена</button>
+                <button class="btn btn-primary" onclick="resolveConfirm(true)">Дополнить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- СТРАНИЦА 1: ПРОСМОТР -->
     <div id="view-page" class="page active">
-        <!-- Кнопка обновления СВЕРХУ -->
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
+        <div class="hint-text">Рекомендуется обновлять как можно чаще</div>
 
         <div class="week-toggle">
             <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
@@ -192,7 +224,7 @@
         <div id="schedule-container"></div>
     </div>
 
-    <!-- СТРАНИЦА 2: ДЗ (БЕЗ ФОТО) -->
+    <!-- СТРАНИЦА 2: ДЗ -->
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
@@ -232,6 +264,7 @@
             <div class="section-title">Управление</div>
             <div class="admin-grid">
                 <div class="admin-tile" onclick="openAdminSection('edit-sch')"><span>✏️</span>Редактор</div>
+                <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>Упр. ДЗ</div>
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
                 <div class="admin-tile" onclick="openAdminSection('broadcast')"><span>📢</span>Рассылка</div>
                 <div class="admin-tile" onclick="sendAction('reset_temp')"><span>🗑</span>Сброс</div>
@@ -243,7 +276,6 @@
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактор расписания</h3>
-            
             <div class="card">
                 <label style="font-size: 12px; color: #888; margin-bottom: 5px; display:block;">Выбор дня:</label>
                 <div style="display: flex; gap: 10px;">
@@ -260,51 +292,55 @@
                     </select>
                 </div>
             </div>
-
-            <!-- Переключатель режимов -->
+            <!-- Режимы редактора -->
             <div class="tabs-header">
                 <div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div>
                 <div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div>
             </div>
-
-            <!-- Режим: ОДНА ПАРА -->
             <div id="edit-mode-pair">
                 <div class="card">
                     <label style="font-size: 12px; color: #888;">Выберите номер пары:</label>
-                    <select id="ed-pair-num">
-                        <option value="1">1 пара (09:00)</option>
-                        <option value="2">2 пара (10:45)</option>
-                        <option value="3">3 пара (13:15)</option>
-                        <option value="4">4 пара (15:00)</option>
-                        <option value="5">5 пара (16:45)</option>
-                    </select>
-                    
-                    <input type="text" id="ed-pair-subj" placeholder="Предмет (например: Математика)">
-                    <input type="text" id="ed-pair-type" placeholder="Тип (Лекция/Практика)">
+                    <select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
+                    <input type="text" id="ed-pair-subj" placeholder="Предмет">
+                    <input type="text" id="ed-pair-type" placeholder="Тип">
                     <input type="text" id="ed-pair-room" placeholder="Аудитория">
                     <input type="text" id="ed-pair-teach" placeholder="Преподаватель">
                 </div>
                 <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
                 <button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button>
             </div>
-
-            <!-- Режим: ВЕСЬ ДЕНЬ -->
             <div id="edit-mode-full" style="display: none;">
-                <div class="card">
-                    <textarea id="ed-text" rows="10" placeholder="Полный текст расписания..."></textarea>
-                </div>
+                <div class="card"><textarea id="ed-text" rows="10" placeholder="Полный текст..."></textarea></div>
                 <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button>
             </div>
+        </div>
+
+        <!-- СЕКЦИЯ: УПРАВЛЕНИЕ ДЗ (НОВОЕ) -->
+        <div id="section-manage-hw" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Редактирование/Удаление ДЗ</h3>
+            <div class="card">
+                <label style="font-size: 12px; color: #888;">Выберите дату и пару:</label>
+                <input type="date" id="adm-hw-date" onchange="loadAdminHw()">
+                <select id="adm-hw-pair" onchange="loadAdminHw()">
+                    <option value="1">1 пара</option><option value="2">2 пара</option>
+                    <option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option>
+                </select>
+            </div>
+            <div class="section-title">Текущее задание</div>
+            <div class="card">
+                <input type="text" id="adm-hw-subj" placeholder="Предмет">
+                <textarea id="adm-hw-text" placeholder="Текст задания..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить изменения</button>
+            <button class="btn btn-danger" onclick="deleteAdminHw()">Удалить ДЗ</button>
         </div>
 
         <!-- СЕКЦИЯ: ЗАМЕТКА -->
         <div id="section-add-note" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Временное изменение</h3>
-            <div class="card">
-                <input type="date" id="note-date">
-                <textarea id="note-text" placeholder="Пример: Пар нет, ко второй паре."></textarea>
-            </div>
+            <div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Пример: Пар нет, ко второй паре."></textarea></div>
             <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
         </div>
 
@@ -312,13 +348,7 @@
         <div id="section-broadcast" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Рассылка всем</h3>
-            <div class="card">
-                <textarea id="bc-text" placeholder="Текст сообщения..."></textarea>
-                <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                    <input type="checkbox" id="bc-photo" style="width: 20px; height: 20px; margin: 0;">
-                    <span>Прикрепить фото (далее в боте)</span>
-                </label>
-            </div>
+            <div class="card"><textarea id="bc-text" placeholder="Текст сообщения..."></textarea><label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;"><input type="checkbox" id="bc-photo" style="width: 20px; height: 20px; margin: 0;"><span>Прикрепить фото (далее в боте)</span></label></div>
             <button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button>
         </div>
     </div>
@@ -335,159 +365,214 @@
         tg.ready();
         tg.expand();
 
-        // --- КОНФИГУРАЦИЯ ---
         const ADMIN_PASS = "0451"; 
         let dbData = { perm: {}, homework: {}, temporary: {} };
         let currentWeek = 'odd';
+        let confirmResolve = null; // Для модального окна
 
-        const PAIR_TIMES = {
-            "1": "09:00 - 10:30", "2": "10:45 - 12:15", 
-            "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15"
-        };
+        const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
-        // --- ОПРЕДЕЛЕНИЕ ТЕКУЩЕЙ НЕДЕЛИ ---
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
             var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-            return weekNo;
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
         }
 
-        // Авто-выбор четности при старте
         const now = new Date();
-        const weekNum = getWeekNumber(now);
-        currentWeek = (weekNum % 2 === 0) ? 'even' : 'odd';
+        let checkDate = new Date(now);
+        if (now.getDay() === 6) checkDate.setDate(now.getDate() + 2);
+        if (now.getDay() === 0) checkDate.setDate(now.getDate() + 1);
+        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
         setWeek(currentWeek);
 
         document.getElementById('hw-date').valueAsDate = now;
+        document.getElementById('adm-hw-date').valueAsDate = now;
         document.getElementById('note-date').valueAsDate = now;
 
-        // 1. ЧТЕНИЕ ДАННЫХ
+        // ПАРСИНГ
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
-
         if (rawData) {
             try {
                 rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
                 const binaryString = window.atob(rawData);
                 const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
                 
                 let decodedString;
-                try {
-                    const decompressed = pako.inflate(bytes);
-                    decodedString = new TextDecoder().decode(decompressed);
-                } catch (e) {
-                    decodedString = new TextDecoder().decode(bytes);
-                }
+                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } 
+                catch (e) { decodedString = new TextDecoder().decode(bytes); }
                 
                 const parsed = JSON.parse(decodedString);
-                
                 if (parsed.p) {
-                    // Распаковка минифицированных данных
                     dbData.perm = unminifyPerm(parsed.p);
-                    // Если бот присылает 'h' (homework) и 't' (temp)
                     if (parsed.h) dbData.homework = parsed.h;
                     if (parsed.t) dbData.temporary = parsed.t;
-                } else {
-                    dbData = parsed; 
-                }
-                
+                } else { dbData = parsed; }
                 renderSchedule();
-            } catch (e) { 
-                renderEmptyState("Ошибка чтения: " + e.message); 
-            }
-        } else {
-            renderEmptyState();
-        }
+            } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
+        } else { renderEmptyState(); }
 
-        // --- РАСПАКОВКА ---
         function unminifyPerm(minifiedP) {
             const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
             const fullPerm = {};
             for (let dKey in minifiedP) {
-                const dayName = daysMap[parseInt(dKey)];
-                const dayData = minifiedP[dKey];
-                fullPerm[dayName] = { "odd": dayData.o || "", "even": dayData.e || "" };
+                fullPerm[daysMap[parseInt(dKey)]] = { "odd": minifiedP[dKey].o || "", "even": minifiedP[dKey].e || "" };
             }
             return fullPerm;
         }
 
-        // --- ЛОГИКА ИНТЕРФЕЙСА ---
-        function renderEmptyState(msg) {
-            document.getElementById('schedule-container').innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📂</div>
-                    <p>Нажмите "Загрузить", чтобы получить расписание.</p>
-                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
-                    ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}
-                </div>`;
+        // --- ЛОГИКА ДЗ (ПРОВЕРКА И ОТПРАВКА) ---
+        function getDateKey(dateElemId) {
+            const dateStr = document.getElementById(dateElemId).value;
+            if(!dateStr) return null;
+            const [y, m, d] = dateStr.split('-');
+            return `${d}.${m}.${y}`;
         }
 
-        // Вычисление даты для конкретного дня недели
-        function getDateForDay(dayIndex, isNextWeek = false) {
-            const d = new Date();
-            const currentDay = d.getDay() || 7; // 1-7
-            const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; // Преобразование 0(Пн)->1
+        async function submitHomework() {
+            const dateKey = getDateKey('hw-date');
+            if(!dateKey) return tg.showAlert("Выберите дату");
             
-            // Логика: находим этот день на текущей неделе
-            d.setDate(d.getDate() - currentDay + targetDay);
-            
-            // Если выбранная четность отличается от текущей реальной недели -> сдвигаем на 7 дней
-            // (Упрощенно: если currentWeek != расчитанной, это следующая неделя)
-            const calculatedWeek = getWeekNumber(new Date()) % 2 === 0 ? 'even' : 'odd';
-            if (currentWeek !== calculatedWeek) {
-                d.setDate(d.getDate() + 7);
+            const pair = document.getElementById('hw-pair').value;
+            const newText = document.getElementById('hw-text').value.trim();
+            const newSubj = document.getElementById('hw-subject').value.trim();
+
+            if(!newText) return tg.showAlert("Введите текст задания");
+
+            // Проверка на существующее ДЗ
+            let existingHw = null;
+            if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
+                existingHw = dbData.homework[dateKey][pair];
             }
+
+            let finalText = newText;
             
-            // Формат DD.MM.YYYY
+            if (existingHw) {
+                // Показываем модальное окно
+                const shouldAppend = await showConfirmModal(existingHw.text);
+                if (shouldAppend) {
+                    finalText = existingHw.text + "\n\n" + newText;
+                } else {
+                    return; // Отмена
+                }
+            }
+
+            sendDataToBot({
+                action: "add_homework",
+                date: dateKey,
+                pair: pair,
+                subject: newSubj || (existingHw ? existingHw.subject : ""),
+                text: finalText,
+                has_photo: false
+            });
+        }
+
+        function showConfirmModal(oldText) {
+            return new Promise((resolve) => {
+                confirmResolve = resolve;
+                document.getElementById('confirm-old-text').innerText = oldText;
+                document.getElementById('confirm-modal').style.display = 'flex';
+            });
+        }
+
+        function resolveConfirm(result) {
+            document.getElementById('confirm-modal').style.display = 'none';
+            if (confirmResolve) confirmResolve(result);
+        }
+
+        // --- ЛОГИКА АДМИНА ДЛЯ ДЗ ---
+        function loadAdminHw() {
+            const dateKey = getDateKey('adm-hw-date');
+            const pair = document.getElementById('adm-hw-pair').value;
+            
+            if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
+                const hw = dbData.homework[dateKey][pair];
+                document.getElementById('adm-hw-subj').value = hw.subject || "";
+                document.getElementById('adm-hw-text').value = hw.text || "";
+            } else {
+                document.getElementById('adm-hw-subj').value = "";
+                document.getElementById('adm-hw-text').value = "";
+            }
+        }
+
+        function submitAdminHw() {
+            const dateKey = getDateKey('adm-hw-date');
+            const pair = document.getElementById('adm-hw-pair').value;
+            const text = document.getElementById('adm-hw-text').value.trim();
+            const subj = document.getElementById('adm-hw-subj').value.trim();
+
+            if(!text) return tg.showAlert("Текст задания пустой");
+
+            sendDataToBot({
+                action: "add_homework", // Используем тот же экшен, это перезапись
+                date: dateKey,
+                pair: pair,
+                subject: subj,
+                text: text,
+                has_photo: false
+            });
+        }
+
+        function deleteAdminHw() {
+            const dateKey = getDateKey('adm-hw-date');
+            const pair = document.getElementById('adm-hw-pair').value;
+            
+            if(confirm("Удалить домашнее задание на эту дату и пару?")) {
+                sendDataToBot({
+                    action: "delete_homework",
+                    date: dateKey,
+                    pair: pair
+                });
+            }
+        }
+
+        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
+        function renderEmptyState(msg) {
+            document.getElementById('schedule-container').innerHTML = `
+                <div class="empty-state"><div class="empty-icon">📂</div>
+                <p>Нажмите "Загрузить", чтобы получить расписание.</p>
+                <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
+                ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}</div>`;
+        }
+
+        function getDateForDay(dayIndex) {
+            const d = new Date();
+            const currentDay = d.getDay() || 7; 
+            const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
+            d.setDate(d.getDate() - currentDay + targetDay);
+            const calcWeek = (getWeekNumber(new Date()) % 2 === 0) ? 'even' : 'odd';
+            if (currentWeek !== calcWeek) d.setDate(d.getDate() + 7);
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yyyy = d.getFullYear();
-            return `${dd}.${mm}.${yyyy}`;
+            const y = d.getFullYear();
+            return `${dd}.${mm}.${y}`;
         }
 
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
             if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
-                container.innerHTML = "<div class='empty-state'>Расписание пустое</div>";
-                return;
+                container.innerHTML = "<div class='empty-state'>Расписание пустое</div>"; return;
             }
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-            
             days.forEach((day, idx) => {
                 const dayObj = dbData.perm[day];
                 if (!dayObj) return;
-                
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
-                if (!text && !dbData.temporary && !dbData.homework) return; // Пропускаем совсем пустые
-                
-                text = text.replace(/<[^>]*>?/gm, ''); 
-                
-                // Вычисляем дату для отображения ДЗ и заметок
                 const dateKey = getDateForDay(idx);
+                const hasNote = dbData.temporary && dbData.temporary[dateKey];
+                const hasHw = dbData.homework && dbData.homework[dateKey];
+                if (!text && !hasNote && !hasHw) return; 
+                text = text.replace(/<[^>]*>?/gm, ''); 
                 
                 const card = document.createElement('div');
                 card.className = 'card';
-                
-                let html = `<div class="day-header">
-                                <span>${day}</span>
-                                <span class="date-badge">${dateKey}</span>
-                            </div>`;
-                
-                // 1. Временное примечание (если есть)
-                if (dbData.temporary && dbData.temporary[dateKey]) {
-                    html += `<div class="note-block">📌 <b>Внимание:</b> ${dbData.temporary[dateKey]}</div>`;
-                }
-                
+                let html = `<div class="day-header"><span>${day}</span><span class="date-badge">${dateKey}</span></div>`;
+                if (hasNote) html += `<div class="note-block">📌 <b>Внимание:</b> ${dbData.temporary[dateKey]}</div>`;
                 html += `<div class="lesson-text">${text}</div>`;
-                
-                // 2. Домашнее задание (если есть)
-                if (dbData.homework && dbData.homework[dateKey]) {
+                if (hasHw) {
                     html += `<div class="homework-block"><div class="hw-title">Домашнее задание:</div>`;
                     const dayHw = dbData.homework[dateKey];
                     for (let pair in dayHw) {
@@ -496,83 +581,18 @@
                     }
                     html += `</div>`;
                 }
-                
                 card.innerHTML = html;
                 container.appendChild(card);
             });
         }
 
-        // --- ВЗАИМОДЕЙСТВИЕ ---
         function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
         function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
-
-        function submitHomework() {
-            const dateStr = document.getElementById('hw-date').value;
-            if(!dateStr) return tg.showAlert("Выберите дату");
-            const [y, m, d] = dateStr.split('-'); 
-            // Убрали has_photo
-            sendDataToBot({
-                action: "add_homework",
-                date: `${d}.${m}.${y}`,
-                pair: document.getElementById('hw-pair').value,
-                subject: document.getElementById('hw-subject').value,
-                text: document.getElementById('hw-text').value,
-                has_photo: false 
-            });
-        }
-
+        
+        // Редактор расписания
         function submitEditSchedule() {
-            sendDataToBot({
-                action: "edit_perm",
-                day: document.getElementById('ed-day').value,
-                week_type: document.getElementById('ed-week').value,
-                text: document.getElementById('ed-text').value
-            });
+            sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value });
         }
-
-        function submitNote() {
-            const dateStr = document.getElementById('note-date').value;
-            if(!dateStr) return tg.showAlert("Выберите дату");
-            const [y, m, d] = dateStr.split('-');
-            sendDataToBot({
-                action: "add_note",
-                date: `${d}.${m}.${y}`,
-                text: document.getElementById('note-text').value
-            });
-        }
-
-        function submitBroadcast() {
-            sendDataToBot({
-                action: "broadcast",
-                text: document.getElementById('bc-text').value,
-                has_photo: document.getElementById('bc-photo').checked
-            });
-        }
-
-        function sendAction(actName) {
-            if(confirm("Вы уверены?")) sendDataToBot({ action: actName });
-        }
-
-        // --- ФУНКЦИИ ДЛЯ РАБОТЫ С ПАРАМИ (СОХРАНЕНИЕ И УДАЛЕНИЕ) ---
-        function parsePairs(fullText) {
-            // Разбиваем текст на куски, начиная с времени "09:00 - ..."
-            let parts = fullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
-            let pairMap = {};
-            parts.forEach(part => {
-                if (!part.trim()) return;
-                const match = part.match(/\n(\d) пара/);
-                if (match) pairMap[parseInt(match[1])] = part.trim();
-            });
-            return pairMap;
-        }
-
-        function rebuildText(pairMap) {
-            let sortedText = "";
-            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
-            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
-            return sortedText.trim();
-        }
-
         function saveSinglePair() {
             loadDayText(); 
             let currentFullText = document.getElementById('ed-text').value || "";
@@ -581,46 +601,53 @@
             const type = document.getElementById('ed-pair-type').value.trim();
             const room = document.getElementById('ed-pair-room').value.trim();
             const teach = document.getElementById('ed-pair-teach').value.trim();
-
             if (!subj) return tg.showAlert("Введите название предмета!");
-
             let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
             if (type) newPairBlock += `\n${type}`;
             if (room) newPairBlock += `\nАуд: ${room}`;
             if (teach) newPairBlock += `\n${teach}`;
-
-            // Получаем карту пар, обновляем нужную и собираем обратно
-            let pairMap = parsePairs(currentFullText);
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
+            let pairMap = {};
+            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
             pairMap[pairNum] = newPairBlock;
-            
-            document.getElementById('ed-text').value = rebuildText(pairMap);
+            let sortedText = "";
+            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
+            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
+            document.getElementById('ed-text').value = sortedText.trim();
             submitEditSchedule(); 
         }
-
         function deleteSinglePair() {
             if(!confirm("Удалить выбранную пару?")) return;
-            
             loadDayText();
             let currentFullText = document.getElementById('ed-text').value || "";
             const pairNum = parseInt(document.getElementById('ed-pair-num').value);
-            
-            let pairMap = parsePairs(currentFullText);
-            
-            if (pairMap[pairNum]) {
-                delete pairMap[pairNum]; // Удаляем пару из объекта
-                document.getElementById('ed-text').value = rebuildText(pairMap);
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
+            let pairMap = {};
+            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
+            if (pairMap[pairNum]) { delete pairMap[pairNum];
+                let sortedText = "";
+                Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; });
+                document.getElementById('ed-text').value = sortedText.trim();
                 submitEditSchedule();
-            } else {
-                tg.showAlert("Эта пара не найдена в расписании");
-            }
+            } else { tg.showAlert("Эта пара не найдена в расписании"); }
         }
 
-        // --- УТИЛИТЫ UI ---
+        // Заметки и Рассылка
+        function submitNote() {
+            const dateStr = document.getElementById('note-date').value;
+            if(!dateStr) return tg.showAlert("Выберите дату");
+            const [y, m, d] = dateStr.split('-');
+            sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value });
+        }
+        function submitBroadcast() {
+            sendDataToBot({ action: "broadcast", text: document.getElementById('bc-text').value, has_photo: document.getElementById('bc-photo').checked });
+        }
+        function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
+
+        // UI Helpers
         function switchTab(tabId, btn) {
             closeAdminSection();
-            document.querySelectorAll('.page').forEach(el => {
-                if(!el.classList.contains('modal')) el.classList.remove('active');
-            });
+            document.querySelectorAll('.page').forEach(el => { if(!el.classList.contains('modal')) el.classList.remove('active'); });
             document.getElementById(tabId + '-page').classList.add('active');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             if(btn) btn.classList.add('active');
@@ -644,7 +671,8 @@
             document.getElementById('adm-pass').value = '';
         }
         function openAdminSection(sectionId) {
-            if (sectionId === 'edit-sch') loadDayText(); 
+            if (sectionId === 'edit-sch') loadDayText();
+            if (sectionId === 'manage-hw') loadAdminHw(); // Загружаем при открытии
             document.getElementById('dashboard-screen').style.display = 'none';
             document.getElementById('section-' + sectionId).classList.add('active');
         }
@@ -658,9 +686,7 @@
             const d = document.getElementById('ed-day').value;
             const w = document.getElementById('ed-week').value;
             let txt = "";
-            if (dbData.perm && dbData.perm[d]) {
-                txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
-            }
+            if (dbData.perm && dbData.perm[d]) txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
             document.getElementById('ed-text').value = txt;
         }
     </script>
