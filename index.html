@@ -179,6 +179,11 @@
             margin-bottom: 15px; margin-top: 0;
         }
 
+        .last-updated {
+            font-size: 11px; color: #8e8e93; text-align: center;
+            margin-bottom: 10px;
+        }
+
         /* --- КАСТОМНЫЙ ДИАЛОГ (ПОДТВЕРЖДЕНИЕ) --- */
         #confirm-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -214,8 +219,8 @@
     <!-- СТРАНИЦА 1: ПРОСМОТР -->
     <div id="view-page" class="page active">
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
-        <div class="hint-text">Рекомендуется обновлять как можно чаще</div>
-
+        <div class="last-updated" id="last-updated-text">Данные еще не загружены</div>
+        
         <div class="week-toggle">
             <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
@@ -315,7 +320,7 @@
             </div>
         </div>
 
-        <!-- СЕКЦИЯ: УПРАВЛЕНИЕ ДЗ (НОВОЕ) -->
+        <!-- СЕКЦИЯ: УПРАВЛЕНИЕ ДЗ -->
         <div id="section-manage-hw" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактирование/Удаление ДЗ</h3>
@@ -368,7 +373,7 @@
         const ADMIN_PASS = "0451"; 
         let dbData = { perm: {}, homework: {}, temporary: {} };
         let currentWeek = 'odd';
-        let confirmResolve = null; // Для модального окна
+        let confirmResolve = null;
 
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
@@ -390,7 +395,22 @@
         document.getElementById('adm-hw-date').valueAsDate = now;
         document.getElementById('note-date').valueAsDate = now;
 
-        // ПАРСИНГ
+        // --- ОБНОВЛЕНИЕ ТЕКСТА КНОПОК ПО ЧЕТНОСТИ ---
+        function updateWeekButtons() {
+            const oddBtn = document.getElementById('btn-odd');
+            const evenBtn = document.getElementById('btn-even');
+            
+            // Сбрасываем текст
+            oddBtn.innerText = "Нечетная";
+            evenBtn.innerText = "Четная";
+            
+            // Добавляем пометку
+            if (currentWeek === 'odd') oddBtn.innerText += " (Текущая)";
+            else evenBtn.innerText += " (Текущая)";
+        }
+        updateWeekButtons();
+
+        // 1. ЧТЕНИЕ ДАННЫХ
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
         if (rawData) {
@@ -410,6 +430,13 @@
                     if (parsed.h) dbData.homework = parsed.h;
                     if (parsed.t) dbData.temporary = parsed.t;
                 } else { dbData = parsed; }
+                
+                // Устанавливаем дату обновления
+                const updateDate = new Date();
+                const updateTimeStr = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const updateDateStr = updateDate.toLocaleDateString();
+                document.getElementById('last-updated-text').innerText = `Обновлено в последний раз: ${updateDateStr} ${updateTimeStr}`;
+
                 renderSchedule();
             } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
         } else { renderEmptyState(); }
@@ -423,7 +450,7 @@
             return fullPerm;
         }
 
-        // --- ЛОГИКА ДЗ (ПРОВЕРКА И ОТПРАВКА) ---
+        // --- ЛОГИКА ДЗ ---
         function getDateKey(dateElemId) {
             const dateStr = document.getElementById(dateElemId).value;
             if(!dateStr) return null;
@@ -434,29 +461,21 @@
         async function submitHomework() {
             const dateKey = getDateKey('hw-date');
             if(!dateKey) return tg.showAlert("Выберите дату");
-            
             const pair = document.getElementById('hw-pair').value;
             const newText = document.getElementById('hw-text').value.trim();
             const newSubj = document.getElementById('hw-subject').value.trim();
-
             if(!newText) return tg.showAlert("Введите текст задания");
 
-            // Проверка на существующее ДЗ
             let existingHw = null;
             if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
                 existingHw = dbData.homework[dateKey][pair];
             }
 
             let finalText = newText;
-            
             if (existingHw) {
-                // Показываем модальное окно
                 const shouldAppend = await showConfirmModal(existingHw.text);
-                if (shouldAppend) {
-                    finalText = existingHw.text + "\n\n" + newText;
-                } else {
-                    return; // Отмена
-                }
+                if (shouldAppend) finalText = existingHw.text + "\n\n" + newText;
+                else return;
             }
 
             sendDataToBot({
@@ -476,17 +495,14 @@
                 document.getElementById('confirm-modal').style.display = 'flex';
             });
         }
-
         function resolveConfirm(result) {
             document.getElementById('confirm-modal').style.display = 'none';
             if (confirmResolve) confirmResolve(result);
         }
 
-        // --- ЛОГИКА АДМИНА ДЛЯ ДЗ ---
         function loadAdminHw() {
             const dateKey = getDateKey('adm-hw-date');
             const pair = document.getElementById('adm-hw-pair').value;
-            
             if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
                 const hw = dbData.homework[dateKey][pair];
                 document.getElementById('adm-hw-subj').value = hw.subject || "";
@@ -496,35 +512,19 @@
                 document.getElementById('adm-hw-text').value = "";
             }
         }
-
         function submitAdminHw() {
             const dateKey = getDateKey('adm-hw-date');
             const pair = document.getElementById('adm-hw-pair').value;
             const text = document.getElementById('adm-hw-text').value.trim();
             const subj = document.getElementById('adm-hw-subj').value.trim();
-
             if(!text) return tg.showAlert("Текст задания пустой");
-
-            sendDataToBot({
-                action: "add_homework", // Используем тот же экшен, это перезапись
-                date: dateKey,
-                pair: pair,
-                subject: subj,
-                text: text,
-                has_photo: false
-            });
+            sendDataToBot({ action: "add_homework", date: dateKey, pair: pair, subject: subj, text: text, has_photo: false });
         }
-
         function deleteAdminHw() {
             const dateKey = getDateKey('adm-hw-date');
             const pair = document.getElementById('adm-hw-pair').value;
-            
             if(confirm("Удалить домашнее задание на эту дату и пару?")) {
-                sendDataToBot({
-                    action: "delete_homework",
-                    date: dateKey,
-                    pair: pair
-                });
+                sendDataToBot({ action: "delete_homework", date: dateKey, pair: pair });
             }
         }
 
@@ -589,7 +589,6 @@
         function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
         function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
         
-        // Редактор расписания
         function submitEditSchedule() {
             sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value });
         }
@@ -632,7 +631,6 @@
             } else { tg.showAlert("Эта пара не найдена в расписании"); }
         }
 
-        // Заметки и Рассылка
         function submitNote() {
             const dateStr = document.getElementById('note-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
@@ -644,7 +642,6 @@
         }
         function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
 
-        // UI Helpers
         function switchTab(tabId, btn) {
             closeAdminSection();
             document.querySelectorAll('.page').forEach(el => { if(!el.classList.contains('modal')) el.classList.remove('active'); });
@@ -656,6 +653,7 @@
             currentWeek = type;
             document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
             document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
+            updateWeekButtons(); // Обновляем текст при переключении (если нужно сбросить пометку)
             renderSchedule();
         }
         function login() {
@@ -672,7 +670,7 @@
         }
         function openAdminSection(sectionId) {
             if (sectionId === 'edit-sch') loadDayText();
-            if (sectionId === 'manage-hw') loadAdminHw(); // Загружаем при открытии
+            if (sectionId === 'manage-hw') loadAdminHw(); 
             document.getElementById('dashboard-screen').style.display = 'none';
             document.getElementById('section-' + sectionId).classList.add('active');
         }
