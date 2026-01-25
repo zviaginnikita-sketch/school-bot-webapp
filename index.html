@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Учебный Ассистент</title>
-    <!-- Добавляем библиотеку для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -24,8 +23,17 @@
             color: var(--text-main);
             margin: 0;
             padding: 0 0 90px 0;
-            user-select: none;
+            /* Исправление ввода текста на iOS */
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- ВАЖНО: РАЗРЕШАЕМ ВВОД --- */
+        input, textarea, select {
+            user-select: text;
+            -webkit-user-select: text;
+            /* Убираем стандартные стили iOS */
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         /* --- СТРАНИЦЫ --- */
@@ -54,14 +62,20 @@
         input, select, textarea {
             width: 100%;
             padding: 14px;
-            border: none;
+            border: 1px solid transparent;
             background: #f2f2f7;
             border-radius: 8px;
             font-size: 16px;
             box-sizing: border-box;
             margin-bottom: 10px;
-            -webkit-appearance: none;
             color: var(--text-main);
+            outline: none;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            background: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
         }
         
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
@@ -84,7 +98,7 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
         
-        /* --- АДМИН ГРИД --- */
+        /* --- АДМИН --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .admin-tile {
             background: var(--card-bg);
@@ -97,6 +111,13 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .admin-tile span { display: block; font-size: 24px; margin-bottom: 5px; }
+
+        .tabs-header { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 8px; text-align: center; background: #e5e5ea; 
+            border-radius: 8px; font-size: 13px; cursor: pointer;
+        }
+        .tab-btn.active { background: var(--primary); color: white; }
 
         /* --- РАСПИСАНИЕ --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
@@ -127,7 +148,6 @@
         }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         
-        /* --- МОДАЛКИ --- */
         .modal { display: none; } 
         .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px;}
@@ -135,7 +155,7 @@
 </head>
 <body>
 
-    <!-- СТРАНИЦА 1: ПРОСМОТР РАСПИСАНИЯ -->
+    <!-- СТРАНИЦА 1: ПРОСМОТР -->
     <div id="view-page" class="page active">
         <div class="week-toggle">
             <div class="wt-btn active" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
@@ -172,18 +192,18 @@
 
     <!-- СТРАНИЦА 3: АДМИН -->
     <div id="admin-page" class="page">
-        <!-- Вход -->
+        <!-- Экран входа -->
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Панель Администратора</h3>
             <div class="card">
-                <input type="password" id="adm-pass" placeholder="Пароль (1234)" style="text-align: center;">
+                <input type="password" id="adm-pass" placeholder="пароль" style="text-align: center;">
             </div>
             <button class="btn btn-primary" onclick="login()">Войти</button>
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
 
-        <!-- Меню Админа -->
+        <!-- Дашборд -->
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Управление</div>
             <div class="admin-grid">
@@ -195,21 +215,61 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
-        <!-- Секции Админа -->
+        <!-- СЕКЦИЯ: РЕДАКТОР РАСПИСАНИЯ -->
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Редактировать постоянное</h3>
+            <h3>Редактор расписания</h3>
+            
             <div class="card">
-                <select id="ed-day">
-                    <option>Понедельник</option><option>Вторник</option><option>Среда</option>
-                    <option>Четверг</option><option>Пятница</option>
+                <select id="ed-day" onchange="loadDayText()">
+                    <option value="Понедельник">Понедельник</option>
+                    <option value="Вторник">Вторник</option>
+                    <option value="Среда">Среда</option>
+                    <option value="Четверг">Четверг</option>
+                    <option value="Пятница">Пятница</option>
                 </select>
-                <select id="ed-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
-                <textarea id="ed-text" rows="8" placeholder="Расписание..."></textarea>
+                <select id="ed-week" onchange="loadDayText()">
+                    <option value="odd">Нечетная</option>
+                    <option value="even">Четная</option>
+                </select>
             </div>
-            <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить</button>
+
+            <!-- Переключатель режимов -->
+            <div class="tabs-header">
+                <div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div>
+                <div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div>
+            </div>
+
+            <!-- Режим: ОДНА ПАРА -->
+            <div id="edit-mode-pair">
+                <div class="card">
+                    <label style="font-size: 12px; color: #888;">Выберите пару:</label>
+                    <select id="ed-pair-num">
+                        <option value="1">1 пара (09:00)</option>
+                        <option value="2">2 пара (10:45)</option>
+                        <option value="3">3 пара (13:15)</option>
+                        <option value="4">4 пара (15:00)</option>
+                        <option value="5">5 пара (16:45)</option>
+                    </select>
+                    
+                    <input type="text" id="ed-pair-subj" placeholder="Предмет (например: Математика)">
+                    <input type="text" id="ed-pair-type" placeholder="Тип (Лекция/Практика)">
+                    <input type="text" id="ed-pair-room" placeholder="Аудитория">
+                    <input type="text" id="ed-pair-teach" placeholder="Преподаватель">
+                </div>
+                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
+            </div>
+
+            <!-- Режим: ВЕСЬ ДЕНЬ -->
+            <div id="edit-mode-full" style="display: none;">
+                <div class="card">
+                    <textarea id="ed-text" rows="10" placeholder="Полный текст расписания..."></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button>
+            </div>
         </div>
 
+        <!-- СЕКЦИЯ: ЗАМЕТКА -->
         <div id="section-add-note" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Временное изменение</h3>
@@ -220,6 +280,7 @@
             <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
         </div>
 
+        <!-- СЕКЦИЯ: РАССЫЛКА -->
         <div id="section-broadcast" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Рассылка всем</h3>
@@ -246,106 +307,73 @@
         tg.ready();
         tg.expand();
 
-        const ADMIN_PASS = "1234"; 
+        // --- КОНФИГУРАЦИЯ ---
+        const ADMIN_PASS = "0451"; // НОВЫЙ ПАРОЛЬ
         let dbData = { perm: {} };
         let currentWeek = 'odd';
 
-        // Инициализация дат
+        // Время пар для генерации текста
+        const PAIR_TIMES = {
+            "1": "09:00 - 10:30", "2": "10:45 - 12:15", 
+            "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15"
+        };
+
         document.getElementById('hw-date').valueAsDate = new Date();
         document.getElementById('note-date').valueAsDate = new Date();
 
-        // 1. ПАРСИНГ ДАННЫХ ИЗ URL (ZLIB)
+        // 1. ЧТЕНИЕ ДАННЫХ
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
 
         if (rawData) {
             try {
-                // Исправляем URL-safe символы на стандартные Base64
                 rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
-
-                // 1. Base64 -> Бинарная строка
                 const binaryString = window.atob(rawData);
-                
-                // 2. Бинарная строка -> Uint8Array байты
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-
-                // 3. ZLIB Распаковка (pako)
-                // Используем try/catch на случай, если данные не сжаты pako, а просто json
+                
                 let decodedString;
                 try {
                     const decompressed = pako.inflate(bytes);
                     decodedString = new TextDecoder().decode(decompressed);
                 } catch (e) {
-                    // Если ошибка распаковки, пробуем как обычный текст (на всякий случай)
                     decodedString = new TextDecoder().decode(bytes);
                 }
                 
                 const parsed = JSON.parse(decodedString);
+                if (parsed.p) dbData = unminifyData(parsed);
+                else dbData = parsed;
                 
-                if (parsed.p) {
-                    dbData = unminifyData(parsed);
-                } else {
-                    dbData = parsed;
-                }
                 renderSchedule();
             } catch (e) { 
-                renderEmptyState("Ошибка чтения данных: " + e.message);
-                console.error(e);
+                renderEmptyState("Ошибка чтения: " + e.message); 
             }
         } else {
             renderEmptyState();
         }
 
-        // --- ФУНКЦИЯ РАСПАКОВКИ ---
+        // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
         function unminifyData(minified) {
             const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
             const fullPerm = {};
-            
             for (let dKey in minified.p) {
                 const dayName = daysMap[parseInt(dKey)];
                 const dayData = minified.p[dKey];
-                fullPerm[dayName] = {
-                    "odd": dayData.o || "",
-                    "even": dayData.e || ""
-                };
+                fullPerm[dayName] = { "odd": dayData.o || "", "even": dayData.e || "" };
             }
             return { perm: fullPerm };
         }
 
-        // --- ЛОГИКА ИНТЕРФЕЙСА ---
-        function switchTab(tabId, btn) {
-            closeAdminSection();
-            document.querySelectorAll('.page').forEach(el => {
-                if(!el.classList.contains('modal')) el.classList.remove('active');
-            });
-            document.getElementById(tabId + '-page').classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-        }
-
-        function setWeek(type) {
-            currentWeek = type;
-            document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
-            document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
-            renderSchedule();
-        }
-
         function renderEmptyState(msg) {
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = `
+            document.getElementById('schedule-container').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📂</div>
-                    <div style="font-weight: 600; font-size: 18px; margin-bottom: 10px;">Нет данных</div>
-                    <p style="font-size: 14px; margin-bottom: 20px;">
-                        Нажмите кнопку "Загрузить", чтобы получить актуальное расписание.
-                    </p>
+                    <p>Нажмите "Загрузить", чтобы получить расписание.</p>
                     <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить расписание</button>
-                    ${msg ? `<p style="color:red; font-size:12px; margin-top:10px">${msg}</p>` : ''}
-                </div>
-            `;
+                    ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}
+                </div>`;
         }
 
         function renderSchedule() {
@@ -356,16 +384,12 @@
             }
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-
             days.forEach(day => {
                 const dayObj = dbData.perm[day];
                 if (!dayObj) return;
-
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 if (!text) return;
-
                 text = text.replace(/<[^>]*>?/gm, ''); 
-
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `<div class="day-header">${day}</div><div class="lesson-text">${text}</div>`;
@@ -373,49 +397,83 @@
             });
         }
 
-        // --- АДМИНКА ---
-        function login() {
-            if (document.getElementById('adm-pass').value === ADMIN_PASS) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('dashboard-screen').style.display = 'block';
-                document.getElementById('login-error').style.display = 'none';
+        // --- ЛОГИКА АДМИНКИ ---
+        function setEditMode(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + mode).classList.add('active');
+            
+            document.getElementById('edit-mode-full').style.display = mode === 'full' ? 'block' : 'none';
+            document.getElementById('edit-mode-pair').style.display = mode === 'pair' ? 'block' : 'none';
+        }
+
+        function loadDayText() {
+            const d = document.getElementById('ed-day').value;
+            const w = document.getElementById('ed-week').value;
+            let txt = "";
+            if (dbData.perm[d]) {
+                txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
+            }
+            document.getElementById('ed-text').value = txt;
+        }
+
+        // === ЛОГИКА СОХРАНЕНИЯ ОДНОЙ ПАРЫ ===
+        function saveSinglePair() {
+            // 1. Берем текущий полный текст дня
+            loadDayText(); // Обновляет hidden textarea актуальными данными из памяти
+            let currentFullText = document.getElementById('ed-text').value;
+            
+            const pairNum = document.getElementById('ed-pair-num').value;
+            const subj = document.getElementById('ed-pair-subj').value.trim();
+            const type = document.getElementById('ed-pair-type').value.trim();
+            const room = document.getElementById('ed-pair-room').value.trim();
+            const teach = document.getElementById('ed-pair-teach').value.trim();
+
+            if (!subj) return tg.showAlert("Введите название предмета!");
+
+            // 2. Формируем новый блок текста для пары
+            // Пример:
+            // 09:00 - 10:30
+            // 1 пара
+            // <b>Математика</b>
+            // Лекция
+            // Ауд: 101
+            // Иванов И.И.
+            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
+            if (type) newPairBlock += `\n${type}`;
+            if (room) newPairBlock += `\nАуд: ${room}`;
+            if (teach) newPairBlock += `\n${teach}`;
+            newPairBlock += "\n\n";
+
+            // 3. Заменяем в полном тексте (Или добавляем, если нет)
+            // Ищем строку вида "09:00 - ... N пара"
+            const timeStart = PAIR_TIMES[pairNum].split(' - ')[0]; // "09:00"
+            const regex = new RegExp(`${timeStart}.*?${pairNum} пара[\\s\\S]*?(?=(\\d{2}:\\d{2} -|\\Z))`, "g");
+            
+            if (regex.test(currentFullText)) {
+                // Если пара уже есть - заменяем
+                currentFullText = currentFullText.replace(regex, newPairBlock);
             } else {
-                document.getElementById('login-error').style.display = 'block';
+                // Если нет - добавляем в конец (просто, но работает)
+                // Можно улучшить сортировку, но для простоты - append
+                currentFullText += newPairBlock;
             }
-        }
-        function logout() {
-            document.getElementById('dashboard-screen').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('adm-pass').value = '';
-        }
-        function openAdminSection(sectionId) {
-            document.getElementById('dashboard-screen').style.display = 'none';
-            document.getElementById('section-' + sectionId).classList.add('active');
-        }
-        function closeAdminSection() {
-            document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
-                 document.getElementById('dashboard-screen').style.display = 'block';
-            }
+
+            // 4. Обновляем поле и отправляем
+            document.getElementById('ed-text').value = currentFullText;
+            submitEditSchedule(); // Используем ту же функцию отправки
         }
 
-        // --- ОТПРАВКА ДАННЫХ БОТУ ---
-        function sendDataToBot(payload) {
-            tg.sendData(JSON.stringify(payload));
-        }
-
-        function requestData() {
-            sendDataToBot({ action: "request_schedule_link" });
-        }
+        // --- ВЗАИМОДЕЙСТВИЕ С БОТОМ ---
+        function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
+        function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
 
         function submitHomework() {
             const dateStr = document.getElementById('hw-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
             const [y, m, d] = dateStr.split('-'); 
-            const fmtDate = `${d}.${m}.${y}`;
             sendDataToBot({
                 action: "add_homework",
-                date: fmtDate,
+                date: `${d}.${m}.${y}`,
                 pair: document.getElementById('hw-pair').value,
                 subject: document.getElementById('hw-subject').value,
                 text: document.getElementById('hw-text').value,
@@ -436,27 +494,62 @@
             const dateStr = document.getElementById('note-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
             const [y, m, d] = dateStr.split('-');
-            const fmtDate = `${d}.${m}.${y}`;
             sendDataToBot({
                 action: "add_note",
-                date: fmtDate,
+                date: `${d}.${m}.${y}`,
                 text: document.getElementById('note-text').value
             });
         }
 
         function submitBroadcast() {
-            const text = document.getElementById('bc-text').value;
-            if(!text) return tg.showAlert("Введите текст");
             sendDataToBot({
                 action: "broadcast",
-                text: text,
+                text: document.getElementById('bc-text').value,
                 has_photo: document.getElementById('bc-photo').checked
             });
         }
 
         function sendAction(actName) {
-            if(confirm("Вы уверены?")) {
-                sendDataToBot({ action: actName });
+            if(confirm("Вы уверены?")) sendDataToBot({ action: actName });
+        }
+
+        // --- ПРОЧЕЕ ---
+        function switchTab(tabId, btn) {
+            closeAdminSection();
+            document.querySelectorAll('.page').forEach(el => {
+                if(!el.classList.contains('modal')) el.classList.remove('active');
+            });
+            document.getElementById(tabId + '-page').classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+        }
+        function setWeek(type) {
+            currentWeek = type;
+            document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
+            document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
+            renderSchedule();
+        }
+        function login() {
+            if (document.getElementById('adm-pass').value === ADMIN_PASS) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                document.getElementById('login-error').style.display = 'none';
+            } else { document.getElementById('login-error').style.display = 'block'; }
+        }
+        function logout() {
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('adm-pass').value = '';
+        }
+        function openAdminSection(sectionId) {
+            if (sectionId === 'edit-sch') loadDayText(); // Подгружаем текст при открытии
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('section-' + sectionId).classList.add('active');
+        }
+        function closeAdminSection() {
+            document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
+            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
+                 document.getElementById('dashboard-screen').style.display = 'block';
             }
         }
     </script>
