@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
+    <!-- Библиотека для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -45,35 +46,21 @@
         }
 
         .section-title {
-            font-size: 13px;
-            text-transform: uppercase;
-            color: var(--text-sec);
-            margin: 20px 0 8px 16px;
+            font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 20px 0 8px 16px;
         }
 
         /* --- ЭЛЕМЕНТЫ ВВОДА --- */
         input:not([type="checkbox"]), select, textarea {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid transparent;
-            background: #f2f2f7;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            color: var(--text-main);
-            outline: none;
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        input[type="checkbox"] {
-            width: 24px; height: 24px; margin: 0; cursor: pointer;
-            -webkit-appearance: checkbox; appearance: checkbox; accent-color: var(--primary);
+            width: 100%; padding: 14px; border: 1px solid transparent; background: #f2f2f7;
+            border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px;
+            color: var(--text-main); outline: none; user-select: text !important;
+            -webkit-user-select: text !important; -webkit-appearance: none; appearance: none;
         }
         
+        input[type="checkbox"] { 
+            width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary); 
+        }
+
         select {
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
@@ -82,34 +69,28 @@
         }
         
         input:focus, select:focus, textarea:focus {
-            background: #fff;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
+            background: #fff; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
         }
         
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
         /* --- КНОПКИ --- */
         .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: var(--radius);
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            margin-bottom: 8px;
-            transition: opacity 0.2s, transform 0.1s;
-            user-select: none;
+            width: 100%; padding: 14px; border: none; border-radius: var(--radius);
+            font-size: 17px; font-weight: 600; cursor: pointer; text-align: center;
+            margin-bottom: 8px; transition: opacity 0.2s, transform 0.1s; user-select: none;
         }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
+        .add-option-btn { 
+            font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; 
+            text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; 
+        }
         
-        /* --- СПЕЦ. ЭЛЕМЕНТЫ --- */
+        /* --- СПЕЦ ЭЛЕМЕНТЫ --- */
         .global-notice-banner {
             background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
             color: white; padding: 15px; border-radius: var(--radius);
@@ -122,41 +103,14 @@
         .countdown-card {
             background: #333; color: #fff; text-align: center;
             padding: 12px; margin-bottom: 15px; display: none;
-            border-radius: var(--radius);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-radius: var(--radius); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .countdown-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .countdown-value { font-size: 24px; font-weight: 800; color: #ffd60a; }
-        .countdown-days { font-size: 14px; font-weight: normal; color: #fff; }
 
-        .refresh-hint {
-            background: var(--primary); color: white; border-radius: 10px;
-            text-align: center; font-size: 14px; font-weight: 600;
-            padding: 12px; cursor: pointer; margin-bottom: 5px;
-            box-shadow: 0 2px 5px rgba(0,122,255,0.2);
-            user-select: none;
-        }
-        .last-updated, .hint-text {
-            font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; margin-top: 0;
-        }
-
-        /* --- ОПРОСЫ (НОВОЕ) --- */
-        .poll-option-result {
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .poll-bar-bg {
-            background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden;
-        }
-        .poll-bar-fill {
-            background: var(--primary); height: 100%; width: 0%; transition: width 0.5s;
-        }
-        .poll-voters {
-            font-size: 12px; color: #888; margin-top: 2px;
-        }
-        .add-option-btn {
-            font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px;
-        }
+        .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
+        .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        .poll-voters { font-size: 11px; color: #8e8e93; margin-top: 2px; }
 
         /* --- АДМИН МЕНЮ --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -182,7 +136,6 @@
         .homework-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .hw-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .hw-item { font-size: 13px; margin-bottom: 4px; padding: 6px; background: #f9f9f9; border-radius: 6px; }
-        
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
         
         .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
@@ -197,11 +150,12 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
-        /* --- ОБЩЕЕ --- */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
+        .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
+        .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
         
         #confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
         #confirm-box { background: #fff; width: 80%; max-width: 320px; padding: 20px; border-radius: 14px; text-align: center; }
@@ -225,31 +179,33 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 1: ПРОСМОТР -->
+    <!-- 1. ПРОСМОТР РАСПИСАНИЯ -->
     <div id="view-page" class="page active">
         <div id="global-notice" class="global-notice-banner">
-            <span class="notice-icon">🔔</span>
-            <div class="notice-text" id="global-notice-text"></div>
+            <span class="notice-icon">🔔</span><div class="notice-text" id="global-notice-text"></div>
         </div>
-
         <div id="countdown-banner" class="countdown-card">
             <div class="countdown-label" id="cd-label">До события:</div>
-            <span class="countdown-value" id="cd-days">0</span>
-            <span class="countdown-days">дн.</span>
+            <span class="countdown-value" id="cd-days">0</span> <span style="font-size:14px">дн.</span>
         </div>
-
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
         <div class="last-updated" id="last-updated-text">Данные еще не загружены</div>
-        
         <div class="week-toggle">
             <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
-        
         <div id="schedule-container"></div>
     </div>
 
-    <!-- СТРАНИЦА 2: ДЗ -->
+    <!-- 2. СЕССИЯ -->
+    <div id="session-page" class="page">
+        <div class="section-title">Расписание сессии</div>
+        <div class="card">
+            <div id="session-content" class="lesson-text" style="min-height: 100px;">Расписание сессии еще не опубликовано.</div>
+        </div>
+    </div>
+
+    <!-- 3. ДЗ -->
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
@@ -262,23 +218,22 @@
         <button class="btn btn-primary" onclick="submitHomework()">Сохранить задание</button>
     </div>
 
-    <!-- СТРАНИЦА 3: АДМИН -->
+    <!-- 4. АДМИН -->
     <div id="admin-page" class="page">
-        <!-- Экран входа -->
-        <div id="login-screen" style="text-align: center; margin-top: 50px;">
+        <!-- Экран доступа запрещен -->
+        <div id="access-denied" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
-            <h3>Панель Администратора</h3>
-            <div class="card"><input type="password" id="adm-pass" placeholder="пароль" style="text-align: center;"></div>
-            <button class="btn btn-primary" onclick="login()">Войти</button>
-            <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
+            <h3>Доступ ограничен</h3>
+            <p style="color:#888;">Эта панель только для администратора.</p>
         </div>
 
-        <!-- Дашборд -->
+        <!-- Меню Админа -->
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Управление</div>
             <div class="admin-grid">
                 <div class="admin-tile" onclick="openAdminSection('edit-sch')"><span>✏️</span>Редактор</div>
                 <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>Упр. ДЗ</div>
+                <div class="admin-tile" onclick="openAdminSection('edit-session')"><span>🎓</span>Сессия</div>
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
                 <div class="admin-tile" onclick="openAdminSection('add-holiday')"><span>🎉</span>Выходной</div>
                 <div class="admin-tile" onclick="openAdminSection('countdown-settings')"><span>⏳</span>Таймер</div>
@@ -287,143 +242,90 @@
                 <div class="admin-tile" onclick="openAdminSection('broadcast')"><span>📢</span>Рассылка</div>
                 <div class="admin-tile" onclick="sendAction('reset_temp')"><span>🗑</span>Сброс</div>
             </div>
-            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
-        <!-- СЕКЦИИ АДМИНКИ -->
-        
-        <!-- 0. ОПРОСЫ (НОВОЕ) -->
+        <!-- Секции Админки -->
         <div id="section-polls" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Опросы</h3>
-            
-            <div class="tabs-header">
-                <div class="tab-btn active" id="tab-poll-create" onclick="switchPollTab('create')">Создать</div>
-                <div class="tab-btn" id="tab-poll-results" onclick="switchPollTab('results')">Результаты</div>
-            </div>
-
-            <!-- Создание -->
-            <div id="poll-create-view">
-                <div class="card">
-                    <label style="font-size: 12px; color: #888;">Вопрос:</label>
-                    <textarea id="poll-question" placeholder="Например: Переносим пару?"></textarea>
-                    
-                    <label style="font-size: 12px; color: #888; margin-top: 10px; display: block;">Варианты ответа:</label>
-                    <div id="poll-options-container">
-                        <input type="text" class="poll-option-input" placeholder="Вариант 1">
-                        <input type="text" class="poll-option-input" placeholder="Вариант 2">
-                    </div>
-                    <div class="add-option-btn" onclick="addPollOption()">+ Добавить вариант</div>
-                </div>
-                <button class="btn btn-primary" onclick="submitPoll()">Создать и отправить</button>
-            </div>
-
-            <!-- Результаты -->
-            <div id="poll-results-view" style="display: none;">
-                <div id="polls-list-container">
-                    <p style="text-align: center; color: #888;">Загрузка опросов...</p>
-                </div>
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Опросы</h3>
+            <div class="tabs-header"><div class="tab-btn active" id="tab-poll-create" onclick="switchPollTab('create')">Создать</div><div class="tab-btn" id="tab-poll-results" onclick="switchPollTab('results')">Результаты</div></div>
+            <div id="poll-create-view"><div class="card"><label style="font-size:12px;color:#888;">Вопрос:</label><textarea id="poll-question" placeholder="Вопрос..."></textarea><label style="font-size:12px;color:#888;display:block;margin-top:10px;">Варианты:</label><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="add-option-btn" onclick="addPollOption()">+ Добавить вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Создать</button></div>
+            <div id="poll-results-view" style="display:none;">
+                <button class="btn btn-secondary" onclick="requestData()" style="margin-bottom:15px;">🔄 Обновить данные</button>
+                <div id="polls-list-container"></div>
             </div>
         </div>
 
-        <!-- 1. Редактор расписания -->
+        <div id="section-edit-session" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Расписание Сессии</h3>
+            <div class="card"><label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><input type="checkbox" id="session-active"><span>Включить вкладку для всех</span></label><textarea id="session-text" rows="10" placeholder="Текст..."></textarea></div>
+            <button class="btn btn-primary" onclick="saveSession()">Сохранить</button>
+        </div>
+
         <div id="section-edit-sch" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Редактор расписания</h3>
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Редактор</h3>
             <div class="card"><div style="display: flex; gap: 10px;"><select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Понедельник</option><option value="Вторник">Вторник</option><option value="Среда">Среда</option><option value="Четверг">Четверг</option><option value="Пятница">Пятница</option></select><select id="ed-week" onchange="loadDayText()"><option value="odd">Нечетная</option><option value="even">Четная</option></select></div></div>
             <div class="tabs-header"><div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div><div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div></div>
             <div id="edit-mode-pair"><div class="card"><select id="ed-pair-num"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select><input type="text" id="ed-pair-subj" placeholder="Предмет"><input type="text" id="ed-pair-type" placeholder="Тип"><input type="text" id="ed-pair-room" placeholder="Аудитория"><input type="text" id="ed-pair-teach" placeholder="Преподаватель"></div><button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button><button class="btn btn-danger" onclick="deleteSinglePair()">Удалить эту пару</button></div>
             <div id="edit-mode-full" style="display: none;"><div class="card"><textarea id="ed-text" rows="10" placeholder="Полный текст..."></textarea></div><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button></div>
         </div>
 
-        <!-- 2. Управление ДЗ -->
         <div id="section-manage-hw" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Управление ДЗ</h3>
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Управление ДЗ</h3>
             <div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select></div>
-            <div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text" placeholder="Текст задания..."></textarea></div>
+            <div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text" placeholder="Текст..."></textarea></div>
             <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button>
         </div>
 
-        <!-- 3. Таймер -->
         <div id="section-countdown-settings" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Настройки Таймера</h3>
-            <div class="card">
-                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><input type="checkbox" id="cd-active" style="width:20px; height:20px; margin:0;"><span>Включить счетчик</span></label>
-                <label style="font-size:12px; color:#888;">Текст заголовка:</label><input type="text" id="cd-title" placeholder="До сессии осталось">
-                <label style="font-size:12px; color:#888; margin-top:10px;">Дата события:</label><input type="date" id="cd-date">
-            </div>
-            <button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button>
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Таймер</h3>
+            <div class="card"><label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><input type="checkbox" id="cd-active"><span>Включить</span></label><input type="text" id="cd-title" placeholder="Заголовок"><input type="date" id="cd-date"></div>
+            <button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button>
         </div>
 
-        <!-- 4. Уведомление -->
         <div id="section-global-notice" class="modal page">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <h3>Уведомление</h3>
-            <div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div>
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Уведомление</h3>
+            <div class="card"><textarea id="global-notice-input" placeholder="Текст..."></textarea></div>
             <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div>
         </div>
 
-        <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Временное изменение</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
-        <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label style="font-size:12px; color:#888;">С:</label><input type="date" id="holiday-date-start"><label style="font-size:12px; color:#888;">По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
-        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="bc-photo" style="width:20px; height:20px; margin:0;"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
+        <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Заметка</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
+        <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label style="font-size:12px;color:#888;">С:</label><input type="date" id="holiday-date-start"><label style="font-size:12px;color:#888;">По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
+        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="bc-photo"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
     <div class="nav-bar">
         <div class="nav-item active" onclick="switchTab('view', this)"><span class="nav-icon">📅</span>Расписание</div>
         <div class="nav-item" onclick="switchTab('hw', this)"><span class="nav-icon">✍️</span>Д/З</div>
-        <div class="nav-item" onclick="switchTab('admin', this)"><span class="nav-icon">⚙️</span>Админ</div>
+        <div class="nav-item" id="nav-session" style="display:none;" onclick="switchTab('session', this)"><span class="nav-icon">🎓</span>Сессия</div>
+        <div class="nav-item" id="nav-admin" style="display:none;" onclick="switchTab('admin', this)"><span class="nav-icon">⚙️</span>Админ</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        tg.ready(); tg.expand();
 
-        const ADMIN_PASS = "0451"; 
-        let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [] };
-        let currentWeek = 'odd';
-        let realCurrentWeek = 'odd'; 
-        let confirmResolve = null;
-        let isNextWeek = false; 
-        let ignoreHolidays = false; 
-
+        let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [], aid: null, session: {} };
+        let currentWeek = 'odd'; let realCurrentWeek = 'odd'; let confirmResolve = null; let isNextWeek = false; let ignoreHolidays = false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
-        function getWeekNumber(d) {
-            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-        }
-
+        function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
+        
         const now = new Date();
-        const realWeekNum = getWeekNumber(now);
-        realCurrentWeek = (realWeekNum % 2 === 0) ? 'even' : 'odd';
-
+        realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
         let checkDate = new Date(now);
         if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
         else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
-
-        const displayedWeekNum = getWeekNumber(checkDate);
-        currentWeek = (displayedWeekNum % 2 === 0) ? 'even' : 'odd';
+        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
         setWeek(currentWeek);
 
-        document.getElementById('hw-date').valueAsDate = now;
-        document.getElementById('adm-hw-date').valueAsDate = now;
-        document.getElementById('note-date').valueAsDate = now;
-        document.getElementById('holiday-date-start').valueAsDate = now;
+        document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
 
         function updateWeekButtons() {
-            const oddBtn = document.getElementById('btn-odd');
-            const evenBtn = document.getElementById('btn-even');
+            const oddBtn = document.getElementById('btn-odd'); const evenBtn = document.getElementById('btn-even');
             oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
-            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } 
-            else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
-        }
-        updateWeekButtons();
+            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
+        } updateWeekButtons();
 
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
@@ -433,186 +335,103 @@
                 const binaryString = window.atob(rawData);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-                
                 let decodedString;
-                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } 
-                catch (e) { decodedString = new TextDecoder().decode(bytes); }
-                
+                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } catch (e) { decodedString = new TextDecoder().decode(bytes); }
                 const parsed = JSON.parse(decodedString);
                 if (parsed.p) {
-                    dbData.perm = unminifyPerm(parsed.p);
-                    if (parsed.h) dbData.homework = parsed.h;
-                    if (parsed.t) dbData.temporary = parsed.t;
-                    if (parsed.n) dbData.notice = parsed.n;
-                    if (parsed.c) dbData.countdown = parsed.c;
-                    if (parsed.P) dbData.polls = parsed.P; // Polls
+                    dbData.perm = unminifyPerm(parsed.p); if (parsed.h) dbData.homework = parsed.h; if (parsed.t) dbData.temporary = parsed.t;
+                    if (parsed.n) dbData.notice = parsed.n; if (parsed.c) dbData.countdown = parsed.c; 
+                    if (parsed.P) dbData.polls = parsed.P; if(parsed.aid) dbData.aid = parsed.aid;
+                    if (parsed.s) dbData.session = parsed.s;
                 } else { dbData = parsed; }
-                
-                const updateDate = new Date();
-                const updateTimeStr = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const updateDateStr = updateDate.toLocaleDateString();
-                document.getElementById('last-updated-text').innerText = `Обновлено в последний раз: ${updateDateStr} ${updateTimeStr}`;
-
-                renderSchedule();
-                renderGlobalNotice();
-                renderCountdown();
+                const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                renderSchedule(); renderGlobalNotice(); renderCountdown(); checkAuth(); renderSession();
             } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
         } else { renderEmptyState(); }
 
         function unminifyPerm(minifiedP) {
-            const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
-            const fullPerm = {};
-            for (let dKey in minifiedP) {
-                fullPerm[daysMap[parseInt(dKey)]] = { "odd": minifiedP[dKey].o || "", "even": minifiedP[dKey].e || "" };
-            }
-            return fullPerm;
+            const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]; const fullPerm = {};
+            for (let dKey in minifiedP) { fullPerm[daysMap[parseInt(dKey)]] = { "odd": minifiedP[dKey].o || "", "even": minifiedP[dKey].e || "" }; } return fullPerm;
         }
 
-        // --- ЛОГИКА ОПРОСОВ ---
-        function switchPollTab(tab) {
-            document.getElementById('tab-poll-create').classList.remove('active');
-            document.getElementById('tab-poll-results').classList.remove('active');
-            document.getElementById('poll-create-view').style.display = 'none';
-            document.getElementById('poll-results-view').style.display = 'none';
-            
-            document.getElementById('tab-poll-' + tab).classList.add('active');
-            document.getElementById('poll-' + tab + '-view').style.display = 'block';
-
-            if (tab === 'results') renderPolls();
-        }
-
-        function addPollOption() {
-            const container = document.getElementById('poll-options-container');
-            const count = container.children.length + 1;
-            if (count > 10) return tg.showAlert("Максимум 10 вариантов");
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'poll-option-input';
-            input.placeholder = 'Вариант ' + count;
-            container.appendChild(input);
-        }
-
-        function submitPoll() {
-            const question = document.getElementById('poll-question').value.trim();
-            if (!question) return tg.showAlert("Введите вопрос");
-            
-            const options = [];
-            document.querySelectorAll('.poll-option-input').forEach(input => {
-                const val = input.value.trim();
-                if (val) options.push(val);
-            });
-
-            if (options.length < 2) return tg.showAlert("Минимум 2 варианта ответа");
-
-            sendDataToBot({
-                action: "create_poll",
-                question: question,
-                options: options
-            });
-        }
-
-        function renderPolls() {
-            const container = document.getElementById('polls-list-container');
-            container.innerHTML = "";
-
-            if (!dbData.polls || dbData.polls.length === 0) {
-                container.innerHTML = "<p style='text-align: center; color: #888;'>Нет активных опросов</p>";
-                return;
-            }
-
-            dbData.polls.forEach(poll => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                let html = `<div style="font-weight: bold; margin-bottom: 10px;">${poll.q}</div>`;
-                
-                // Calculate totals if needed, assumes poll.r (results) structure like { "User": 0, "User2": 1 }
-                // Or simplified: poll.o = ["Opt1", "Opt2"], poll.v = { "UserId": optionIndex }
-                
-                const votes = poll.v || {};
-                const totalVotes = Object.keys(votes).length;
-                
-                // Count votes per option
-                const counts = new Array(poll.o.length).fill(0);
-                const voters = new Array(poll.o.length).fill().map(() => []);
-
-                for (let uid in votes) {
-                    const optIdx = votes[uid].idx; // Assuming stored as { idx: 0, name: "Name" }
-                    if (counts[optIdx] !== undefined) {
-                        counts[optIdx]++;
-                        voters[optIdx].push(votes[uid].name);
-                    }
+        function checkAuth() {
+            if (dbData.aid && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                if (String(tg.initDataUnsafe.user.id) === String(dbData.aid)) {
+                    document.getElementById('nav-admin').style.display = 'block';
+                    document.getElementById('access-denied').style.display = 'none';
+                    document.getElementById('dashboard-screen').style.display = 'block';
+                    if(dbData.countdown) { document.getElementById('cd-active').checked = dbData.countdown.active; document.getElementById('cd-title').value = dbData.countdown.title || ""; document.getElementById('cd-date').value = dbData.countdown.date || ""; }
+                    if(dbData.notice) document.getElementById('global-notice-input').value = dbData.notice;
+                    if(dbData.session) { document.getElementById('session-text').value = dbData.session.text || ""; document.getElementById('session-active').checked = dbData.session.active; }
                 }
-
-                poll.o.forEach((optText, idx) => {
-                    const count = counts[idx];
-                    const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-                    
-                    html += `
-                        <div class="poll-option-result">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span>${optText}</span>
-                                <span>${count} (${percent}%)</span>
-                            </div>
-                            <div class="poll-bar-bg">
-                                <div class="poll-bar-fill" style="width: ${percent}%"></div>
-                            </div>
-                            <div class="poll-voters">${voters[idx].join(', ')}</div>
-                        </div>
-                    `;
-                });
-
-                card.innerHTML = html;
-                container.appendChild(card);
-            });
+            }
+        }
+        function renderSession() {
+            if (dbData.session && dbData.session.active) {
+                document.getElementById('nav-session').style.display = 'block';
+                document.getElementById('session-content').innerText = dbData.session.text || "Нет данных";
+            } else { document.getElementById('nav-session').style.display = 'none'; }
+        }
+        function saveSession() {
+             const txt = document.getElementById('session-text').value;
+             const act = document.getElementById('session-active').checked;
+             sendDataToBot({ action: "update_session", text: txt, active: act });
         }
 
-        // --- ЛОГИКА ТАЙМЕРА ---
         function renderCountdown() {
-            const banner = document.getElementById('countdown-banner');
-            const data = dbData.countdown;
+            const banner = document.getElementById('countdown-banner'); const data = dbData.countdown;
             if (!data || !data.active) { banner.style.display = 'none'; return; }
-            
-            document.getElementById('cd-active').checked = data.active;
-            document.getElementById('cd-title').value = data.title || "";
-            document.getElementById('cd-date').value = data.date || "";
-
-            const target = new Date(data.date);
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const target = new Date(data.date); const today = new Date(); today.setHours(0,0,0,0);
             const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24)); 
-
-            document.getElementById('cd-label').innerText = (data.title || "До события") + ":";
-            document.getElementById('cd-days').innerText = diffDays;
-            banner.style.display = 'block';
+            document.getElementById('cd-label').innerText = (data.title || "До события") + ":"; document.getElementById('cd-days').innerText = diffDays; banner.style.display = 'block';
         }
         function saveCountdown() {
-            const active = document.getElementById('cd-active').checked;
-            const title = document.getElementById('cd-title').value;
-            const date = document.getElementById('cd-date').value;
-            if (active && !date) return tg.showAlert("Выберите дату события");
-            sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
+            const active = document.getElementById('cd-active').checked; const title = document.getElementById('cd-title').value; const date = document.getElementById('cd-date').value;
+            if (active && !date) return tg.showAlert("Дата?"); sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
         }
 
-        // --- УВЕДОМЛЕНИЕ ---
         function renderGlobalNotice() {
             const banner = document.getElementById('global-notice');
-            if (dbData.notice && dbData.notice.trim() !== "") {
-                document.getElementById('global-notice-text').innerText = dbData.notice;
-                banner.style.display = 'block';
-                document.getElementById('global-notice-input').value = dbData.notice;
-            } else { banner.style.display = 'none'; document.getElementById('global-notice-input').value = ""; }
+            if (dbData.notice && dbData.notice.trim() !== "") { document.getElementById('global-notice-text').innerText = dbData.notice; banner.style.display = 'block'; } else { banner.style.display = 'none'; }
         }
         function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
         function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
 
-        // --- ДЗ И РАСПИСАНИЕ ---
-        function getDateKey(dateElemId) { const dateStr = document.getElementById(dateElemId).value; if(!dateStr) return null; const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; }
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            if (!dbData.perm || Object.keys(dbData.perm).length === 0) { container.innerHTML = "<div class='empty-state'>Расписание пустое</div>"; return; }
+            container.innerHTML = ""; const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+            let hasHolidays = false;
+            days.forEach((day, idx) => {
+                const dayObj = dbData.perm[day]; if (!dayObj) return;
+                let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
+                const dateKey = getDateForDay(idx);
+                const note = dbData.temporary ? dbData.temporary[dateKey] : null; const hasHw = dbData.homework && dbData.homework[dateKey];
+                
+                if (note && note.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
+                    hasHolidays = true; const reason = note.split("\n")[2] || ""; 
+                    container.innerHTML += `<div class='card holiday-card'><div class='holiday-title'>🎉 ВЫХОДНОЙ <span style='font-size:12px; margin-left:auto; color:#2e7d32'>${dateKey}</span></div><div class='holiday-reason'>${reason.replace('📍 Причина: ', '')}</div></div>`; return; 
+                }
+                if (!text && !note && !hasHw) return; text = text.replace(/<[^>]*>?/gm, ''); 
+                let html = `<div class='card'><div class='day-header'><span>${day}</span><span class='date-badge'>${dateKey}</span></div>`;
+                if (note) html += `<div class='note-block'>📌 <b>Внимание:</b> ${note}</div>`;
+                html += `<div class='lesson-text'>${text}</div>`;
+                if (hasHw) { html += `<div class='homework-block'><div class='hw-title'>Домашнее задание:</div>`; const dayHw = dbData.homework[dateKey]; for (let pair in dayHw) { html += `<div class='hw-item'><b>${pair} пара</b> (${dayHw[pair].subject || 'Предмет'}): ${dayHw[pair].text}</div>`; } html += `</div>`; }
+                html += `</div>`; container.innerHTML += html;
+            });
+            if (hasHolidays) { const btn = document.createElement('div'); btn.className = 'force-show-btn'; btn.innerText = '👁 Показать скрытое расписание'; btn.onclick = function() { ignoreHolidays = true; renderSchedule(); }; container.appendChild(btn); }
+        }
+        function getDateForDay(dayIndex) {
+            const d = new Date(); const currentDay = d.getDay() || 7; const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
+            d.setDate(d.getDate() - currentDay + targetDay); if (currentWeek !== realCurrentWeek) d.setDate(d.getDate() + 7);
+            return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+        }
+        function getDateKey(id) { const s = document.getElementById(id).value; if(!s) return null; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; }
+        
         async function submitHomework() {
-            const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Выберите дату");
+            const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Дата?");
             const pair = document.getElementById('hw-pair').value; const newText = document.getElementById('hw-text').value.trim(); const newSubj = document.getElementById('hw-subject').value.trim();
-            if(!newText) return tg.showAlert("Введите текст");
+            if(!newText) return tg.showAlert("Текст?");
             let existingHw = null; if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) existingHw = dbData.homework[dateKey][pair];
             let finalText = newText;
             if (existingHw) { const shouldAppend = await showConfirmModal(existingHw.text); if (shouldAppend) finalText = existingHw.text + "\n\n" + newText; else return; }
@@ -620,169 +439,79 @@
         }
         function showConfirmModal(oldText) { return new Promise((resolve) => { confirmResolve = resolve; document.getElementById('confirm-old-text').innerText = oldText; document.getElementById('confirm-modal').style.display = 'flex'; }); }
         function resolveConfirm(result) { document.getElementById('confirm-modal').style.display = 'none'; if (confirmResolve) confirmResolve(result); }
-        function loadAdminHw() {
-            const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value;
-            if (dbData.homework && dbData.homework[dateKey] && dbData.homework[dateKey][pair]) {
-                const hw = dbData.homework[dateKey][pair]; document.getElementById('adm-hw-subj').value = hw.subject || ""; document.getElementById('adm-hw-text').value = hw.text || "";
-            } else { document.getElementById('adm-hw-subj').value = ""; document.getElementById('adm-hw-text').value = ""; }
+
+        function switchPollTab(tab) {
+            document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active');
+            document.getElementById('poll-create-view').style.display = 'none'; document.getElementById('poll-results-view').style.display = 'none';
+            document.getElementById('tab-poll-' + tab).classList.add('active'); document.getElementById('poll-' + tab + '-view').style.display = 'block';
+            if (tab === 'results') renderPolls();
         }
-        function submitAdminHw() {
-            const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value; const text = document.getElementById('adm-hw-text').value.trim(); const subj = document.getElementById('adm-hw-subj').value.trim();
-            if(!text) return tg.showAlert("Пусто"); sendDataToBot({ action: "add_homework", date: dateKey, pair: pair, subject: subj, text: text, has_photo: false });
+        function addPollOption() { const c = document.getElementById('poll-options-container'); if(c.children.length>9) return; const i = document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант'; c.appendChild(i); }
+        function submitPoll() {
+            const q = document.getElementById('poll-question').value.trim(); if(!q) return tg.showAlert("Вопрос?");
+            const opts = []; document.querySelectorAll('.poll-option-input').forEach(i => { if(i.value.trim()) opts.push(i.value.trim()); });
+            if(opts.length<2) return tg.showAlert("Мин 2 варианта"); sendDataToBot({ action: "create_poll", question: q, options: opts });
         }
-        function deleteAdminHw() { const dateKey = getDateKey('adm-hw-date'); const pair = document.getElementById('adm-hw-pair').value; if(confirm("Удалить?")) sendDataToBot({ action: "delete_homework", date: dateKey, pair: pair }); }
-        
-        function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
-        function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
-        function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
-        function saveSinglePair() {
-            loadDayText(); let currentFullText = document.getElementById('ed-text').value || "";
-            const pairNum = parseInt(document.getElementById('ed-pair-num').value); const subj = document.getElementById('ed-pair-subj').value.trim();
-            const type = document.getElementById('ed-pair-type').value.trim(); const room = document.getElementById('ed-pair-room').value.trim(); const teach = document.getElementById('ed-pair-teach').value.trim();
-            if (!subj) return tg.showAlert("Предмет?");
-            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`; if(type) newPairBlock+=`\n${type}`; if(room) newPairBlock+=`\nАуд: ${room}`; if(teach) newPairBlock+=`\n${teach}`;
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m); let pairMap = {};
-            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
-            pairMap[pairNum] = newPairBlock;
-            let sortedText = ""; Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; });
-            document.getElementById('ed-text').value = sortedText.trim(); submitEditSchedule(); 
+        function renderPolls() {
+            const c = document.getElementById('polls-list-container'); c.innerHTML = "";
+            if(!dbData.polls || !dbData.polls.length) { c.innerHTML = "<p style='text-align:center;color:#999'>Нет опросов</p>"; return; }
+            dbData.polls.forEach(p => {
+                let html = `<div class='card'><div style='font-weight:bold;margin-bottom:10px;'>${p.q}</div>`;
+                const votes = p.v || {}; const total = Object.keys(votes).length; const counts = new Array(p.o.length).fill(0); const voters = new Array(p.o.length).fill().map(()=>[]);
+                for(let uid in votes) { const idx = votes[uid].idx; if(counts[idx]!==undefined) { counts[idx]++; voters[idx].push(votes[uid].name); } }
+                p.o.forEach((opt, i) => { const pct = total>0 ? Math.round((counts[i]/total)*100) : 0; html+=`<div style='margin-bottom:10px;font-size:14px;'><div style='display:flex;justify-content:space-between'><span>${opt}</span><span>${counts[i]} (${pct}%)</span></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div class='poll-voters'>${voters[i].join(', ')}</div></div>`; });
+                html+="</div>"; c.innerHTML += html;
+            });
         }
-        function deleteSinglePair() {
-            if(!confirm("Удалить?")) return; loadDayText(); let currentFullText = document.getElementById('ed-text').value || ""; const pairNum = parseInt(document.getElementById('ed-pair-num').value);
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m); let pairMap = {};
-            parts.forEach(part => { if (!part.trim()) return; const match = part.match(/\n(\d) пара/); if (match) pairMap[parseInt(match[1])] = part.trim(); });
-            if (pairMap[pairNum]) { delete pairMap[pairNum]; let sortedText = ""; Object.keys(pairMap).map(Number).sort((a, b) => a - b).forEach(key => { sortedText += pairMap[key] + "\n\n"; }); document.getElementById('ed-text').value = sortedText.trim(); submitEditSchedule(); } 
-            else { tg.showAlert("Не найдено"); }
+
+        // Standard Admin Functions
+        function loadAdminHw() { 
+            const d = getDateKey('adm-hw-date'); const p = document.getElementById('adm-hw-pair').value; 
+            if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) { const h = dbData.homework[d][p]; document.getElementById('adm-hw-subj').value = h.subject||""; document.getElementById('adm-hw-text').value = h.text||""; } 
+            else { document.getElementById('adm-hw-subj').value=""; document.getElementById('adm-hw-text').value=""; }
         }
-        function submitNote() { const dateStr = document.getElementById('note-date').value; if(!dateStr) return tg.showAlert("Дата?"); const [y, m, d] = dateStr.split('-'); sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value }); }
+        function submitAdminHw() { const d = getDateKey('adm-hw-date'); const p = document.getElementById('adm-hw-pair').value; const t = document.getElementById('adm-hw-text').value.trim(); const s = document.getElementById('adm-hw-subj').value.trim(); if(!t) return tg.showAlert("Пусто"); sendDataToBot({action:"add_homework", date:d, pair:p, subject:s, text:t, has_photo:false}); }
+        function deleteAdminHw() { if(confirm("Удалить?")) sendDataToBot({action:"delete_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value}); }
+        function submitNote() { const d = getDateKey('note-date'); if(!d) return tg.showAlert("Дата?"); sendDataToBot({action:"add_note", date:d, text:document.getElementById('note-text').value}); }
         function submitHoliday() {
-            const dateStart = document.getElementById('holiday-date-start').value; const dateEnd = document.getElementById('holiday-date-end').value; const reason = document.getElementById('holiday-reason').value.trim();
-            if(!dateStart) return tg.showAlert("Дата?"); if(!reason) return tg.showAlert("Причина?");
-            const dates = []; let current = new Date(dateStart); const end = new Date(dateEnd || dateStart);
-            while (current <= end) { const d = String(current.getDate()).padStart(2, '0'); const m = String(current.getMonth() + 1).padStart(2, '0'); const y = current.getFullYear(); dates.push(`${d}.${m}.${y}`); current.setDate(current.getDate() + 1); }
-            const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`; sendDataToBot({ action: "add_holiday_batch", dates: dates, text: holidayText });
+            const ds = getDateKey('holiday-date-start'); const de = getDateKey('holiday-date-end'); const r = document.getElementById('holiday-reason').value.trim(); if(!ds) return tg.showAlert("Дата?"); if(!r) return tg.showAlert("Причина?");
+            const dates=[]; let c = new Date(document.getElementById('holiday-date-start').value); const end = new Date(document.getElementById('holiday-date-end').value || document.getElementById('holiday-date-start').value);
+            while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); }
+            sendDataToBot({action:"add_holiday_batch", dates:dates, text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${r}`});
         }
         function removeHoliday() {
-            const dateStart = document.getElementById('holiday-date-start').value; const dateEnd = document.getElementById('holiday-date-end').value; if(!dateStart) return tg.showAlert("Дата?");
-            if(!confirm("Убрать выходные?")) return; const dates = []; let current = new Date(dateStart); const end = new Date(dateEnd || dateStart);
-            while (current <= end) { const d = String(current.getDate()).padStart(2, '0'); const m = String(current.getMonth() + 1).padStart(2, '0'); const y = current.getFullYear(); dates.push(`${d}.${m}.${y}`); current.setDate(current.getDate() + 1); }
-            sendDataToBot({ action: "delete_note_batch", dates: dates });
+             const ds = getDateKey('holiday-date-start'); if(!ds) return tg.showAlert("Дата?"); if(!confirm("Снять?")) return;
+             const dates=[]; let c = new Date(document.getElementById('holiday-date-start').value); const end = new Date(document.getElementById('holiday-date-end').value || document.getElementById('holiday-date-start').value);
+             while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); }
+             sendDataToBot({action:"delete_note_batch", dates:dates});
         }
-        function submitBroadcast() { sendDataToBot({ action: "broadcast", text: document.getElementById('bc-text').value, has_photo: document.getElementById('bc-photo').checked }); }
-        function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
-
-        function renderEmptyState(msg) {
-            document.getElementById('schedule-container').innerHTML = `
-                <div class="empty-state"><div class="empty-icon">📂</div>
-                <p>Нажмите "Загрузить", чтобы получить расписание.</p>
-                <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
-                ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}</div>`;
+        function submitBroadcast() { sendDataToBot({action:"broadcast", text:document.getElementById('bc-text').value, has_photo:document.getElementById('bc-photo').checked}); }
+        function sendAction(a) { if(confirm("Точно?")) sendDataToBot({action:a}); }
+        function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
+        function requestData() { sendDataToBot({action:"request_schedule_link"}); }
+        function switchTab(t,b) { closeAdminSection(); document.querySelectorAll('.page').forEach(e=> {if(!e.classList.contains('modal'))e.classList.remove('active')}); document.getElementById(t+'-page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); }
+        function setWeek(t) { currentWeek=t; ignoreHolidays=false; document.getElementById('btn-odd').className=t==='odd'?'wt-btn active':'wt-btn'; document.getElementById('btn-even').className=t==='even'?'wt-btn active':'wt-btn'; updateWeekButtons(); renderSchedule(); }
+        function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
+        function closeAdminSection() { document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); if(document.getElementById('dashboard-screen').style.display === 'none') document.getElementById('dashboard-screen').style.display='block'; }
+        function renderEmptyState(m) { document.getElementById('schedule-container').innerHTML=`<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных</p><button class='btn btn-primary' onclick='requestData()'>🔄 Загрузить</button>${m?`<p style='color:red;font-size:12px'>${m}</p>`:''}</div>`; }
+        
+        function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
+        function loadDayText() { const d = document.getElementById('ed-day').value; const w = document.getElementById('ed-week').value; let txt = ""; if (dbData.perm && dbData.perm[d]) txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || ""); document.getElementById('ed-text').value = txt; }
+        function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
+        function saveSinglePair() {
+            loadDayText(); let txt = document.getElementById('ed-text').value||""; const num=document.getElementById('ed-pair-num').value; const s=document.getElementById('ed-pair-subj').value.trim(); const ty=document.getElementById('ed-pair-type').value.trim(); const r=document.getElementById('ed-pair-room').value.trim(); const te=document.getElementById('ed-pair-teach').value.trim();
+            if(!s) return tg.showAlert("Предмет?");
+            let blk = `${PAIR_TIMES[num]}\n${num} пара\n<b>${s}</b>`; if(ty) blk+=`\n${ty}`; if(r) blk+=`\nАуд: ${r}`; if(te) blk+=`\n${te}`;
+            let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } });
+            pMap[parseInt(num)]=blk;
+            let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n");
+            document.getElementById('ed-text').value=res.trim(); submitEditSchedule();
         }
-        function getDateForDay(dayIndex) {
-            const d = new Date();
-            const currentDay = d.getDay() || 7; 
-            const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
-            d.setDate(d.getDate() - currentDay + targetDay);
-            if (currentWeek !== realCurrentWeek) d.setDate(d.getDate() + 7);
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const y = d.getFullYear();
-            return `${dd}.${mm}.${y}`;
-        }
-        function renderSchedule() {
-            const container = document.getElementById('schedule-container');
-            if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
-                container.innerHTML = "<div class='empty-state'>Расписание пустое</div>"; return;
-            }
-            container.innerHTML = "";
-            const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-            days.forEach((day, idx) => {
-                const dayObj = dbData.perm[day];
-                if (!dayObj) return;
-                let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
-                const dateKey = getDateForDay(idx);
-                const note = dbData.temporary ? dbData.temporary[dateKey] : null;
-                const hasHw = dbData.homework && dbData.homework[dateKey];
-                
-                if (note && note.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
-                    const reason = note.split("\n")[2] || ""; 
-                    const card = document.createElement('div');
-                    card.className = 'card holiday-card';
-                    card.innerHTML = `<div class="day-header" style="color: var(--success)"><span>${day}</span><span class="date-badge">${dateKey}</span></div><div class="holiday-title">🎉 ВЫХОДНОЙ</div><div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>`;
-                    container.appendChild(card);
-                    return; 
-                }
-                if (!text && !note && !hasHw) return; 
-                text = text.replace(/<[^>]*>?/gm, ''); 
-                
-                const card = document.createElement('div');
-                card.className = 'card';
-                let html = `<div class="day-header"><span>${day}</span><span class="date-badge">${dateKey}</span></div>`;
-                if (note) html += `<div class="note-block">📌 <b>Внимание:</b> ${note}</div>`;
-                html += `<div class="lesson-text">${text}</div>`;
-                if (hasHw) {
-                    html += `<div class="homework-block"><div class="hw-title">Домашнее задание:</div>`;
-                    const dayHw = dbData.homework[dateKey];
-                    for (let pair in dayHw) {
-                        const task = dayHw[pair];
-                        html += `<div class="hw-item"><b>${pair} пара</b> (${task.subject || 'Предмет'}): ${task.text}</div>`;
-                    }
-                    html += `</div>`;
-                }
-                card.innerHTML = html;
-                container.appendChild(card);
-            });
-            if (document.querySelector('.holiday-card')) {
-                const btn = document.createElement('div'); btn.className = 'force-show-btn'; btn.innerText = '👁 Посмотреть расписание (скрыто из-за выходных)';
-                btn.onclick = function() { ignoreHolidays = true; renderSchedule(); }; container.appendChild(btn);
-            }
-        }
-
-        function switchTab(tabId, btn) {
-            closeAdminSection();
-            document.querySelectorAll('.page').forEach(el => { if(!el.classList.contains('modal')) el.classList.remove('active'); });
-            document.getElementById(tabId + '-page').classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-        }
-        function setWeek(type) {
-            currentWeek = type; ignoreHolidays = false; 
-            document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
-            document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
-            updateWeekButtons(); renderSchedule();
-        }
-        function login() {
-            if (document.getElementById('adm-pass').value === ADMIN_PASS) {
-                document.getElementById('login-screen').style.display = 'none'; document.getElementById('dashboard-screen').style.display = 'block'; document.getElementById('login-error').style.display = 'none';
-                if(dbData.countdown) {
-                    document.getElementById('cd-active').checked = dbData.countdown.active;
-                    document.getElementById('cd-title').value = dbData.countdown.title || "";
-                    document.getElementById('cd-date').value = dbData.countdown.date || "";
-                }
-                if(dbData.notice) {
-                    document.getElementById('global-notice-input').value = dbData.notice;
-                }
-            } else { document.getElementById('login-error').style.display = 'block'; }
-        }
-        function logout() { document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'block'; document.getElementById('adm-pass').value = ''; }
-        function openAdminSection(sectionId) {
-            if (sectionId === 'edit-sch') loadDayText(); if (sectionId === 'manage-hw') loadAdminHw(); 
-            if (sectionId === 'polls') { switchPollTab('create'); } // Default tab
-            document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('section-' + sectionId).classList.add('active');
-        }
-        function closeAdminSection() {
-            // Закрываем модалки
-            document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-            
-            // Если мы уже вошли в админку (логин скрыт), показываем дашборд
-            if (document.getElementById('login-screen').style.display === 'none') {
-                document.getElementById('dashboard-screen').style.display = 'block';
-            }
-        }
-        function loadDayText() {
-            const d = document.getElementById('ed-day').value; const w = document.getElementById('ed-week').value; let txt = "";
-            if (dbData.perm && dbData.perm[d]) txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
-            document.getElementById('ed-text').value = txt;
+        function deleteSinglePair() {
+             if(!confirm("Удалить?"))return; loadDayText(); let txt=document.getElementById('ed-text').value||""; const num=parseInt(document.getElementById('ed-pair-num').value);
+             let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } });
+             if(pMap[num]) { delete pMap[num]; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); }
+             else tg.showAlert("Нет такой пары");
         }
     </script>
 </body>
