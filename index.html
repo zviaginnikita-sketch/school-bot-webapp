@@ -184,6 +184,7 @@
         }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         
+        /* --- МОДАЛКИ --- */
         .modal { display: none; } 
         .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
@@ -206,7 +207,7 @@
             margin-bottom: 10px;
         }
 
-        /* --- МОДАЛКИ --- */
+        /* --- КАСТОМНЫЙ ДИАЛОГ (ПОДТВЕРЖДЕНИЕ) --- */
         #confirm-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 2000; display: none;
@@ -404,7 +405,7 @@
         const ADMIN_PASS = "0451"; 
         let dbData = { perm: {}, homework: {}, temporary: {} };
         let currentWeek = 'odd';
-        let realCurrentWeek = 'odd'; // Реальная текущая неделя
+        let realCurrentWeek = 'odd'; 
         let confirmResolve = null;
         let isNextWeek = false; 
         let ignoreHolidays = false; 
@@ -419,11 +420,9 @@
         }
 
         const now = new Date();
-        // Рассчитываем реальную текущую неделю (без сдвигов на Сб/Вс)
         const realWeekNum = getWeekNumber(now);
         realCurrentWeek = (realWeekNum % 2 === 0) ? 'even' : 'odd';
 
-        // Логика авто-выбора для Сб/Вс (просто для открытия нужной вкладки)
         let checkDate = new Date(now);
         if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
         else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
@@ -437,24 +436,12 @@
         document.getElementById('note-date').valueAsDate = now;
         document.getElementById('holiday-date-start').valueAsDate = now;
 
-        // ИСПРАВЛЕННАЯ ЛОГИКА ПОДПИСЕЙ
         function updateWeekButtons() {
             const oddBtn = document.getElementById('btn-odd');
             const evenBtn = document.getElementById('btn-even');
-            
-            oddBtn.innerText = "Нечетная";
-            evenBtn.innerText = "Четная";
-            
-            // Если реальная неделя - Нечетная
-            if (realCurrentWeek === 'odd') {
-                oddBtn.innerText += " (Текущая)";
-                evenBtn.innerText += " (Следующая)";
-            } 
-            // Если реальная неделя - Четная
-            else {
-                evenBtn.innerText += " (Текущая)";
-                oddBtn.innerText += " (Следующая)";
-            }
+            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
+            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } 
+            else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
         }
         updateWeekButtons();
 
@@ -592,7 +579,6 @@
             
             // Если выбранная в UI неделя (currentWeek) не совпадает с РЕАЛЬНОЙ неделей (realCurrentWeek),
             // значит мы сдвинули просмотр вперед/назад.
-            // В нашем случае это происходит только если Сб/Вс переключили нас на "следующую".
             if (currentWeek !== realCurrentWeek) {
                 d.setDate(d.getDate() + 7);
             }
@@ -797,8 +783,9 @@
         }
         function closeAdminSection() {
             document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
-                 document.getElementById('dashboard-screen').style.display = 'block';
+            // Если экран входа скрыт (значит мы внутри), показываем меню
+            if (document.getElementById('login-screen').style.display === 'none') {
+                document.getElementById('dashboard-screen').style.display = 'block';
             }
         }
         function loadDayText() {
