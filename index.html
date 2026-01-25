@@ -12,52 +12,110 @@
             --bg-color: #f2f2f7; --card-bg: #ffffff; --primary: #007aff; --danger: #ff3b30; --success: #34c759;
             --text-main: #000000; --text-sec: #8e8e93; --radius: 12px;
         }
+
         html, body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0 0 90px 0;
-            -webkit-tap-highlight-color: transparent; user-select: text; -webkit-user-select: text;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0 0 90px 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: text;
+            -webkit-user-select: text;
         }
+
+        /* --- СТРАНИЦЫ --- */
         .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
         .page.active { display: block; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .card { background: var(--card-bg); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .section-title { font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 20px 0 8px 16px; }
+        /* --- КАРТОЧКИ --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
-        input, select, textarea {
+        .section-title {
+            font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 20px 0 8px 16px;
+        }
+
+        /* --- ЭЛЕМЕНТЫ ВВОДА --- */
+        input:not([type="checkbox"]), select, textarea {
             width: 100%; padding: 14px; border: 1px solid transparent; background: #f2f2f7;
             border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px;
-            color: var(--text-main); outline: none; user-select: text !important; -webkit-appearance: none; appearance: none;
+            color: var(--text-main); outline: none; user-select: text !important;
+            -webkit-user-select: text !important; -webkit-appearance: none; appearance: none;
         }
-        input:focus, select:focus, textarea:focus { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
-        input[type="checkbox"] { width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary); }
-        select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 10px auto; }
+        
+        input[type="checkbox"] { 
+            width: 24px; height: 24px; margin: 0; cursor: pointer; accent-color: var(--primary); 
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            background: #fff; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
+        }
+        
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: var(--radius); font-size: 17px; font-weight: 600; cursor: pointer; text-align: center; margin-bottom: 8px; transition: opacity 0.2s, transform 0.1s; user-select: none; }
+        /* --- КНОПКИ --- */
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: var(--radius);
+            font-size: 17px; font-weight: 600; cursor: pointer; text-align: center;
+            margin-bottom: 8px; transition: opacity 0.2s, transform 0.1s; user-select: none;
+        }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
-        .add-option-btn { font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; }
+        .add-option-btn { 
+            font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; 
+            text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; 
+        }
         
-        .global-notice-banner { background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%); color: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3); }
+        /* --- СПЕЦ ЭЛЕМЕНТЫ --- */
+        .global-notice-banner {
+            background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
+            color: white; padding: 15px; border-radius: var(--radius);
+            margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+            display: none; animation: slideDown 0.3s ease-out;
+        }
         .notice-icon { font-size: 20px; float: left; margin-right: 10px; }
         .notice-text { font-size: 15px; font-weight: 500; line-height: 1.4; white-space: pre-wrap; }
 
-        .countdown-card { background: #333; color: #fff; text-align: center; padding: 12px; margin-bottom: 15px; display: none; border-radius: var(--radius); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .countdown-card {
+            background: #333; color: #fff; text-align: center;
+            padding: 12px; margin-bottom: 15px; display: none;
+            border-radius: var(--radius); box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
         .countdown-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .countdown-value { font-size: 24px; font-weight: 800; color: #ffd60a; }
-        .countdown-days { font-size: 14px; font-weight: normal; color: #fff; }
 
-        .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
-        .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
+        .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
+        .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        .poll-voters { font-size: 11px; color: #8e8e93; margin-top: 2px; }
 
+        /* --- АДМИН МЕНЮ --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .admin-tile { background: var(--card-bg); padding: 20px; border-radius: var(--radius); text-align: center; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .admin-tile {
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius);
+            text-align: center; font-size: 14px; font-weight: 500; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
         .admin-tile span { display: block; font-size: 24px; margin-bottom: 5px; }
 
+        /* --- РАСПИСАНИЕ UI --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
         .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -75,7 +133,6 @@
         .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
         .holiday-title { color: #1b5e20; font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px; }
         .holiday-reason { font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; }
-        
         .force-show-btn { font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-top: 1px solid #c6c6c8; display: flex; justify-content: space-around; padding: 10px 0 25px 0; z-index: 1000; }
@@ -83,21 +140,25 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
+        /* --- ОБЩЕЕ --- */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
+        .refresh-hint { background: var(--primary); color: white; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; margin-bottom: 5px; user-select: none; }
+        .last-updated { font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
         
         #confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; }
         #confirm-box { background: #fff; width: 80%; max-width: 320px; padding: 20px; border-radius: 14px; text-align: center; }
         #confirm-old-text { background: #f0f0f0; padding: 10px; border-radius: 8px; margin: 10px 0; font-size: 13px; text-align: left; max-height: 100px; overflow-y: auto; }
-        
         .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
         .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
         .poll-voters { font-size: 11px; color: #8e8e93; margin-top: 2px; }
         .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 15px; }
         
-        .debug-id { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; padding-bottom: 20px; }
+        /* Debug info */
+        .debug-id { text-align: center; font-size: 10px; color: #ccc; margin-top: 20px; padding-bottom: 20px; word-break: break-all; }
+        .error-message { color: var(--danger); font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -128,8 +189,8 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-container"></div>
-        <!-- ВЫВОД ID -->
-        <div class="debug-id" id="debug-footer">ID: не определен</div>
+        <!-- ВЫВОД ID ДЛЯ ОТЛАДКИ -->
+        <div class="debug-id" id="debug-footer">Инициализация...</div>
     </div>
 
     <!-- 2. ДЗ -->
@@ -225,7 +286,7 @@
 
         function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
         
-        // --- FUNCTIONS ---
+        // --- 1. ФУНКЦИИ (ОБЪЯВЛЕНИЕ) ---
         function checkAuth() {
             const user = tg.initDataUnsafe?.user;
             if (user) {
@@ -239,13 +300,12 @@
                     document.getElementById('dashboard-screen').style.display = 'block';
                     fillAdminData();
                 } else {
-                    // ЕСЛИ НЕ АДМИН
                     document.getElementById('nav-admin').style.display = 'none';
                     document.getElementById('access-denied').style.display = 'block';
                     document.getElementById('dashboard-screen').style.display = 'none';
                 }
             } else {
-                 document.getElementById('debug-footer').innerText = "Нет данных о пользователе (открыто в браузере?)";
+                 document.getElementById('debug-footer').innerText = "Нет данных о пользователе (открыто не из Telegram?)";
             }
         }
         function fillAdminData() {
@@ -261,7 +321,10 @@
         }
 
         function renderSession() {
-            if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Пусто"; } else document.getElementById('nav-session').style.display='none';
+            if (dbData.session && dbData.session.active) {
+                document.getElementById('nav-session').style.display='block';
+                document.getElementById('session-content').innerText = dbData.session.text || "Нет данных";
+            } else { document.getElementById('nav-session').style.display='none'; }
         }
         function renderCountdown() {
             const b = document.getElementById('countdown-banner'), d = dbData.countdown;
@@ -271,11 +334,11 @@
         }
         function renderGlobalNotice() {
             const b = document.getElementById('global-notice');
-            if(dbData.notice) { document.getElementById('global-notice-text').innerText=dbData.notice; b.style.display='block'; } else b.style.display='none';
+            if(dbData.notice && dbData.notice.trim() !== "") { document.getElementById('global-notice-text').innerText=dbData.notice; b.style.display='block'; } else b.style.display='none';
         }
         function renderSchedule() {
             const c = document.getElementById('schedule-container');
-            if(!dbData.perm || !Object.keys(dbData.perm).length) { c.innerHTML="<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных. Нажмите обновить.</p></div>"; return; }
+            if(!dbData.perm || !Object.keys(dbData.perm).length) { c.innerHTML="<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных. Нажмите кнопку выше.</p></div>"; return; }
             c.innerHTML=""; const days=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
             let hasHol=false;
             days.forEach((day,i) => {
@@ -308,8 +371,8 @@
             });
         }
         function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
-
-        // --- ACTIONS ---
+        
+        // --- 2. ДЕЙСТВИЯ (ACTIONS) ---
         function getDateForDay(idx) { const d=new Date(); d.setDate(d.getDate()-(d.getDay()||7)+(idx===0?1:idx+1)); if(currentWeek!==realCurrentWeek)d.setDate(d.getDate()+7); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; }
         function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
         function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
@@ -329,7 +392,7 @@
         function deleteAdminHw() { if(confirm("Удалить?")) sendDataToBot({action:"delete_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value}); }
         function submitNote() { const d=getDateKey('note-date'); if(!d) return tg.showAlert("Дата?"); sendDataToBot({action:"add_note", date:d, text:document.getElementById('note-text').value}); }
         function submitHoliday() {
-            const ds=getDateKey('holiday-date-start'), de=getDateKey('holiday-date-end'), r=document.getElementById('holiday-reason').value.trim(); if(!ds||!r)return tg.showAlert("Данные?");
+            const ds=getDateKey('holiday-date-start'), r=document.getElementById('holiday-reason').value.trim(); if(!ds||!r)return tg.showAlert("Данные?");
             const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value), end=new Date(document.getElementById('holiday-date-end').value||document.getElementById('holiday-date-start').value);
             while(c<=end){ dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); c.setDate(c.getDate()+1); }
             sendDataToBot({action:"add_holiday_batch", dates:dates, text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${r}`});
@@ -384,7 +447,6 @@
         function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
         function closeAdminSection() { 
             document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); 
-            // Возвращаемся в дашборд админа, если мы авторизованы (экран доступа скрыт)
             if(document.getElementById('access-denied').style.display === 'none') {
                 document.getElementById('dashboard-screen').style.display='block';
             }
@@ -392,7 +454,7 @@
         function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
         function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
 
-        // --- INIT ---
+        // --- 3. ЗАПУСК ---
         const now = new Date();
         realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
         let checkDate = new Date(now);
@@ -404,7 +466,7 @@
         document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
         updateWeekButtons();
 
-        // 1. ЗАГРУЗКА
+        // 4. ЗАГРУЗКА
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
         if (rawData) {
@@ -424,13 +486,8 @@
                 } else { dbData = parsed; }
                 const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                 renderAll(); checkAuth();
-            } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
+            } catch (e) { renderEmptyState("Ошибка: " + e.message); }
         } else { renderEmptyState(); }
-
-        function renderAll() {
-            renderSchedule(); renderGlobalNotice(); renderCountdown(); renderSession(); renderStats();
-        }
-        function renderStats() { if(dbData.stats) { document.getElementById('stat-users').innerText = dbData.stats.u || 0; document.getElementById('stat-hw').innerText = dbData.stats.h || 0; document.getElementById('stat-notes').innerText = dbData.stats.t || 0; } }
 
     </script>
 </body>
