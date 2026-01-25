@@ -12,6 +12,7 @@
             --card-bg: #ffffff;
             --primary: #007aff;
             --danger: #ff3b30;
+            --success: #34c759;
             --text-main: #000000;
             --text-sec: #8e8e93;
             --radius: 12px;
@@ -101,6 +102,7 @@
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
         .btn-outline { background: transparent; border: 1px solid var(--text-sec); color: var(--text-sec); }
         
@@ -138,7 +140,13 @@
         .homework-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .hw-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .hw-item { font-size: 13px; margin-bottom: 4px; padding: 6px; background: #f9f9f9; border-radius: 6px; }
+        
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
+        
+        /* Стили для выходного дня */
+        .holiday-card { background: #e8f5e9; border: 1px solid #c8e6c9; }
+        .holiday-title { color: var(--success); font-weight: bold; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+        .holiday-reason { font-size: 15px; color: #2e7d32; }
 
         /* --- НАВИГАЦИЯ --- */
         .nav-bar {
@@ -271,6 +279,7 @@
                 <div class="admin-tile" onclick="openAdminSection('edit-sch')"><span>✏️</span>Редактор</div>
                 <div class="admin-tile" onclick="openAdminSection('manage-hw')"><span>📚</span>Упр. ДЗ</div>
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
+                <div class="admin-tile" onclick="openAdminSection('add-holiday')"><span>🎉</span>Выходной</div>
                 <div class="admin-tile" onclick="openAdminSection('broadcast')"><span>📢</span>Рассылка</div>
                 <div class="admin-tile" onclick="sendAction('reset_temp')"><span>🗑</span>Сброс</div>
             </div>
@@ -349,6 +358,19 @@
             <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
         </div>
 
+        <!-- СЕКЦИЯ: ВЫХОДНОЙ (НОВАЯ) -->
+        <div id="section-add-holiday" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Установить выходной</h3>
+            <div class="card">
+                <label style="font-size: 12px; color: #888;">Дата:</label>
+                <input type="date" id="holiday-date">
+                <label style="font-size: 12px; color: #888;">Причина:</label>
+                <textarea id="holiday-reason" placeholder="Например: День города, Праздник и т.д."></textarea>
+            </div>
+            <button class="btn btn-success" onclick="submitHoliday()">Установить выходной</button>
+        </div>
+
         <!-- СЕКЦИЯ: РАССЫЛКА -->
         <div id="section-broadcast" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
@@ -394,17 +416,13 @@
         document.getElementById('hw-date').valueAsDate = now;
         document.getElementById('adm-hw-date').valueAsDate = now;
         document.getElementById('note-date').valueAsDate = now;
+        document.getElementById('holiday-date').valueAsDate = now;
 
-        // --- ОБНОВЛЕНИЕ ТЕКСТА КНОПОК ПО ЧЕТНОСТИ ---
         function updateWeekButtons() {
             const oddBtn = document.getElementById('btn-odd');
             const evenBtn = document.getElementById('btn-even');
-            
-            // Сбрасываем текст
             oddBtn.innerText = "Нечетная";
             evenBtn.innerText = "Четная";
-            
-            // Добавляем пометку
             if (currentWeek === 'odd') oddBtn.innerText += " (Текущая)";
             else evenBtn.innerText += " (Текущая)";
         }
@@ -431,7 +449,6 @@
                     if (parsed.t) dbData.temporary = parsed.t;
                 } else { dbData = parsed; }
                 
-                // Устанавливаем дату обновления
                 const updateDate = new Date();
                 const updateTimeStr = updateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const updateDateStr = updateDate.toLocaleDateString();
@@ -562,15 +579,32 @@
                 if (!dayObj) return;
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 const dateKey = getDateForDay(idx);
-                const hasNote = dbData.temporary && dbData.temporary[dateKey];
+                const note = dbData.temporary ? dbData.temporary[dateKey] : null;
                 const hasHw = dbData.homework && dbData.homework[dateKey];
-                if (!text && !hasNote && !hasHw) return; 
+                
+                // Проверка на выходной
+                if (note && note.startsWith("🎉 ВЫХОДНОЙ")) {
+                    const reason = note.split("\n")[2] || "Без причины"; // Берем текст после заголовка
+                    const card = document.createElement('div');
+                    card.className = 'card holiday-card';
+                    card.innerHTML = `
+                        <div class="day-header" style="color: var(--success)">
+                            <span>${day}</span><span class="date-badge">${dateKey}</span>
+                        </div>
+                        <div class="holiday-title">🎉 ВЫХОДНОЙ</div>
+                        <div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>
+                    `;
+                    container.appendChild(card);
+                    return; // Прерываем, обычное расписание не показываем
+                }
+
+                if (!text && !note && !hasHw) return; 
                 text = text.replace(/<[^>]*>?/gm, ''); 
                 
                 const card = document.createElement('div');
                 card.className = 'card';
                 let html = `<div class="day-header"><span>${day}</span><span class="date-badge">${dateKey}</span></div>`;
-                if (hasNote) html += `<div class="note-block">📌 <b>Внимание:</b> ${dbData.temporary[dateKey]}</div>`;
+                if (note) html += `<div class="note-block">📌 <b>Внимание:</b> ${note}</div>`;
                 html += `<div class="lesson-text">${text}</div>`;
                 if (hasHw) {
                     html += `<div class="homework-block"><div class="hw-title">Домашнее задание:</div>`;
@@ -631,17 +665,30 @@
             } else { tg.showAlert("Эта пара не найдена в расписании"); }
         }
 
+        // Заметки и Выходные
         function submitNote() {
             const dateStr = document.getElementById('note-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
             const [y, m, d] = dateStr.split('-');
             sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value });
         }
+        function submitHoliday() {
+            const dateStr = document.getElementById('holiday-date').value;
+            const reason = document.getElementById('holiday-reason').value.trim();
+            if(!dateStr) return tg.showAlert("Выберите дату");
+            if(!reason) return tg.showAlert("Укажите причину");
+            const [y, m, d] = dateStr.split('-');
+            // Форматируем как заметку, но с спец. маркером
+            const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`;
+            sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: holidayText });
+        }
+
         function submitBroadcast() {
             sendDataToBot({ action: "broadcast", text: document.getElementById('bc-text').value, has_photo: document.getElementById('bc-photo').checked });
         }
         function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
 
+        // UI Helpers
         function switchTab(tabId, btn) {
             closeAdminSection();
             document.querySelectorAll('.page').forEach(el => { if(!el.classList.contains('modal')) el.classList.remove('active'); });
@@ -653,7 +700,7 @@
             currentWeek = type;
             document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
             document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
-            updateWeekButtons(); // Обновляем текст при переключении (если нужно сбросить пометку)
+            updateWeekButtons(); 
             renderSchedule();
         }
         function login() {
