@@ -252,12 +252,16 @@
         document.getElementById('hw-date').valueAsDate = new Date();
         document.getElementById('note-date').valueAsDate = new Date();
 
-        // 1. ПАРСИНГ ДАННЫХ ИЗ URL
+        // 1. ПАРСИНГ ДАННЫХ ИЗ URL (ИСПРАВЛЕНО)
         const urlParams = new URLSearchParams(window.location.search);
-        const rawData = urlParams.get('data');
+        let rawData = urlParams.get('data');
 
         if (rawData) {
             try {
+                // Исправляем URL-safe символы на стандартные Base64
+                // '-' -> '+' и '_' -> '/'
+                rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
+
                 // Декодируем Base64 с поддержкой русских символов
                 const binaryString = window.atob(rawData);
                 const bytes = new Uint8Array(binaryString.length);
@@ -276,7 +280,7 @@
                 }
                 renderSchedule();
             } catch (e) { 
-                renderEmptyState("Ошибка чтения данных");
+                renderEmptyState("Ошибка чтения данных: " + e.message);
                 console.error(e);
             }
         } else {
