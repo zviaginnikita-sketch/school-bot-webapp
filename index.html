@@ -143,10 +143,21 @@
         
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
         
-        /* Стили для выходного дня */
-        .holiday-card { background: #e8f5e9; border: 1px solid #c8e6c9; }
-        .holiday-title { color: var(--success); font-weight: bold; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-        .holiday-reason { font-size: 15px; color: #2e7d32; }
+        /* Стили для выходного дня (Обновленные) */
+        .holiday-card { 
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+            border: 2px solid #4caf50; 
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2);
+        }
+        .holiday-title { 
+            color: #1b5e20; font-weight: 800; font-size: 18px;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px dashed rgba(27,94,32,0.2); padding-bottom: 8px;
+        }
+        .holiday-reason { 
+            font-size: 16px; font-weight: 600; color: #2e7d32; line-height: 1.4; 
+        }
 
         /* --- НАВИГАЦИЯ --- */
         .nav-bar {
@@ -358,17 +369,21 @@
             <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
         </div>
 
-        <!-- СЕКЦИЯ: ВЫХОДНОЙ (НОВАЯ) -->
+        <!-- СЕКЦИЯ: ВЫХОДНОЙ (Обновленная) -->
         <div id="section-add-holiday" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Установить выходной</h3>
             <div class="card">
-                <label style="font-size: 12px; color: #888;">Дата:</label>
-                <input type="date" id="holiday-date">
-                <label style="font-size: 12px; color: #888;">Причина:</label>
-                <textarea id="holiday-reason" placeholder="Например: День города, Праздник и т.д."></textarea>
+                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px;">С даты:</label>
+                <input type="date" id="holiday-date-start">
+                
+                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px; margin-top:10px;">По дату (включительно):</label>
+                <input type="date" id="holiday-date-end">
+                
+                <label style="font-size: 12px; color: #888; display:block; margin-bottom:5px; margin-top:10px;">Причина:</label>
+                <textarea id="holiday-reason" placeholder="Например: Праздники"></textarea>
             </div>
-            <button class="btn btn-success" onclick="submitHoliday()">Установить выходной</button>
+            <button class="btn btn-success" onclick="submitHoliday()">Установить выходные</button>
         </div>
 
         <!-- СЕКЦИЯ: РАССЫЛКА -->
@@ -416,7 +431,7 @@
         document.getElementById('hw-date').valueAsDate = now;
         document.getElementById('adm-hw-date').valueAsDate = now;
         document.getElementById('note-date').valueAsDate = now;
-        document.getElementById('holiday-date').valueAsDate = now;
+        document.getElementById('holiday-date-start').valueAsDate = now; // Default start
 
         function updateWeekButtons() {
             const oddBtn = document.getElementById('btn-odd');
@@ -584,7 +599,7 @@
                 
                 // Проверка на выходной
                 if (note && note.startsWith("🎉 ВЫХОДНОЙ")) {
-                    const reason = note.split("\n")[2] || "Без причины"; // Берем текст после заголовка
+                    const reason = note.split("\n")[2] || "Без причины"; 
                     const card = document.createElement('div');
                     card.className = 'card holiday-card';
                     card.innerHTML = `
@@ -595,7 +610,7 @@
                         <div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>
                     `;
                     container.appendChild(card);
-                    return; // Прерываем, обычное расписание не показываем
+                    return; // Прерываем
                 }
 
                 if (!text && !note && !hasHw) return; 
@@ -665,7 +680,7 @@
             } else { tg.showAlert("Эта пара не найдена в расписании"); }
         }
 
-        // Заметки и Выходные
+        // Заметки и Выходные (МАССОВОЕ ДОБАВЛЕНИЕ)
         function submitNote() {
             const dateStr = document.getElementById('note-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
@@ -673,14 +688,37 @@
             sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: document.getElementById('note-text').value });
         }
         function submitHoliday() {
-            const dateStr = document.getElementById('holiday-date').value;
+            const dateStart = document.getElementById('holiday-date-start').value;
+            const dateEnd = document.getElementById('holiday-date-end').value;
             const reason = document.getElementById('holiday-reason').value.trim();
-            if(!dateStr) return tg.showAlert("Выберите дату");
+            
+            if(!dateStart) return tg.showAlert("Выберите дату начала");
+            // Если конец не выбран, считаем что это 1 день
+            const effectiveEnd = dateEnd || dateStart;
+            
             if(!reason) return tg.showAlert("Укажите причину");
-            const [y, m, d] = dateStr.split('-');
-            // Форматируем как заметку, но с спец. маркером
+
+            // Генерируем список дат
+            const dates = [];
+            let current = new Date(dateStart);
+            const end = new Date(effectiveEnd);
+            
+            while (current <= end) {
+                const d = String(current.getDate()).padStart(2, '0');
+                const m = String(current.getMonth() + 1).padStart(2, '0');
+                const y = current.getFullYear();
+                dates.push(`${d}.${m}.${y}`);
+                current.setDate(current.getDate() + 1);
+            }
+
             const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`;
-            sendDataToBot({ action: "add_note", date: `${d}.${m}.${y}`, text: holidayText });
+            
+            // Отправляем специальный экшен для массива
+            sendDataToBot({
+                action: "add_holiday_batch",
+                dates: dates,
+                text: holidayText
+            });
         }
 
         function submitBroadcast() {
