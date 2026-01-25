@@ -142,7 +142,7 @@
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Админка</h3>
-            <div class="card"><input type="password" id="adm-pass" placeholder="пароль (0451)" style="text-align: center;"></div>
+            <div class="card"><input type="password" id="adm-pass" placeholder="пароль" style="text-align: center;"></div>
             <button class="btn btn-primary" onclick="login()">Войти</button>
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
@@ -208,7 +208,7 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
-        const ADMIN_PASS = "0451";
+        const ADMIN_PASS = "2520";
         let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [], aid: null, session: {}, stats: {} };
         let currentWeek='odd', realCurrentWeek='odd', confirmResolve=null, isNextWeek=false, ignoreHolidays=false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
@@ -413,3 +413,4 @@
     </script>
 </body>
 </html>
+
