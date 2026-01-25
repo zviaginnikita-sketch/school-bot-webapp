@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дневник</title>
+    <title>Дневник (Диагностика)</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; color: #000; margin: 0; padding-bottom: 80px; }
         
-        /* Диагностическая панель */
-        #status-bar {
-            background: #333; color: #fff; padding: 8px; font-size: 11px; 
-            text-align: center; word-break: break-all;
+        /* Блок диагностики - КРАСНЫЙ ЕСЛИ ОШИБКА, ЗЕЛЕНЫЙ ЕСЛИ ОК */
+        #diag-panel {
+            background: #333; color: #fff; padding: 10px; font-size: 11px; 
+            font-family: monospace; word-break: break-all; border-bottom: 2px solid #000;
         }
 
-        /* Навигация */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: #fff; border-top: 1px solid #ddd;
@@ -24,11 +23,9 @@
         .nav-btn.active { color: #007aff; font-weight: bold; }
         .nav-icon { display: block; font-size: 20px; margin-bottom: 4px; }
 
-        /* Контент */
         .page { display: none; padding: 16px; }
         .page.active { display: block; }
 
-        /* Элементы интерфейса */
         .sch-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .day-header { font-weight: bold; font-size: 18px; color: #007aff; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         .week-toggle { display: flex; background: #e0e0e0; border-radius: 8px; margin-bottom: 15px; }
@@ -37,15 +34,12 @@
         
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
         button.main { width: 100%; padding: 14px; background: #007aff; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
-        
-        /* Стили для скрытого элемента (без !important) */
-        .hidden-tab { display: none; }
     </style>
 </head>
 <body>
 
-    <!-- СТАТУС (Для отладки) -->
-    <div id="status-bar">Загрузка данных пользователя...</div>
+    <!-- ПАНЕЛЬ ДИАГНОСТИКИ -->
+    <div id="diag-panel">Загрузка информации...</div>
 
     <!-- СТРАНИЦА 1: РАСПИСАНИЕ -->
     <div id="page-view" class="page active">
@@ -54,7 +48,7 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-list">
-            <div style="text-align: center; padding: 20px; color: #888;">Загрузка списка...</div>
+            <div style="text-align: center; padding: 20px; color: #888;">Нет данных для отображения</div>
         </div>
     </div>
 
@@ -75,7 +69,7 @@
         <button class="main" onclick="sendHomework()">Сохранить</button>
     </div>
 
-    <!-- СТРАНИЦА 3: АДМИН (Скрыта по умолчанию) -->
+    <!-- СТРАНИЦА 3: АДМИН -->
     <div id="page-admin" class="page">
         <h3>Редактор расписания</h3>
         <select id="adm-day">
@@ -83,7 +77,7 @@
             <option>Четверг</option><option>Пятница</option>
         </select>
         <select id="adm-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
-        <textarea id="adm-text" rows="10" placeholder="Вставьте текст расписания сюда..."></textarea>
+        <textarea id="adm-text" rows="10" placeholder="Текст расписания..."></textarea>
         <button class="main" onclick="sendAdmin()">Обновить базу</button>
     </div>
 
@@ -91,7 +85,6 @@
     <div class="nav-bar">
         <div class="nav-btn active" onclick="go('view', this)"><span class="nav-icon">📅</span>Расписание</div>
         <div class="nav-btn" onclick="go('add', this)"><span class="nav-icon">✍️</span>Д/З</div>
-        <!-- Кнопка админа скрыта через style -->
         <div class="nav-btn" id="nav-admin" style="display: none;" onclick="go('admin', this)">
             <span class="nav-icon">⚙️</span>Админ
         </div>
@@ -102,74 +95,71 @@
         tg.ready();
         tg.expand();
 
-        // --- ВАШ ID ---
+        // ВАШ ID
         const ADMIN_ID = 697543617; 
 
-        // 1. ПРОВЕРКА ПОЛЬЗОВАТЕЛЯ
-        const statusBar = document.getElementById('status-bar');
+        // === ДИАГНОСТИКА ===
+        const diag = document.getElementById('diag-panel');
+        let diagText = "";
+        let hasError = false;
+
+        // 1. Проверка URL и данных
+        const fullUrl = window.location.href;
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawData = urlParams.get('data');
         
-        // Используем старый добрый синтаксис без ?. для надежности
+        diagText += `URL Len: ${fullUrl.length} chars. `;
+        if (!rawData) {
+            diagText += "[ОШИБКА: НЕТ ДАННЫХ В ССЫЛКЕ]. ";
+            diagText += "Вы нажали кнопку меню? Нажмите большую кнопку в чате! ";
+            hasError = true;
+        } else {
+            diagText += "[Данные есть]. ";
+        }
+
+        // 2. Проверка User ID
         let userId = null;
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             userId = tg.initDataUnsafe.user.id;
-        }
-
-        if (!userId) {
-            statusBar.innerText = "Ошибка: Не удалось получить ID пользователя. Откройте в Telegram.";
-            statusBar.style.background = "#d9534f";
+            diagText += `ID: ${userId}. `;
         } else {
-            // Сравнение строк, чтобы избежать проблем типов (число vs строка)
-            const isMatch = String(userId) === String(ADMIN_ID);
-            
-            statusBar.innerText = `Ваш ID: ${userId} | Админ ID: ${ADMIN_ID} | Доступ: ${isMatch ? "✅ ДА" : "❌ НЕТ"}`;
-            statusBar.style.background = isMatch ? "#5cb85c" : "#f0ad4e";
-
-            if (isMatch) {
-                // Если совпало - просто меняем display
-                document.getElementById('nav-admin').style.display = 'block';
-            }
+            diagText += "[ОШИБКА: ID НЕ НАЙДЕН]. Открыто не в Telegram? ";
+            hasError = true;
         }
-        
-        // Скрываем статус через 5 секунд, чтобы не мешал
-        setTimeout(function() {
-            statusBar.style.display = 'none';
-        }, 8000);
 
+        // Вывод диагностики
+        diag.innerText = diagText;
+        diag.style.background = hasError ? "#d9534f" : "#5cb85c";
 
-        // 2. ОБРАБОТКА ДАННЫХ ИЗ URL
+        // === ЛОГИКА АДМИНА ===
+        if (userId && String(userId) === String(ADMIN_ID)) {
+            document.getElementById('nav-admin').style.display = 'block';
+            diag.innerText += " (Вы Админ)";
+        }
+
+        // === ОБРАБОТКА ДАННЫХ ===
         let dbData = { perm: {} };
         let currentWeek = 'odd';
 
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const rawData = urlParams.get('data');
-            if (rawData) {
+        if (rawData) {
+            try {
                 dbData = JSON.parse(decodeURIComponent(rawData));
                 renderSchedule();
-            } else {
-                document.getElementById('schedule-list').innerHTML = 
-                    "<div style='text-align:center; padding:20px; color:red'>Нет данных. Перезапустите бота через /start</div>";
+            } catch (e) {
+                document.getElementById('schedule-list').innerHTML = "Ошибка чтения JSON: " + e.message;
             }
-        } catch (e) {
-            console.error(e);
-            document.getElementById('schedule-list').innerHTML = "Ошибка чтения данных: " + e.message;
+        } else {
+             document.getElementById('schedule-list').innerHTML = 
+                "<div style='padding:20px; text-align:center'><b>Пусто.</b><br>1. Напишите боту /start<br>2. Нажмите кнопку внизу чата</div>";
         }
 
-        // Установка даты
+        // === ФУНКЦИИ ИНТЕРФЕЙСА ===
         document.getElementById('hw-date').valueAsDate = new Date();
 
-        // 3. ФУНКЦИИ ИНТЕРФЕЙСА
         function go(pageId, btn) {
-            // Скрываем все страницы
-            const pages = document.querySelectorAll('.page');
-            for(let i=0; i<pages.length; i++) { pages[i].classList.remove('active'); }
-            
-            // Показываем нужную
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
-            
-            // Обновляем кнопки меню
-            const btns = document.querySelectorAll('.nav-btn');
-            for(let i=0; i<btns.length; i++) { btns[i].classList.remove('active'); }
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             if(btn) btn.classList.add('active');
         }
 
@@ -182,33 +172,26 @@
 
         function renderSchedule() {
             const container = document.getElementById('schedule-list');
-            if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
-                container.innerHTML = "<div style='text-align:center; padding:20px'>Расписание пустое.</div>";
-                return;
-            }
+            if (!dbData.perm || Object.keys(dbData.perm).length === 0) return;
             
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 
-            for (let i = 0; i < days.length; i++) {
-                const day = days[i];
+            days.forEach(day => {
                 const dayObj = dbData.perm[day];
-                if (!dayObj) continue;
+                if (!dayObj) return;
 
-                let text = "";
-                if (typeof dayObj === 'string') text = dayObj; 
-                else text = dayObj[currentWeek] || "";
+                let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
+                if (!text) return;
 
-                if (!text) continue; 
-
-                // Удаляем HTML теги для чистого текста в карточке
-                const cleanText = text.replace(/<[^>]*>?/gm, '');
+                // Убираем HTML теги
+                text = text.replace(/<[^>]*>?/gm, '');
 
                 const card = document.createElement('div');
                 card.className = 'sch-card';
-                card.innerHTML = `<div class="day-header">${day}</div><div style="white-space: pre-wrap; font-size: 14px;">${cleanText}</div>`;
+                card.innerHTML = `<div class="day-header">${day}</div><div style="white-space: pre-wrap; font-size: 14px;">${text}</div>`;
                 container.appendChild(card);
-            }
+            });
         }
 
         function sendHomework() {
