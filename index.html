@@ -33,7 +33,6 @@
         /* --- СТРАНИЦЫ --- */
         .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
         .page.active { display: block; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* --- КАРТОЧКИ --- */
@@ -85,10 +84,7 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
-        .add-option-btn { 
-            font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; 
-            text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; 
-        }
+        .add-option-btn { font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; }
         
         /* --- СПЕЦ ЭЛЕМЕНТЫ --- */
         .global-notice-banner {
@@ -151,7 +147,6 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
-        /* --- ОБЩЕЕ --- */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
@@ -312,16 +307,24 @@
         let currentWeek = 'odd'; let realCurrentWeek = 'odd'; let confirmResolve = null; let isNextWeek = false; let ignoreHolidays = false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
-        function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
+        // 1. ФУНКЦИИ (Объявляем всё заранее)
+        function getWeekNumber(d) { 
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); 
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); 
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); 
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); 
+        }
         
-        // --- FUNCTIONS ---
+        function unminifyPerm(minifiedP) {
+            const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]; const fullPerm = {};
+            for (let dKey in minifiedP) { fullPerm[daysMap[parseInt(dKey)]] = { "odd": minifiedP[dKey].o || "", "even": minifiedP[dKey].e || "" }; } return fullPerm;
+        }
+
         function checkAuth() {
             const user = tg.initDataUnsafe?.user;
             if (!user) return; 
-
             const myId = String(user.id);
             const cloudAdminId = dbData.aid ? String(dbData.aid) : null;
-            
             if (myId === cloudAdminId || myId === HARDCODED_ADMIN_ID) {
                 document.getElementById('nav-admin').style.display = 'block';
                 document.getElementById('access-denied').style.display = 'none';
@@ -331,17 +334,20 @@
                 if(dbData.session) { document.getElementById('session-text').value = dbData.session.text || ""; document.getElementById('session-active').checked = dbData.session.active; }
             }
         }
+        
         function renderSession() {
             if (dbData.session && dbData.session.active) {
                 document.getElementById('nav-session').style.display = 'block';
                 document.getElementById('session-content').innerText = dbData.session.text || "Нет данных";
             } else { document.getElementById('nav-session').style.display = 'none'; }
         }
-        function saveSession() {
-             const txt = document.getElementById('session-text').value;
-             const act = document.getElementById('session-active').checked;
-             sendDataToBot({ action: "update_session", text: txt, active: act });
+
+        function updateWeekButtons() {
+            const oddBtn = document.getElementById('btn-odd'); const evenBtn = document.getElementById('btn-even');
+            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
+            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
         }
+
         function renderCountdown() {
             const banner = document.getElementById('countdown-banner'); const data = dbData.countdown;
             if (!data || !data.active) { banner.style.display = 'none'; return; }
@@ -353,12 +359,20 @@
             const active = document.getElementById('cd-active').checked; const title = document.getElementById('cd-title').value; const date = document.getElementById('cd-date').value;
             if (active && !date) return tg.showAlert("Дата?"); sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
         }
+        
+        function saveSession() {
+             const txt = document.getElementById('session-text').value;
+             const act = document.getElementById('session-active').checked;
+             sendDataToBot({ action: "update_session", text: txt, active: act });
+        }
+
         function renderGlobalNotice() {
             const banner = document.getElementById('global-notice');
             if (dbData.notice && dbData.notice.trim() !== "") { document.getElementById('global-notice-text').innerText = dbData.notice; banner.style.display = 'block'; } else { banner.style.display = 'none'; }
         }
         function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
         function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
+
         function getDateKey(dateElemId) { const dateStr = document.getElementById(dateElemId).value; if(!dateStr) return null; const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; }
         async function submitHomework() {
             const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Дата?");
@@ -400,7 +414,6 @@
         function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
         function closeAdminSection() { 
             document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active'));
-            // Если экран входа скрыт (мы авторизованы) и мы не на вкладке сессии/расписания, то показываем меню
             if(document.getElementById('access-denied').style.display === 'none') {
                 document.getElementById('dashboard-screen').style.display='block'; 
             }
@@ -447,48 +460,11 @@
                 html+="</div>"; c.innerHTML += html;
             });
         }
-        
-        function updateWeekButtons() {
-            const oddBtn = document.getElementById('btn-odd'); const evenBtn = document.getElementById('btn-even');
-            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
-            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
+        function getDateForDay(dayIndex) {
+            const d = new Date(); const currentDay = d.getDay() || 7; const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
+            d.setDate(d.getDate() - currentDay + targetDay); if (currentWeek !== realCurrentWeek) d.setDate(d.getDate() + 7);
+            return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
         }
-
-        // --- INIT ---
-        const now = new Date();
-        realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
-        let checkDate = new Date(now);
-        if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
-        else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
-        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
-        setWeek(currentWeek);
-
-        document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
-        updateWeekButtons();
-
-        // 1. ЧТЕНИЕ ДАННЫХ
-        const urlParams = new URLSearchParams(window.location.search);
-        let rawData = urlParams.get('data');
-        if (rawData) {
-            try {
-                rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
-                const binaryString = window.atob(rawData);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-                let decodedString;
-                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } catch (e) { decodedString = new TextDecoder().decode(bytes); }
-                const parsed = JSON.parse(decodedString);
-                if (parsed.p) {
-                    dbData.perm = unminifyPerm(parsed.p); if (parsed.h) dbData.homework = parsed.h; if (parsed.t) dbData.temporary = parsed.t;
-                    if (parsed.n) dbData.notice = parsed.n; if (parsed.c) dbData.countdown = parsed.c; 
-                    if (parsed.P) dbData.polls = parsed.P; if(parsed.aid) dbData.aid = parsed.aid;
-                    if (parsed.s) dbData.session = parsed.s;
-                } else { dbData = parsed; }
-                const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                renderSchedule(); renderGlobalNotice(); renderCountdown(); checkAuth(); renderSession();
-            } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
-        } else { renderEmptyState(); }
-
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
             if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
@@ -526,8 +502,6 @@
                 }
 
                 if (!text && !note && !hasHw) return; 
-                // !!! ВАЖНОЕ ИЗМЕНЕНИЕ: Убираем replace, чтобы жирный шрифт <b> работал !!!
-                // text = text.replace(/<[^>]*>?/gm, ''); 
                 
                 const card = document.createElement('div');
                 card.className = 'card';
@@ -555,6 +529,19 @@
                 container.appendChild(btn);
             }
         }
+
+        // --- INIT ---
+        const now = new Date();
+        realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
+        let checkDate = new Date(now);
+        if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
+        else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
+        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
+        setWeek(currentWeek);
+
+        document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
+        updateWeekButtons();
+
     </script>
 </body>
 </html>
