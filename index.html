@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дневник</title>
+    <title>Веб-Расписание</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -12,378 +12,203 @@
             --text-color: var(--tg-theme-text-color, #000000);
             --hint-color: var(--tg-theme-hint-color, #8e8e93);
             --accent-color: var(--tg-theme-button-color, #007aff);
-            --accent-text: var(--tg-theme-button-text-color, #ffffff);
-            --danger-color: #ff3b30;
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            -webkit-font-smoothing: antialiased;
+        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; }
+        
+        /* Табы навигации */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--card-bg); border-top: 1px solid rgba(0,0,0,0.1);
+            display: flex; justify-content: space-around; padding: 10px 0; z-index: 100;
         }
-
-        /* Навигация (Табы) */
-        .nav-tabs {
-            display: flex;
-            background-color: var(--card-bg);
-            padding: 10px 10px 0 10px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            padding-bottom: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--hint-color);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .nav-item.active {
-            color: var(--accent-color);
-            border-bottom-color: var(--accent-color);
-        }
+        .nav-btn { flex: 1; text-align: center; color: var(--hint-color); font-size: 12px; cursor: pointer; }
+        .nav-btn.active { color: var(--accent-color); font-weight: bold; }
+        .nav-icon { display: block; font-size: 20px; margin-bottom: 4px; }
 
         /* Контент */
-        .container {
-            padding: 16px;
-            display: none;
-            animation: fadeIn 0.2s ease-in-out;
-        }
+        .page { display: none; padding: 16px; }
+        .page.active { display: block; }
 
-        .container.active {
-            display: block;
+        /* Карточки расписания */
+        .sch-card {
+            background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Карточки */
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-
-        .card-header {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Поля ввода */
-        .form-group { margin-bottom: 16px; }
+        .day-header { font-weight: bold; font-size: 18px; color: var(--accent-color); margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .day-content { white-space: pre-wrap; font-size: 14px; line-height: 1.5; }
         
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--hint-color);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        /* Переключатель недель */
+        .week-toggle {
+            display: flex; background: #e0e0e0; border-radius: 8px; p-1; margin-bottom: 15px;
         }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid transparent;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
+        .wt-btn {
+            flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; font-size: 14px;
         }
+        .wt-btn.active { background: var(--card-bg); font-weight: bold; shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--accent-color);
-            background-color: var(--card-bg);
-            box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
+        /* Формы */
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; 
+            border: 1px solid #ddd; box-sizing: border-box; 
         }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-            line-height: 1.5;
+        button.main { 
+            width: 100%; padding: 14px; background: var(--accent-color); color: #fff; 
+            border: none; border-radius: 10px; font-weight: bold; font-size: 16px; 
         }
-
-        /* Кнопка Фото */
-        .photo-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border-radius: 12px;
-            border: 2px dashed var(--hint-color);
-            color: var(--hint-color);
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: none;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .photo-btn.selected {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            background-color: rgba(0,122,255,0.05);
-        }
-
-        /* Главная кнопка */
-        .main-btn {
-            width: 100%;
-            padding: 16px;
-            border-radius: 14px;
-            border: none;
-            background-color: var(--accent-color);
-            color: var(--accent-text);
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-            transition: transform 0.1s;
-        }
-
-        .main-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Чипы шаблонов */
-        .chip-container {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .chip-container::-webkit-scrollbar { display: none; }
-
-        .chip {
-            background-color: var(--bg-color);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-            color: var(--text-color);
-            cursor: pointer;
-        }
-        .chip:active { background-color: #d1d1d6; }
-
-        /* Иконки (SVG) */
-        .icon { width: 20px; height: 20px; fill: currentColor; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="nav-tabs">
-        <div class="nav-item active" onclick="setTab('homework')">🏠 Домашка</div>
-        <div class="nav-item" id="admin-tab" style="display: none;" onclick="setTab('schedule')">✏️ Админ</div>
+    <!-- СТРАНИЦА 1: ПРОСМОТР РАСПИСАНИЯ -->
+    <div id="page-view" class="page active">
+        <div class="week-toggle">
+            <div class="wt-btn active" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
+            <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
+        </div>
+        <div id="schedule-list">
+            <!-- Сюда JS вставит расписание -->
+            <div style="text-align: center; padding: 20px; color: #888;">Загрузка данных...</div>
+        </div>
     </div>
 
-    <!-- Вкладка: ДОБАВИТЬ ДОМАШКУ -->
-    <div id="homework" class="container active">
-        <div class="card">
-            <div class="card-header">Новое задание</div>
-            
-            <div class="form-group">
-                <label>Дата</label>
-                <input type="date" id="hw-date">
-            </div>
-
-            <div class="form-group">
-                <label>Предмет</label>
-                <div class="chip-container" style="margin-bottom: 10px;">
-                    <div class="chip" onclick="setSubject('Математика')">Математика</div>
-                    <div class="chip" onclick="setSubject('Физика')">Физика</div>
-                    <div class="chip" onclick="setSubject('История')">История</div>
-                    <div class="chip" onclick="setSubject('Ин.яз')">Ин.яз</div>
-                </div>
-                <input type="text" id="hw-subject" placeholder="Выберите или введите...">
-            </div>
-
-            <div class="form-group">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label>Пара</label>
-                        <select id="hw-pair">
-                            <option value="1">1 (09:00)</option>
-                            <option value="2">2 (10:45)</option>
-                            <option value="3">3 (13:15)</option>
-                            <option value="4">4 (15:00)</option>
-                            <option value="5">5 (16:45)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Текст задания</label>
-                <textarea id="hw-text" placeholder="Стр. 45, упр. 3..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <button type="button" class="photo-btn" id="photo-toggle" onclick="togglePhoto()">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 7h-3l-1.2-2.4c-.3-.6-.9-1-1.6-1H10.8c-.7 0-1.3.4-1.6 1L8 7H5c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 10c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/></svg>
-                    <span>Прикрепить фото</span>
-                </button>
-            </div>
-
-            <button class="main-btn" onclick="sendHomework()">Сохранить</button>
-        </div>
+    <!-- СТРАНИЦА 2: ДОБАВИТЬ ДОМАШКУ -->
+    <div id="page-add" class="page">
+        <h3>Добавить ДЗ</h3>
+        <input type="date" id="hw-date">
+        <select id="hw-pair">
+            <option value="1">1 пара</option><option value="2">2 пара</option>
+            <option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option>
+        </select>
+        <input type="text" id="hw-subject" placeholder="Предмет">
+        <textarea id="hw-text" rows="4" placeholder="Текст задания..."></textarea>
         
-        <div style="text-align: center; color: var(--hint-color); font-size: 12px; margin-top: 20px;">
-            Чтобы увидеть актуальное расписание, используйте меню бота.
-        </div>
+        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <input type="checkbox" id="hw-photo" style="width: auto; margin: 0;">
+            <span>📷 Прикрепить фото (потом в боте)</span>
+        </label>
+
+        <button class="main" onclick="sendHomework()">Сохранить</button>
     </div>
 
-    <!-- Вкладка: РЕДАКТОР (АДМИН) -->
-    <div id="schedule" class="container">
-        <div class="card">
-            <div class="card-header">Редактор дня</div>
-            
-            <div class="form-group">
-                <label>Настройки дня</label>
-                <div style="display: flex; gap: 10px;">
-                    <select id="sch-day">
-                        <option value="Понедельник">Понедельник</option>
-                        <option value="Вторник">Вторник</option>
-                        <option value="Среда">Среда</option>
-                        <option value="Четверг">Четверг</option>
-                        <option value="Пятница">Пятница</option>
-                    </select>
-                    <select id="sch-week">
-                        <option value="odd">Нечетная</option>
-                        <option value="even">Четная</option>
-                    </select>
-                </div>
-            </div>
+    <!-- СТРАНИЦА 3: АДМИН -->
+    <div id="page-admin" class="page">
+        <h3>Редактор (Админ)</h3>
+        <select id="adm-day">
+            <option>Понедельник</option><option>Вторник</option><option>Среда</option>
+            <option>Четверг</option><option>Пятница</option>
+        </select>
+        <select id="adm-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
+        <textarea id="adm-text" rows="10"></textarea>
+        <button class="main" onclick="sendAdmin()">Обновить</button>
+    </div>
 
-            <div class="form-group">
-                <label>Шаблоны</label>
-                <div class="chip-container">
-                    <div class="chip" onclick="addTemplate(1)">+ 1 Пара</div>
-                    <div class="chip" onclick="addTemplate(2)">+ 2 Пара</div>
-                    <div class="chip" onclick="addTemplate(3)">+ 3 Пара</div>
-                    <div class="chip" onclick="addTemplate(4)">+ 4 Пара</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <textarea id="sch-text" style="min-height: 200px; font-family: monospace;" placeholder="Расписание..."></textarea>
-            </div>
-
-            <button class="main-btn" onclick="sendSchedule()">Обновить базу</button>
-        </div>
+    <!-- НАВИГАЦИЯ -->
+    <div class="nav-bar">
+        <div class="nav-btn active" onclick="go('view', this)"><span class="nav-icon">📅</span>Расписание</div>
+        <div class="nav-btn" onclick="go('add', this)"><span class="nav-icon">✍️</span>Д/З</div>
+        <div class="nav-btn hidden" id="nav-admin" onclick="go('admin', this)"><span class="nav-icon">⚙️</span>Админ</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        const ADMIN_ID = 697543617;
+        const user = tg.initDataUnsafe?.user;
 
-        // --- ДАННЫЕ И НАСТРОЙКИ ---
-        const ADMIN_ID = 697543617; 
-        let hasPhoto = false;
+        // Данные
+        let dbData = { perm: {} };
+        let currentWeek = 'odd';
 
-        // Инициализация
-        const user = tg.initDataUnsafe.user;
-        document.getElementById('hw-date').valueAsDate = new Date();
-
-        if (user && user.id === ADMIN_ID) {
-            document.getElementById('admin-tab').style.display = 'block';
-        }
-
-        // --- УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ ---
-        function setTab(tabId) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.container').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            if(tabId === 'homework') document.querySelector('.nav-item:first-child').classList.add('active');
-            if(tabId === 'schedule') document.getElementById('admin-tab').classList.add('active');
-        }
-
-        function togglePhoto() {
-            hasPhoto = !hasPhoto;
-            const btn = document.getElementById('photo-toggle');
-            if (hasPhoto) {
-                btn.classList.add('selected');
-                btn.querySelector('span').innerText = "Фото будет запрошено";
-                tg.HapticFeedback.notificationOccurred('success');
+        // 1. ПАРСИНГ ДАННЫХ ИЗ URL
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawData = urlParams.get('data');
+            if (rawData) {
+                dbData = JSON.parse(decodeURIComponent(rawData));
             } else {
-                btn.classList.remove('selected');
-                btn.querySelector('span').innerText = "Прикрепить фото";
+                document.getElementById('schedule-list').innerHTML = 
+                    "<p style='text-align:center'>Данные не получены. Откройте через бота командой /start</p>";
             }
+        } catch (e) {
+            console.error(e);
         }
 
-        function setSubject(name) {
-            document.getElementById('hw-subject').value = name;
+        // 2. ИНИЦИАЛИЗАЦИЯ
+        if (user && String(user.id) === String(ADMIN_ID)) {
+            document.getElementById('nav-admin').classList.remove('hidden');
+        }
+        document.getElementById('hw-date').valueAsDate = new Date();
+        renderSchedule();
+
+        // 3. ФУНКЦИИ
+        function go(pageId, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
         }
 
-        function addTemplate(num) {
-            const times = { 1: "09:00 - 10:30", 2: "10:45 - 12:15", 3: "13:15 - 14:45", 4: "15:00 - 16:30" };
-            const area = document.getElementById('sch-text');
-            const tpl = `${times[num]}\n${num} пара\n<b>Предмет</b>\nЛекция\nАуд: ???\nПреподаватель\n\n`;
-            area.value += tpl;
+        function setWeek(type) {
+            currentWeek = type;
+            document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
+            document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
+            renderSchedule();
         }
 
-        // --- ОТПРАВКА ДАННЫХ ---
+        function renderSchedule() {
+            const container = document.getElementById('schedule-list');
+            if (!dbData.perm || Object.keys(dbData.perm).length === 0) return;
+            
+            container.innerHTML = "";
+            const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+
+            days.forEach(day => {
+                const dayObj = dbData.perm[day];
+                if (!dayObj) return;
+
+                // Получаем текст для текущей недели
+                let text = "";
+                if (typeof dayObj === 'string') text = dayObj; // Старый формат
+                else text = dayObj[currentWeek] || "";
+
+                if (!text) return; // Пропускаем пустые дни
+
+                // Очистка HTML тегов для красивого отображения, или оставляем как есть
+                // text = text.replace(/<b>/g, '').replace(/<\/b>/g, ''); 
+                
+                const card = document.createElement('div');
+                card.className = 'sch-card';
+                card.innerHTML = `<div class="day-header">${day}</div><div class="day-content">${text}</div>`;
+                container.appendChild(card);
+            });
+        }
+
         function sendHomework() {
             const date = document.getElementById('hw-date').value;
-            const subject = document.getElementById('hw-subject').value.trim();
-            const text = document.getElementById('hw-text').value.trim();
-            const pair = document.getElementById('hw-pair').value;
-
-            if (!date) return tg.showAlert("Укажите дату!");
-            if (!text && !hasPhoto) return tg.showAlert("Напишите задание или прикрепите фото!");
-
-            const dateObj = new Date(date);
-            const formattedDate = dateObj.toLocaleDateString('ru-RU');
+            if(!date) return tg.showAlert("Выберите дату");
+            
+            // Формат DD.MM.YYYY
+            const dObj = new Date(date);
+            const fmtDate = `${String(dObj.getDate()).padStart(2,'0')}.${String(dObj.getMonth()+1).padStart(2,'0')}.${dObj.getFullYear()}`;
 
             const data = {
                 action: "add_homework",
-                date: formattedDate,
-                pair: pair,
-                subject: subject,
-                text: text,
-                has_photo: hasPhoto // Передаем флаг фото
+                date: fmtDate,
+                pair: document.getElementById('hw-pair').value,
+                subject: document.getElementById('hw-subject').value,
+                text: document.getElementById('hw-text').value,
+                has_photo: document.getElementById('hw-photo').checked
             };
             tg.sendData(JSON.stringify(data));
         }
 
-        function sendSchedule() {
-            const day = document.getElementById('sch-day').value;
-            const week = document.getElementById('sch-week').value;
-            const text = document.getElementById('sch-text').value.trim();
-
-            if (!text) return tg.showAlert("Расписание не может быть пустым");
-
+        function sendAdmin() {
             const data = {
                 action: "edit_perm",
-                day: day,
-                week_type: week,
-                text: text
+                day: document.getElementById('adm-day').value,
+                week_type: document.getElementById('adm-week').value,
+                text: document.getElementById('adm-text').value
             };
             tg.sendData(JSON.stringify(data));
         }
