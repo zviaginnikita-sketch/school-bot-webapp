@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Учебный Ассистент</title>
+    <!-- Добавляем библиотеку для распаковки данных (ZLIB) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -252,31 +254,41 @@
         document.getElementById('hw-date').valueAsDate = new Date();
         document.getElementById('note-date').valueAsDate = new Date();
 
-        // 1. ПАРСИНГ ДАННЫХ ИЗ URL (ИСПРАВЛЕНО)
+        // 1. ПАРСИНГ ДАННЫХ ИЗ URL (ZLIB)
         const urlParams = new URLSearchParams(window.location.search);
         let rawData = urlParams.get('data');
 
         if (rawData) {
             try {
                 // Исправляем URL-safe символы на стандартные Base64
-                // '-' -> '+' и '_' -> '/'
                 rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
 
-                // Декодируем Base64 с поддержкой русских символов
+                // 1. Base64 -> Бинарная строка
                 const binaryString = window.atob(rawData);
+                
+                // 2. Бинарная строка -> Uint8Array байты
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-                const decodedString = new TextDecoder().decode(bytes);
+
+                // 3. ZLIB Распаковка (pako)
+                // Используем try/catch на случай, если данные не сжаты pako, а просто json
+                let decodedString;
+                try {
+                    const decompressed = pako.inflate(bytes);
+                    decodedString = new TextDecoder().decode(decompressed);
+                } catch (e) {
+                    // Если ошибка распаковки, пробуем как обычный текст (на всякий случай)
+                    decodedString = new TextDecoder().decode(bytes);
+                }
                 
                 const parsed = JSON.parse(decodedString);
                 
-                // Проверяем, сжаты данные или нет (есть ли ключ 'p')
                 if (parsed.p) {
                     dbData = unminifyData(parsed);
                 } else {
-                    dbData = parsed; // Поддержка старого формата (если вдруг)
+                    dbData = parsed;
                 }
                 renderSchedule();
             } catch (e) { 
@@ -287,14 +299,13 @@
             renderEmptyState();
         }
 
-        // --- ФУНКЦИЯ РАСПАКОВКИ (Восстанавливает полные названия) ---
+        // --- ФУНКЦИЯ РАСПАКОВКИ ---
         function unminifyData(minified) {
             const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
             const fullPerm = {};
             
-            // minified.p содержит: {"0": {"o": "...", "e": "..."}, ...}
             for (let dKey in minified.p) {
-                const dayName = daysMap[parseInt(dKey)]; // "0" -> "Понедельник"
+                const dayName = daysMap[parseInt(dKey)];
                 const dayData = minified.p[dKey];
                 fullPerm[dayName] = {
                     "odd": dayData.o || "",
