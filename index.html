@@ -106,7 +106,6 @@
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
         .btn-outline { background: transparent; border: 1px solid var(--text-sec); color: var(--text-sec); }
         
-        /* Кнопка "Показать скрытое" */
         .force-show-btn {
             font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1);
             padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px;
@@ -149,7 +148,6 @@
         
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
         
-        /* Стили для выходного дня */
         .holiday-card { 
             background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
             border: 2px solid #4caf50; 
@@ -186,7 +184,6 @@
         }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         
-        /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal { display: none; } 
         .modal.open { display: block; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
@@ -209,7 +206,7 @@
             margin-bottom: 10px;
         }
 
-        /* --- КАСТОМНЫЙ ДИАЛОГ (ПОДТВЕРЖДЕНИЕ) --- */
+        /* --- МОДАЛКИ --- */
         #confirm-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 2000; display: none;
@@ -227,7 +224,6 @@
 </head>
 <body>
 
-    <!-- КАСТОМНОЕ ОКНО ПОДТВЕРЖДЕНИЯ -->
     <div id="confirm-modal">
         <div id="confirm-box">
             <h3 style="margin-top:0">ДЗ уже существует!</h3>
@@ -241,7 +237,7 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 1: ПРОСМОТР -->
+    <!-- ПРОСМОТР -->
     <div id="view-page" class="page active">
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
         <div class="last-updated" id="last-updated-text">Данные еще не загружены</div>
@@ -254,7 +250,7 @@
         <div id="schedule-container"></div>
     </div>
 
-    <!-- СТРАНИЦА 2: ДЗ -->
+    <!-- ДЗ -->
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
@@ -268,7 +264,6 @@
             </select>
             <input type="text" id="hw-subject" placeholder="Предмет (необязательно)">
         </div>
-        
         <div class="section-title">Содержание</div>
         <div class="card">
             <textarea id="hw-text" placeholder="Что задали?"></textarea>
@@ -276,9 +271,8 @@
         <button class="btn btn-primary" onclick="submitHomework()">Сохранить задание</button>
     </div>
 
-    <!-- СТРАНИЦА 3: АДМИН -->
+    <!-- АДМИН -->
     <div id="admin-page" class="page">
-        <!-- Экран входа -->
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Панель Администратора</h3>
@@ -289,7 +283,6 @@
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
 
-        <!-- Дашборд -->
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Управление</div>
             <div class="admin-grid">
@@ -303,7 +296,6 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
-        <!-- СЕКЦИЯ: РЕДАКТОР РАСПИСАНИЯ -->
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактор расписания</h3>
@@ -323,7 +315,6 @@
                     </select>
                 </div>
             </div>
-            <!-- Режимы редактора -->
             <div class="tabs-header">
                 <div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Одна пара</div>
                 <div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div>
@@ -346,7 +337,6 @@
             </div>
         </div>
 
-        <!-- СЕКЦИЯ: УПРАВЛЕНИЕ ДЗ -->
         <div id="section-manage-hw" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактирование/Удаление ДЗ</h3>
@@ -367,7 +357,6 @@
             <button class="btn btn-danger" onclick="deleteAdminHw()">Удалить ДЗ</button>
         </div>
 
-        <!-- СЕКЦИЯ: ЗАМЕТКА -->
         <div id="section-add-note" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Временное изменение</h3>
@@ -375,7 +364,6 @@
             <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
         </div>
 
-        <!-- СЕКЦИЯ: ВЫХОДНОЙ (ОБНОВЛЕННАЯ) -->
         <div id="section-add-holiday" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Управление выходными</h3>
@@ -393,7 +381,6 @@
             </div>
         </div>
 
-        <!-- СЕКЦИЯ: РАССЫЛКА -->
         <div id="section-broadcast" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Рассылка всем</h3>
@@ -417,6 +404,7 @@
         const ADMIN_PASS = "0451"; 
         let dbData = { perm: {}, homework: {}, temporary: {} };
         let currentWeek = 'odd';
+        let realCurrentWeek = 'odd'; // Реальная текущая неделя
         let confirmResolve = null;
         let isNextWeek = false; 
         let ignoreHolidays = false; 
@@ -431,12 +419,17 @@
         }
 
         const now = new Date();
+        // Рассчитываем реальную текущую неделю (без сдвигов на Сб/Вс)
+        const realWeekNum = getWeekNumber(now);
+        realCurrentWeek = (realWeekNum % 2 === 0) ? 'even' : 'odd';
+
+        // Логика авто-выбора для Сб/Вс (просто для открытия нужной вкладки)
         let checkDate = new Date(now);
         if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
         else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
 
-        const weekNum = getWeekNumber(checkDate);
-        currentWeek = (weekNum % 2 === 0) ? 'even' : 'odd';
+        const displayedWeekNum = getWeekNumber(checkDate);
+        currentWeek = (displayedWeekNum % 2 === 0) ? 'even' : 'odd';
         setWeek(currentWeek);
 
         document.getElementById('hw-date').valueAsDate = now;
@@ -444,13 +437,24 @@
         document.getElementById('note-date').valueAsDate = now;
         document.getElementById('holiday-date-start').valueAsDate = now;
 
+        // ИСПРАВЛЕННАЯ ЛОГИКА ПОДПИСЕЙ
         function updateWeekButtons() {
             const oddBtn = document.getElementById('btn-odd');
             const evenBtn = document.getElementById('btn-even');
-            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
-            const suffix = isNextWeek ? " (Следующая)" : " (Текущая)";
-            if (currentWeek === 'odd') oddBtn.innerText += suffix;
-            else evenBtn.innerText += suffix;
+            
+            oddBtn.innerText = "Нечетная";
+            evenBtn.innerText = "Четная";
+            
+            // Если реальная неделя - Нечетная
+            if (realCurrentWeek === 'odd') {
+                oddBtn.innerText += " (Текущая)";
+                evenBtn.innerText += " (Следующая)";
+            } 
+            // Если реальная неделя - Четная
+            else {
+                evenBtn.innerText += " (Текущая)";
+                oddBtn.innerText += " (Следующая)";
+            }
         }
         updateWeekButtons();
 
@@ -585,8 +589,14 @@
             const currentDay = d.getDay() || 7; 
             const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
             d.setDate(d.getDate() - currentDay + targetDay);
-            const realCalendarWeek = (getWeekNumber(new Date()) % 2 === 0) ? 'even' : 'odd';
-            if (currentWeek !== realCalendarWeek) d.setDate(d.getDate() + 7);
+            
+            // Если выбранная в UI неделя (currentWeek) не совпадает с РЕАЛЬНОЙ неделей (realCurrentWeek),
+            // значит мы сдвинули просмотр вперед/назад.
+            // В нашем случае это происходит только если Сб/Вс переключили нас на "следующую".
+            if (currentWeek !== realCurrentWeek) {
+                d.setDate(d.getDate() + 7);
+            }
+            
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const y = d.getFullYear();
@@ -702,7 +712,6 @@
             } else { tg.showAlert("Эта пара не найдена в расписании"); }
         }
 
-        // Заметки и Выходные
         function submitNote() {
             const dateStr = document.getElementById('note-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
@@ -729,7 +738,6 @@
             const holidayText = `🎉 ВЫХОДНОЙ\n\n📍 Причина: ${reason}`;
             sendDataToBot({ action: "add_holiday_batch", dates: dates, text: holidayText });
         }
-        
         function removeHoliday() {
             const dateStart = document.getElementById('holiday-date-start').value;
             const dateEnd = document.getElementById('holiday-date-end').value;
@@ -754,7 +762,6 @@
         }
         function sendAction(actName) { if(confirm("Вы уверены?")) sendDataToBot({ action: actName }); }
 
-        // UI Helpers
         function switchTab(tabId, btn) {
             closeAdminSection();
             document.querySelectorAll('.page').forEach(el => { if(!el.classList.contains('modal')) el.classList.remove('active'); });
@@ -764,8 +771,7 @@
         }
         function setWeek(type) {
             currentWeek = type;
-            ignoreHolidays = false; // Сбрасываем флаг при смене недели
-            
+            ignoreHolidays = false; 
             document.getElementById('btn-odd').className = type === 'odd' ? 'wt-btn active' : 'wt-btn';
             document.getElementById('btn-even').className = type === 'even' ? 'wt-btn active' : 'wt-btn';
             updateWeekButtons(); 
