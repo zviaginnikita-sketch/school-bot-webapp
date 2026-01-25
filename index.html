@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учебный Ассистент</title>
+    <title>Дневник</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -50,7 +50,7 @@
             width: 100%;
             padding: 14px;
             border: none;
-            background: #f2f2f7; /* Чуть темнее внутри карт */
+            background: #f2f2f7;
             border-radius: 8px;
             font-size: 16px;
             box-sizing: border-box;
@@ -251,7 +251,7 @@
             try {
                 dbData = JSON.parse(decodeURIComponent(rawData));
                 renderSchedule();
-            } catch (e) { renderEmptyState("Ошибка данных"); }
+            } catch (e) { renderEmptyState("Ошибка данных: " + e.message); }
         } else {
             renderEmptyState();
         }
@@ -280,7 +280,9 @@
                 <div class="empty-state">
                     <div class="empty-icon">📂</div>
                     <div style="font-weight: 600; font-size: 18px; margin-bottom: 10px;">Нет данных</div>
-                    <p style="font-size: 14px; margin-bottom: 20px;">Нажмите кнопку ниже, чтобы получить ссылку с данными.</p>
+                    <p style="font-size: 14px; margin-bottom: 20px;">
+                        Нажмите кнопку "Загрузить", чтобы получить актуальное расписание от бота.
+                    </p>
                     <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить расписание</button>
                     ${msg ? `<p style="color:red; font-size:12px; margin-top:10px">${msg}</p>` : ''}
                 </div>
@@ -299,9 +301,12 @@
             days.forEach(day => {
                 const dayObj = dbData.perm[day];
                 if (!dayObj) return;
+
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 if (!text) return;
+
                 text = text.replace(/<[^>]*>?/gm, ''); 
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `<div class="day-header">${day}</div><div class="lesson-text">${text}</div>`;
@@ -338,12 +343,9 @@
         // --- ОТПРАВКА ДАННЫХ ---
         function sendDataToBot(payload) {
             tg.sendData(JSON.stringify(payload));
-            // ВАЖНО: Закрываем WebApp, чтобы бот мог обработать данные в чате
-            // tg.close() иногда срабатывает слишком быстро, но sendData обычно сам закрывает окно.
         }
 
         function requestData() {
-            // Вот этот Action бот должен поймать
             sendDataToBot({ action: "request_schedule_link" });
         }
 
@@ -395,7 +397,6 @@
 
         function sendAction(actName) {
             if(confirm("Вы уверены?")) {
-                // Вот этот Action бот должен поймать для сброса
                 sendDataToBot({ action: actName });
             }
         }
