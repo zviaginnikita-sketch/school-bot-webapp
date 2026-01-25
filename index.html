@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
-    <!-- Библиотека для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -26,7 +25,6 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
-            /* Разрешаем выделение для нормальной работы ввода */
             user-select: text;
             -webkit-user-select: text;
         }
@@ -53,8 +51,8 @@
             margin: 20px 0 8px 16px;
         }
 
-        /* --- ПОЛЯ ВВОДА (Фикс для iOS) --- */
-        input, select, textarea {
+        /* --- ЭЛЕМЕНТЫ ВВОДА --- */
+        input:not([type="checkbox"]), select, textarea {
             width: 100%;
             padding: 14px;
             border: 1px solid transparent;
@@ -69,6 +67,11 @@
             -webkit-user-select: text !important;
             -webkit-appearance: none;
             appearance: none;
+        }
+
+        input[type="checkbox"] {
+            width: 24px; height: 24px; margin: 0; cursor: pointer;
+            -webkit-appearance: checkbox; appearance: checkbox; accent-color: var(--primary);
         }
         
         select {
@@ -106,7 +109,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
         
-        /* --- СПЕЦИАЛЬНЫЕ ЭЛЕМЕНТЫ --- */
+        /* --- СПЕЦ. ЭЛЕМЕНТЫ --- */
         .global-notice-banner {
             background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
             color: white; padding: 15px; border-radius: var(--radius);
@@ -137,6 +140,24 @@
             font-size: 11px; color: #8e8e93; text-align: center; margin-bottom: 10px; margin-top: 0;
         }
 
+        /* --- ОПРОСЫ (НОВОЕ) --- */
+        .poll-option-result {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .poll-bar-bg {
+            background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden;
+        }
+        .poll-bar-fill {
+            background: var(--primary); height: 100%; width: 0%; transition: width 0.5s;
+        }
+        .poll-voters {
+            font-size: 12px; color: #888; margin-top: 2px;
+        }
+        .add-option-btn {
+            font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px;
+        }
+
         /* --- АДМИН МЕНЮ --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .admin-tile {
@@ -161,6 +182,7 @@
         .homework-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .hw-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
         .hw-item { font-size: 13px; margin-bottom: 4px; padding: 6px; background: #f9f9f9; border-radius: 6px; }
+        
         .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
         
         .holiday-card { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 2px solid #4caf50; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.2); }
@@ -242,6 +264,7 @@
 
     <!-- СТРАНИЦА 3: АДМИН -->
     <div id="admin-page" class="page">
+        <!-- Экран входа -->
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
             <h3>Панель Администратора</h3>
@@ -250,6 +273,7 @@
             <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
         </div>
 
+        <!-- Дашборд -->
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Управление</div>
             <div class="admin-grid">
@@ -258,6 +282,7 @@
                 <div class="admin-tile" onclick="openAdminSection('add-note')"><span>📌</span>Заметка</div>
                 <div class="admin-tile" onclick="openAdminSection('add-holiday')"><span>🎉</span>Выходной</div>
                 <div class="admin-tile" onclick="openAdminSection('countdown-settings')"><span>⏳</span>Таймер</div>
+                <div class="admin-tile" onclick="openAdminSection('polls')"><span>📊</span>Опросы</div>
                 <div class="admin-tile" onclick="openAdminSection('global-notice')"><span>🔔</span>Уведомление</div>
                 <div class="admin-tile" onclick="openAdminSection('broadcast')"><span>📢</span>Рассылка</div>
                 <div class="admin-tile" onclick="sendAction('reset_temp')"><span>🗑</span>Сброс</div>
@@ -265,6 +290,43 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
+        <!-- СЕКЦИИ АДМИНКИ -->
+        
+        <!-- 0. ОПРОСЫ (НОВОЕ) -->
+        <div id="section-polls" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Опросы</h3>
+            
+            <div class="tabs-header">
+                <div class="tab-btn active" id="tab-poll-create" onclick="switchPollTab('create')">Создать</div>
+                <div class="tab-btn" id="tab-poll-results" onclick="switchPollTab('results')">Результаты</div>
+            </div>
+
+            <!-- Создание -->
+            <div id="poll-create-view">
+                <div class="card">
+                    <label style="font-size: 12px; color: #888;">Вопрос:</label>
+                    <textarea id="poll-question" placeholder="Например: Переносим пару?"></textarea>
+                    
+                    <label style="font-size: 12px; color: #888; margin-top: 10px; display: block;">Варианты ответа:</label>
+                    <div id="poll-options-container">
+                        <input type="text" class="poll-option-input" placeholder="Вариант 1">
+                        <input type="text" class="poll-option-input" placeholder="Вариант 2">
+                    </div>
+                    <div class="add-option-btn" onclick="addPollOption()">+ Добавить вариант</div>
+                </div>
+                <button class="btn btn-primary" onclick="submitPoll()">Создать и отправить</button>
+            </div>
+
+            <!-- Результаты -->
+            <div id="poll-results-view" style="display: none;">
+                <div id="polls-list-container">
+                    <p style="text-align: center; color: #888;">Загрузка опросов...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Редактор расписания -->
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактор расписания</h3>
@@ -274,6 +336,7 @@
             <div id="edit-mode-full" style="display: none;"><div class="card"><textarea id="ed-text" rows="10" placeholder="Полный текст..."></textarea></div><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button></div>
         </div>
 
+        <!-- 2. Управление ДЗ -->
         <div id="section-manage-hw" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Управление ДЗ</h3>
@@ -282,6 +345,7 @@
             <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()">Удалить</button>
         </div>
 
+        <!-- 3. Таймер -->
         <div id="section-countdown-settings" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Настройки Таймера</h3>
@@ -293,6 +357,7 @@
             <button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button>
         </div>
 
+        <!-- 4. Уведомление -->
         <div id="section-global-notice" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Уведомление</h3>
@@ -318,7 +383,7 @@
         tg.expand();
 
         const ADMIN_PASS = "0451"; 
-        let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {} };
+        let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [] };
         let currentWeek = 'odd';
         let realCurrentWeek = 'odd'; 
         let confirmResolve = null;
@@ -380,6 +445,7 @@
                     if (parsed.t) dbData.temporary = parsed.t;
                     if (parsed.n) dbData.notice = parsed.n;
                     if (parsed.c) dbData.countdown = parsed.c;
+                    if (parsed.P) dbData.polls = parsed.P; // Polls
                 } else { dbData = parsed; }
                 
                 const updateDate = new Date();
@@ -402,6 +468,107 @@
             return fullPerm;
         }
 
+        // --- ЛОГИКА ОПРОСОВ ---
+        function switchPollTab(tab) {
+            document.getElementById('tab-poll-create').classList.remove('active');
+            document.getElementById('tab-poll-results').classList.remove('active');
+            document.getElementById('poll-create-view').style.display = 'none';
+            document.getElementById('poll-results-view').style.display = 'none';
+            
+            document.getElementById('tab-poll-' + tab).classList.add('active');
+            document.getElementById('poll-' + tab + '-view').style.display = 'block';
+
+            if (tab === 'results') renderPolls();
+        }
+
+        function addPollOption() {
+            const container = document.getElementById('poll-options-container');
+            const count = container.children.length + 1;
+            if (count > 10) return tg.showAlert("Максимум 10 вариантов");
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'poll-option-input';
+            input.placeholder = 'Вариант ' + count;
+            container.appendChild(input);
+        }
+
+        function submitPoll() {
+            const question = document.getElementById('poll-question').value.trim();
+            if (!question) return tg.showAlert("Введите вопрос");
+            
+            const options = [];
+            document.querySelectorAll('.poll-option-input').forEach(input => {
+                const val = input.value.trim();
+                if (val) options.push(val);
+            });
+
+            if (options.length < 2) return tg.showAlert("Минимум 2 варианта ответа");
+
+            sendDataToBot({
+                action: "create_poll",
+                question: question,
+                options: options
+            });
+        }
+
+        function renderPolls() {
+            const container = document.getElementById('polls-list-container');
+            container.innerHTML = "";
+
+            if (!dbData.polls || dbData.polls.length === 0) {
+                container.innerHTML = "<p style='text-align: center; color: #888;'>Нет активных опросов</p>";
+                return;
+            }
+
+            dbData.polls.forEach(poll => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                let html = `<div style="font-weight: bold; margin-bottom: 10px;">${poll.q}</div>`;
+                
+                // Calculate totals if needed, assumes poll.r (results) structure like { "User": 0, "User2": 1 }
+                // Or simplified: poll.o = ["Opt1", "Opt2"], poll.v = { "UserId": optionIndex }
+                
+                const votes = poll.v || {};
+                const totalVotes = Object.keys(votes).length;
+                
+                // Count votes per option
+                const counts = new Array(poll.o.length).fill(0);
+                const voters = new Array(poll.o.length).fill().map(() => []);
+
+                for (let uid in votes) {
+                    const optIdx = votes[uid].idx; // Assuming stored as { idx: 0, name: "Name" }
+                    if (counts[optIdx] !== undefined) {
+                        counts[optIdx]++;
+                        voters[optIdx].push(votes[uid].name);
+                    }
+                }
+
+                poll.o.forEach((optText, idx) => {
+                    const count = counts[idx];
+                    const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                    
+                    html += `
+                        <div class="poll-option-result">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>${optText}</span>
+                                <span>${count} (${percent}%)</span>
+                            </div>
+                            <div class="poll-bar-bg">
+                                <div class="poll-bar-fill" style="width: ${percent}%"></div>
+                            </div>
+                            <div class="poll-voters">${voters[idx].join(', ')}</div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+        }
+
+        // --- ЛОГИКА ТАЙМЕРА ---
         function renderCountdown() {
             const banner = document.getElementById('countdown-banner');
             const data = dbData.countdown;
@@ -428,6 +595,7 @@
             sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
         }
 
+        // --- УВЕДОМЛЕНИЕ ---
         function renderGlobalNotice() {
             const banner = document.getElementById('global-notice');
             if (dbData.notice && dbData.notice.trim() !== "") {
@@ -439,6 +607,7 @@
         function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
         function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
 
+        // --- ДЗ И РАСПИСАНИЕ ---
         function getDateKey(dateElemId) { const dateStr = document.getElementById(dateElemId).value; if(!dateStr) return null; const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; }
         async function submitHomework() {
             const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Выберите дату");
@@ -598,6 +767,7 @@
         function logout() { document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('login-screen').style.display = 'block'; document.getElementById('adm-pass').value = ''; }
         function openAdminSection(sectionId) {
             if (sectionId === 'edit-sch') loadDayText(); if (sectionId === 'manage-hw') loadAdminHw(); 
+            if (sectionId === 'polls') { switchPollTab('create'); } // Default tab
             document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('section-' + sectionId).classList.add('active');
         }
         function closeAdminSection() {
