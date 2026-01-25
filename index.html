@@ -24,9 +24,6 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
-            /* Разрешаем выделение текста везде для стабильной работы ввода */
-            user-select: text;
-            -webkit-user-select: text;
         }
 
         /* --- СТРАНИЦЫ --- */
@@ -52,6 +49,7 @@
         }
 
         /* --- ЭЛЕМЕНТЫ ВВОДА --- */
+        /* Убрали user-select: none, чтобы работал ввод */
         input, select, textarea {
             width: 100%;
             padding: 14px;
@@ -63,15 +61,11 @@
             margin-bottom: 10px;
             color: var(--text-main);
             outline: none;
-            /* Гарантируем работу ввода */
-            user-select: text !important;
-            -webkit-user-select: text !important;
+            -webkit-appearance: none;
         }
         
         /* Фикс для iOS select */
         select {
-            -webkit-appearance: none;
-            appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 12px top 50%;
@@ -98,7 +92,6 @@
             text-align: center;
             margin-bottom: 8px;
             transition: opacity 0.2s, transform 0.1s;
-            user-select: none;
         }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
@@ -123,17 +116,22 @@
         .tab-btn {
             flex: 1; padding: 8px; text-align: center; background: #e5e5ea; 
             border-radius: 8px; font-size: 13px; cursor: pointer;
-            user-select: none;
         }
         .tab-btn.active { background: var(--primary); color: white; }
 
         /* --- РАСПИСАНИЕ --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
-        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
+        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
-        .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; }
+        .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .date-badge { font-size: 12px; color: var(--text-sec); font-weight: normal; background: #f2f2f7; padding: 2px 6px; border-radius: 6px; }
         .lesson-text { white-space: pre-wrap; font-size: 15px; line-height: 1.4; }
+        
+        .homework-block { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .hw-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 4px; }
+        .hw-item { font-size: 13px; margin-bottom: 4px; padding: 6px; background: #f9f9f9; border-radius: 6px; }
+        .note-block { background: #fff3cd; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; border: 1px solid #ffeeba; }
 
         /* --- НАВИГАЦИЯ --- */
         .nav-bar {
@@ -145,7 +143,7 @@
             padding: 10px 0 25px 0;
             z-index: 1000;
         }
-        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; user-select: none;}
+        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
@@ -158,11 +156,13 @@
         
         .modal { display: none; } 
         .modal.open { display: block; }
-        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
+        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; }
         
         .refresh-hint {
-            text-align: center; font-size: 12px; color: var(--primary); 
-            padding: 10px; cursor: pointer; opacity: 0.7;
+            background: var(--primary); color: white; border-radius: 10px;
+            text-align: center; font-size: 14px; font-weight: 600;
+            padding: 12px; cursor: pointer; margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,122,255,0.2);
         }
     </style>
 </head>
@@ -170,18 +170,18 @@
 
     <!-- СТРАНИЦА 1: ПРОСМОТР -->
     <div id="view-page" class="page active">
+        <!-- Кнопка обновления СВЕРХУ -->
+        <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
+
         <div class="week-toggle">
-            <div class="wt-btn active" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
+            <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         
         <div id="schedule-container"></div>
-        
-        <!-- Кнопка обновления, если данные устарели -->
-        <div class="refresh-hint" onclick="requestData()">🔄 Данные устарели? Нажми, чтобы обновить</div>
     </div>
 
-    <!-- СТРАНИЦА 2: ДЗ -->
+    <!-- СТРАНИЦА 2: ДЗ (БЕЗ ФОТО) -->
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
@@ -199,10 +199,6 @@
         <div class="section-title">Содержание</div>
         <div class="card">
             <textarea id="hw-text" placeholder="Что задали?"></textarea>
-            <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
-                <input type="checkbox" id="hw-photo" style="width: 20px; height: 20px; margin: 0;">
-                <span style="font-size: 15px;">Прикрепить фото (далее в боте)</span>
-            </label>
         </div>
         <button class="btn btn-primary" onclick="submitHomework()">Сохранить задание</button>
     </div>
@@ -329,17 +325,31 @@
 
         // --- КОНФИГУРАЦИЯ ---
         const ADMIN_PASS = "0451"; 
-        let dbData = { perm: {} };
+        let dbData = { perm: {}, homework: {}, temporary: {} };
         let currentWeek = 'odd';
 
-        // Время пар для генерации текста
         const PAIR_TIMES = {
             "1": "09:00 - 10:30", "2": "10:45 - 12:15", 
             "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15"
         };
 
-        document.getElementById('hw-date').valueAsDate = new Date();
-        document.getElementById('note-date').valueAsDate = new Date();
+        // --- ОПРЕДЕЛЕНИЕ ТЕКУЩЕЙ НЕДЕЛИ ---
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            return weekNo;
+        }
+
+        // Авто-выбор четности при старте
+        const now = new Date();
+        const weekNum = getWeekNumber(now);
+        currentWeek = (weekNum % 2 === 0) ? 'even' : 'odd';
+        setWeek(currentWeek);
+
+        document.getElementById('hw-date').valueAsDate = now;
+        document.getElementById('note-date').valueAsDate = now;
 
         // 1. ЧТЕНИЕ ДАННЫХ
         const urlParams = new URLSearchParams(window.location.search);
@@ -363,8 +373,16 @@
                 }
                 
                 const parsed = JSON.parse(decodedString);
-                if (parsed.p) dbData = unminifyData(parsed);
-                else dbData = parsed;
+                
+                if (parsed.p) {
+                    // Распаковка минифицированных данных
+                    dbData.perm = unminifyPerm(parsed.p);
+                    // Если бот присылает 'h' (homework) и 't' (temp)
+                    if (parsed.h) dbData.homework = parsed.h;
+                    if (parsed.t) dbData.temporary = parsed.t;
+                } else {
+                    dbData = parsed; 
+                }
                 
                 renderSchedule();
             } catch (e) { 
@@ -374,26 +392,49 @@
             renderEmptyState();
         }
 
-        // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
-        function unminifyData(minified) {
+        // --- РАСПАКОВКА ---
+        function unminifyPerm(minifiedP) {
             const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
             const fullPerm = {};
-            for (let dKey in minified.p) {
+            for (let dKey in minifiedP) {
                 const dayName = daysMap[parseInt(dKey)];
-                const dayData = minified.p[dKey];
+                const dayData = minifiedP[dKey];
                 fullPerm[dayName] = { "odd": dayData.o || "", "even": dayData.e || "" };
             }
-            return { perm: fullPerm };
+            return fullPerm;
         }
 
+        // --- ЛОГИКА ИНТЕРФЕЙСА ---
         function renderEmptyState(msg) {
             document.getElementById('schedule-container').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-icon">📂</div>
-                    <p>Нажмите кнопку ниже, чтобы загрузить расписание.</p>
-                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить данные</button>
+                    <p>Нажмите "Загрузить", чтобы получить расписание.</p>
                     ${msg ? `<p style="color:red; font-size:12px;">${msg}</p>` : ''}
                 </div>`;
+        }
+
+        // Вычисление даты для конкретного дня недели
+        function getDateForDay(dayIndex, isNextWeek = false) {
+            const d = new Date();
+            const currentDay = d.getDay() || 7; // 1-7
+            const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; // Преобразование 0(Пн)->1
+            
+            // Логика: находим этот день на текущей неделе
+            d.setDate(d.getDate() - currentDay + targetDay);
+            
+            // Если выбранная четность отличается от текущей реальной недели -> сдвигаем на 7 дней
+            // (Упрощенно: если currentWeek != расчитанной, это следующая неделя)
+            const calculatedWeek = getWeekNumber(new Date()) % 2 === 0 ? 'even' : 'odd';
+            if (currentWeek !== calculatedWeek) {
+                d.setDate(d.getDate() + 7);
+            }
+            
+            // Формат DD.MM.YYYY
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
         }
 
         function renderSchedule() {
@@ -404,92 +445,51 @@
             }
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-            days.forEach(day => {
+            
+            days.forEach((day, idx) => {
                 const dayObj = dbData.perm[day];
                 if (!dayObj) return;
+                
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
-                if (!text) return;
+                if (!text && !dbData.temporary && !dbData.homework) return; // Пропускаем совсем пустые
+                
                 text = text.replace(/<[^>]*>?/gm, ''); 
+                
+                // Вычисляем дату для отображения ДЗ и заметок
+                const dateKey = getDateForDay(idx);
+                
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.innerHTML = `<div class="day-header">${day}</div><div class="lesson-text">${text}</div>`;
+                
+                let html = `<div class="day-header">
+                                <span>${day}</span>
+                                <span class="date-badge">${dateKey}</span>
+                            </div>`;
+                
+                // 1. Временное примечание (если есть)
+                if (dbData.temporary && dbData.temporary[dateKey]) {
+                    html += `<div class="note-block">📌 <b>Внимание:</b> ${dbData.temporary[dateKey]}</div>`;
+                }
+                
+                html += `<div class="lesson-text">${text}</div>`;
+                
+                // 2. Домашнее задание (если есть)
+                if (dbData.homework && dbData.homework[dateKey]) {
+                    html += `<div class="homework-block"><div class="hw-title">Домашнее задание:</div>`;
+                    const dayHw = dbData.homework[dateKey];
+                    for (let pair in dayHw) {
+                        const task = dayHw[pair];
+                        html += `<div class="hw-item"><b>${pair} пара</b> (${task.subject || 'Предмет'}): ${task.text}</div>`;
+                    }
+                    html += `</div>`;
+                }
+                
+                card.innerHTML = html;
                 container.appendChild(card);
             });
         }
 
-        // --- ЛОГИКА АДМИНКИ ---
-        function setEditMode(mode) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + mode).classList.add('active');
-            
-            document.getElementById('edit-mode-full').style.display = mode === 'full' ? 'block' : 'none';
-            document.getElementById('edit-mode-pair').style.display = mode === 'pair' ? 'block' : 'none';
-        }
-
-        function loadDayText() {
-            const d = document.getElementById('ed-day').value;
-            const w = document.getElementById('ed-week').value;
-            let txt = "";
-            if (dbData.perm && dbData.perm[d]) {
-                txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
-            }
-            document.getElementById('ed-text').value = txt;
-        }
-
-        // === ЛОГИКА СОХРАНЕНИЯ ОДНОЙ ПАРЫ (СОРТИРОВКА) ===
-        function saveSinglePair() {
-            // 1. Берем текущий текст
-            loadDayText(); 
-            let currentFullText = document.getElementById('ed-text').value || "";
-            
-            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
-            const subj = document.getElementById('ed-pair-subj').value.trim();
-            const type = document.getElementById('ed-pair-type').value.trim();
-            const room = document.getElementById('ed-pair-room').value.trim();
-            const teach = document.getElementById('ed-pair-teach').value.trim();
-
-            if (!subj) return tg.showAlert("Введите название предмета!");
-
-            // 2. Создаем новый блок для этой пары
-            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
-            if (type) newPairBlock += `\n${type}`;
-            if (room) newPairBlock += `\nАуд: ${room}`;
-            if (teach) newPairBlock += `\n${teach}`;
-
-            // 3. Парсим существующий текст на куски
-            // Разбиваем текст по шаблону времени "09:00 - 10:30" (начало строки или после переноса)
-            // Используем lookahead, чтобы не терять разделитель
-            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
-            
-            let pairMap = {};
-            
-            // Заполняем карту существующими парами
-            parts.forEach(part => {
-                if (!part.trim()) return;
-                // Ищем номер пары в куске: "1 пара", "2 пара" и т.д.
-                const match = part.match(/\n(\d) пара/);
-                if (match) {
-                    pairMap[parseInt(match[1])] = part.trim();
-                }
-            });
-
-            // 4. Обновляем (или добавляем) нашу пару
-            pairMap[pairNum] = newPairBlock;
-
-            // 5. Собираем обратно по порядку (1..5)
-            let sortedText = "";
-            // Сортируем ключи (номера пар) как числа
-            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
-            
-            sortedKeys.forEach(key => {
-                sortedText += pairMap[key] + "\n\n";
-            });
-
-            document.getElementById('ed-text').value = sortedText.trim();
-            submitEditSchedule(); 
-        }
-
-        // --- ВЗАИМОДЕЙСТВИЕ С БОТОМ ---
+        // --- ВЗАИМОДЕЙСТВИЕ ---
         function sendDataToBot(payload) { tg.sendData(JSON.stringify(payload)); }
         function requestData() { sendDataToBot({ action: "request_schedule_link" }); }
 
@@ -497,13 +497,14 @@
             const dateStr = document.getElementById('hw-date').value;
             if(!dateStr) return tg.showAlert("Выберите дату");
             const [y, m, d] = dateStr.split('-'); 
+            // Убрали has_photo
             sendDataToBot({
                 action: "add_homework",
                 date: `${d}.${m}.${y}`,
                 pair: document.getElementById('hw-pair').value,
                 subject: document.getElementById('hw-subject').value,
                 text: document.getElementById('hw-text').value,
-                has_photo: document.getElementById('hw-photo').checked
+                has_photo: false 
             });
         }
 
@@ -539,7 +540,41 @@
             if(confirm("Вы уверены?")) sendDataToBot({ action: actName });
         }
 
-        // --- ПРОЧЕЕ ---
+        function saveSinglePair() {
+            loadDayText(); 
+            let currentFullText = document.getElementById('ed-text').value || "";
+            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
+            const subj = document.getElementById('ed-pair-subj').value.trim();
+            const type = document.getElementById('ed-pair-type').value.trim();
+            const room = document.getElementById('ed-pair-room').value.trim();
+            const teach = document.getElementById('ed-pair-teach').value.trim();
+
+            if (!subj) return tg.showAlert("Введите название предмета!");
+
+            let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
+            if (type) newPairBlock += `\n${type}`;
+            if (room) newPairBlock += `\nАуд: ${room}`;
+            if (teach) newPairBlock += `\n${teach}`;
+
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
+            let pairMap = {};
+            parts.forEach(part => {
+                if (!part.trim()) return;
+                const match = part.match(/\n(\d) пара/);
+                if (match) pairMap[parseInt(match[1])] = part.trim();
+            });
+
+            pairMap[pairNum] = newPairBlock;
+
+            let sortedText = "";
+            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
+            sortedKeys.forEach(key => { sortedText += pairMap[key] + "\n\n"; });
+
+            document.getElementById('ed-text').value = sortedText.trim();
+            submitEditSchedule(); 
+        }
+
+        // --- УТИЛИТЫ UI ---
         function switchTab(tabId, btn) {
             closeAdminSection();
             document.querySelectorAll('.page').forEach(el => {
@@ -577,6 +612,15 @@
             if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
                  document.getElementById('dashboard-screen').style.display = 'block';
             }
+        }
+        function loadDayText() {
+            const d = document.getElementById('ed-day').value;
+            const w = document.getElementById('ed-week').value;
+            let txt = "";
+            if (dbData.perm && dbData.perm[d]) {
+                txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || "");
+            }
+            document.getElementById('ed-text').value = txt;
         }
     </script>
 </body>
