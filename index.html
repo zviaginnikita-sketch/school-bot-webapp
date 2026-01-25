@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Учебный Ассистент</title>
+    <!-- Библиотека для распаковки данных (ZLIB) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -25,13 +26,35 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
+            /* Разрешаем выделение для нормальной работы ввода */
             user-select: text;
             -webkit-user-select: text;
         }
 
-        /* --- ЭЛЕМЕНТЫ ВВОДА (ИСПРАВЛЕНО) --- */
-        /* Применяем стили только к текстовым полям, чтобы не ломать чекбоксы */
-        input:not([type="checkbox"]), select, textarea {
+        /* --- СТРАНИЦЫ --- */
+        .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
+        .page.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- КАРТОЧКИ --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            margin: 20px 0 8px 16px;
+        }
+
+        /* --- ПОЛЯ ВВОДА (Фикс для iOS) --- */
+        input, select, textarea {
             width: 100%;
             padding: 14px;
             border: 1px solid transparent;
@@ -44,21 +67,10 @@
             outline: none;
             user-select: text !important;
             -webkit-user-select: text !important;
-            -webkit-appearance: none; /* Убирает стили iOS */
+            -webkit-appearance: none;
             appearance: none;
         }
         
-        /* Стили специально для чекбоксов */
-        input[type="checkbox"] {
-            width: 24px;
-            height: 24px;
-            margin: 0;
-            cursor: pointer;
-            -webkit-appearance: checkbox; /* Возвращаем вид чекбокса */
-            appearance: checkbox;
-            accent-color: var(--primary);
-        }
-
         select {
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
@@ -73,19 +85,6 @@
         }
         
         textarea { resize: vertical; min-height: 100px; font-family: inherit; }
-
-        /* --- КАРТОЧКИ --- */
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .section-title {
-            font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 20px 0 8px 16px;
-        }
 
         /* --- КНОПКИ --- */
         .btn {
@@ -107,7 +106,7 @@
         .btn-success { background: var(--success); color: white; }
         .btn-secondary { background: #e5e5ea; color: var(--text-main); }
         
-        /* --- СПЕЦ. ЭЛЕМЕНТЫ --- */
+        /* --- СПЕЦИАЛЬНЫЕ ЭЛЕМЕНТЫ --- */
         .global-notice-banner {
             background: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
             color: white; padding: 15px; border-radius: var(--radius);
@@ -177,8 +176,6 @@
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
         /* --- ОБЩЕЕ --- */
-        .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
-        .page.active { display: block; }
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
@@ -268,7 +265,6 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
         </div>
 
-        <!-- СЕКЦИИ -->
         <div id="section-edit-sch" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Редактор расписания</h3>
@@ -290,10 +286,7 @@
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <h3>Настройки Таймера</h3>
             <div class="card">
-                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <input type="checkbox" id="cd-active" style="margin:0;">
-                    <span>Включить счетчик</span>
-                </label>
+                <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px;"><input type="checkbox" id="cd-active" style="width:20px; height:20px; margin:0;"><span>Включить счетчик</span></label>
                 <label style="font-size:12px; color:#888;">Текст заголовка:</label><input type="text" id="cd-title" placeholder="До сессии осталось">
                 <label style="font-size:12px; color:#888; margin-top:10px;">Дата события:</label><input type="date" id="cd-date">
             </div>
@@ -309,7 +302,7 @@
 
         <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Временное изменение</h3><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
         <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Выходной</h3><div class="card"><label style="font-size:12px; color:#888;">С:</label><input type="date" id="holiday-date-start"><label style="font-size:12px; color:#888;">По:</label><input type="date" id="holiday-date-end"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
-        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="bc-photo" style="margin:0;"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
+        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Рассылка</h3><div class="card"><textarea id="bc-text" placeholder="Текст..."></textarea><label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="bc-photo" style="width:20px; height:20px; margin:0;"><span>Фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить</button></div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
@@ -414,6 +407,10 @@
             const data = dbData.countdown;
             if (!data || !data.active) { banner.style.display = 'none'; return; }
             
+            document.getElementById('cd-active').checked = data.active;
+            document.getElementById('cd-title').value = data.title || "";
+            document.getElementById('cd-date').value = data.date || "";
+
             const target = new Date(data.date);
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -436,7 +433,8 @@
             if (dbData.notice && dbData.notice.trim() !== "") {
                 document.getElementById('global-notice-text').innerText = dbData.notice;
                 banner.style.display = 'block';
-            } else { banner.style.display = 'none'; }
+                document.getElementById('global-notice-input').value = dbData.notice;
+            } else { banner.style.display = 'none'; document.getElementById('global-notice-input').value = ""; }
         }
         function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
         function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
@@ -603,9 +601,12 @@
             document.getElementById('dashboard-screen').style.display = 'none'; document.getElementById('section-' + sectionId).classList.add('active');
         }
         function closeAdminSection() {
+            // Закрываем модалки
             document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
-            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
-                 document.getElementById('dashboard-screen').style.display = 'block';
+            
+            // Если мы уже вошли в админку (логин скрыт), показываем дашборд
+            if (document.getElementById('login-screen').style.display === 'none') {
+                document.getElementById('dashboard-screen').style.display = 'block';
             }
         }
         function loadDayText() {
