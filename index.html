@@ -24,14 +24,9 @@
             margin: 0;
             padding: 0 0 90px 0;
             -webkit-tap-highlight-color: transparent;
-        }
-
-        /* --- ВАЖНО: ИСПРАВЛЕНИЕ ВВОДА --- */
-        input, textarea, select {
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            -webkit-appearance: none;
-            appearance: none;
+            /* Разрешаем выделение текста везде для стабильной работы ввода */
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         /* --- СТРАНИЦЫ --- */
@@ -68,6 +63,19 @@
             margin-bottom: 10px;
             color: var(--text-main);
             outline: none;
+            /* Гарантируем работу ввода */
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        
+        /* Фикс для iOS select */
+        select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
         }
         
         input:focus, select:focus, textarea:focus {
@@ -90,6 +98,7 @@
             text-align: center;
             margin-bottom: 8px;
             transition: opacity 0.2s, transform 0.1s;
+            user-select: none;
         }
         .btn:active { opacity: 0.7; transform: scale(0.98); }
         .btn-primary { background: var(--primary); color: white; }
@@ -114,12 +123,13 @@
         .tab-btn {
             flex: 1; padding: 8px; text-align: center; background: #e5e5ea; 
             border-radius: 8px; font-size: 13px; cursor: pointer;
+            user-select: none;
         }
         .tab-btn.active { background: var(--primary); color: white; }
 
         /* --- РАСПИСАНИЕ --- */
         .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
-        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; user-select: none; }
         .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; }
@@ -135,7 +145,7 @@
             padding: 10px 0 25px 0;
             z-index: 1000;
         }
-        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; }
+        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; user-select: none;}
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
@@ -148,7 +158,7 @@
         
         .modal { display: none; } 
         .modal.open { display: block; }
-        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px;}
+        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px; user-select: none;}
         
         .refresh-hint {
             text-align: center; font-size: 12px; color: var(--primary); 
@@ -267,7 +277,7 @@
                     <input type="text" id="ed-pair-room" placeholder="Аудитория">
                     <input type="text" id="ed-pair-teach" placeholder="Преподаватель">
                 </div>
-                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
+                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить и отсортировать</button>
             </div>
 
             <!-- Режим: ВЕСЬ ДЕНЬ -->
@@ -426,13 +436,13 @@
             document.getElementById('ed-text').value = txt;
         }
 
-        // === ЛОГИКА СОХРАНЕНИЯ ОДНОЙ ПАРЫ ===
+        // === ЛОГИКА СОХРАНЕНИЯ ОДНОЙ ПАРЫ (СОРТИРОВКА) ===
         function saveSinglePair() {
-            // 1. Берем текущий полный текст дня
+            // 1. Берем текущий текст
             loadDayText(); 
             let currentFullText = document.getElementById('ed-text').value || "";
             
-            const pairNum = document.getElementById('ed-pair-num').value;
+            const pairNum = parseInt(document.getElementById('ed-pair-num').value);
             const subj = document.getElementById('ed-pair-subj').value.trim();
             const type = document.getElementById('ed-pair-type').value.trim();
             const room = document.getElementById('ed-pair-room').value.trim();
@@ -440,24 +450,42 @@
 
             if (!subj) return tg.showAlert("Введите название предмета!");
 
-            // 2. Формируем новый блок текста
+            // 2. Создаем новый блок для этой пары
             let newPairBlock = `${PAIR_TIMES[pairNum]}\n${pairNum} пара\n<b>${subj}</b>`;
             if (type) newPairBlock += `\n${type}`;
             if (room) newPairBlock += `\nАуд: ${room}`;
             if (teach) newPairBlock += `\n${teach}`;
-            newPairBlock += "\n\n";
 
-            // 3. Заменяем в полном тексте
-            const timeStart = PAIR_TIMES[pairNum].split(' - ')[0]; 
-            const regex = new RegExp(`${timeStart}.*?${pairNum} пара[\\s\\S]*?(?=(\\d{2}:\\d{2} -|\\Z))`, "g");
+            // 3. Парсим существующий текст на куски
+            // Разбиваем текст по шаблону времени "09:00 - 10:30" (начало строки или после переноса)
+            // Используем lookahead, чтобы не терять разделитель
+            let parts = currentFullText.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m);
             
-            if (regex.test(currentFullText)) {
-                currentFullText = currentFullText.replace(regex, newPairBlock);
-            } else {
-                currentFullText = currentFullText.trim() + "\n\n" + newPairBlock;
-            }
+            let pairMap = {};
+            
+            // Заполняем карту существующими парами
+            parts.forEach(part => {
+                if (!part.trim()) return;
+                // Ищем номер пары в куске: "1 пара", "2 пара" и т.д.
+                const match = part.match(/\n(\d) пара/);
+                if (match) {
+                    pairMap[parseInt(match[1])] = part.trim();
+                }
+            });
 
-            document.getElementById('ed-text').value = currentFullText;
+            // 4. Обновляем (или добавляем) нашу пару
+            pairMap[pairNum] = newPairBlock;
+
+            // 5. Собираем обратно по порядку (1..5)
+            let sortedText = "";
+            // Сортируем ключи (номера пар) как числа
+            const sortedKeys = Object.keys(pairMap).map(Number).sort((a, b) => a - b);
+            
+            sortedKeys.forEach(key => {
+                sortedText += pairMap[key] + "\n\n";
+            });
+
+            document.getElementById('ed-text').value = sortedText.trim();
             submitEditSchedule(); 
         }
 
