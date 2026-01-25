@@ -3,104 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дневник</title>
+    <title>Учебный Ассистент</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; color: #000; margin: 0; padding-bottom: 80px; }
-        
-        /* Навигация */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: #fff; border-top: 1px solid #ddd;
-            display: flex; justify-content: space-around; padding: 10px 0; z-index: 100;
+        :root {
+            --bg-color: #f2f2f7;
+            --card-bg: #ffffff;
+            --primary: #007aff;
+            --danger: #ff3b30;
+            --text-main: #000000;
+            --text-sec: #8e8e93;
+            --radius: 12px;
         }
-        .nav-btn { flex: 1; text-align: center; color: #8e8e93; font-size: 12px; cursor: pointer; }
-        .nav-btn.active { color: #007aff; font-weight: bold; }
-        .nav-icon { display: block; font-size: 20px; margin-bottom: 4px; }
 
-        .page { display: none; padding: 16px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0 0 90px 0; /* Отступ под меню */
+            user-select: none;
+        }
+
+        /* --- КАРТОЧКИ И КОНТЕЙНЕРЫ --- */
+        .page { display: none; padding: 16px; animation: fadeIn 0.2s; }
         .page.active { display: block; }
 
-        /* Карточки */
-        .sch-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .day-header { font-weight: bold; font-size: 18px; color: #007aff; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
-        .week-toggle { display: flex; background: #e0e0e0; border-radius: 8px; margin-bottom: 15px; }
-        .wt-btn { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; font-size: 14px; }
-        .wt-btn.active { background: #fff; font-weight: bold; }
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-sec);
+            margin: 20px 0 8px 16px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- ЭЛЕМЕНТЫ УПРАВЛЕНИЯ --- */
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            -webkit-appearance: none; /* Убирает стили iOS */
+        }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button.main { width: 100%; padding: 14px; background: #007aff; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; margin-bottom: 10px;}
-        button.secondary { width: 100%; padding: 14px; background: #6c757d; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+        textarea { resize: vertical; min-height: 100px; font-family: inherit; }
 
-        /* Блок пароля */
-        #admin-login { text-align: center; padding: 20px; background: #fff; border-radius: 12px; margin-top: 20px; }
-        #admin-content { display: none; }
-        .error-msg { color: red; font-size: 14px; display: none; margin-bottom: 10px; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.7; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: #e5e5ea; color: var(--text-main); }
+        
+        /* Кнопки меню админа (сетка) */
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .admin-tile {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--radius);
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .admin-tile span { display: block; font-size: 24px; margin-bottom: 5px; }
 
-        /* Пустой экран */
-        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
+        /* --- РАСПИСАНИЕ --- */
+        .week-toggle { display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 15px; }
+        .wt-btn { flex: 1; text-align: center; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; }
+        .wt-btn.active { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        .day-header { font-weight: 700; font-size: 18px; color: var(--primary); margin-bottom: 8px; }
+        .lesson-text { white-space: pre-wrap; font-size: 15px; line-height: 1.4; }
+
+        /* --- НИЖНЕЕ МЕНЮ --- */
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #c6c6c8;
+            display: flex; justify-content: space-around;
+            padding: 10px 0 25px 0; /* Учет safe area iPhone */
+            z-index: 1000;
+        }
+        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
+
+        /* --- ЭКРАН ЗАГРУЗКИ / ПУСТОЙ --- */
+        .empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 60vh; text-align: center; color: var(--text-sec); padding: 20px;
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 15px; }
+        
+        /* Всплывающие модальные окна (для разделов админки) */
+        .modal { display: none; } 
+        .modal.open { display: block; }
+        .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 17px;}
     </style>
 </head>
 <body>
 
-    <!-- СТРАНИЦА 1: РАСПИСАНИЕ -->
-    <div id="page-view" class="page active">
+    <!-- СТРАНИЦА 1: ПРОСМОТР РАСПИСАНИЯ -->
+    <div id="view-page" class="page active">
         <div class="week-toggle">
             <div class="wt-btn active" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
-        <div id="schedule-list">
-            <!-- Сюда загрузится расписание или кнопка запроса -->
+        <div id="schedule-container">
+            <!-- Сюда попадет расписание -->
         </div>
     </div>
 
     <!-- СТРАНИЦА 2: ДОБАВИТЬ ДЗ -->
-    <div id="page-add" class="page">
-        <h3>Добавить ДЗ</h3>
-        <input type="date" id="hw-date">
-        <select id="hw-pair">
-            <option value="1">1 пара</option><option value="2">2 пара</option>
-            <option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option>
-        </select>
-        <input type="text" id="hw-subject" placeholder="Предмет">
-        <textarea id="hw-text" rows="4" placeholder="Текст задания..."></textarea>
-        <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-            <input type="checkbox" id="hw-photo" style="width: auto; margin: 0;">
-            <span>📷 Фото (отправить в боте)</span>
-        </label>
-        <button class="main" onclick="sendHomework()">Сохранить</button>
-    </div>
-
-    <!-- СТРАНИЦА 3: АДМИН (С ПАРОЛЕМ) -->
-    <div id="page-admin" class="page">
-        <!-- Экран входа -->
-        <div id="admin-login">
-            <h3>🔒 Вход для админа</h3>
-            <p style="font-size: 14px; color: #888;">Введите пароль доступа</p>
-            <input type="password" id="adm-pass" placeholder="Пароль" style="text-align: center;">
-            <div class="error-msg" id="pass-error">Неверный пароль</div>
-            <button class="main" onclick="checkPass()">Войти</button>
-        </div>
-
-        <!-- Контент админа (Скрыт) -->
-        <div id="admin-content">
-            <h3>Редактор расписания</h3>
-            <select id="adm-day">
-                <option>Понедельник</option><option>Вторник</option><option>Среда</option>
-                <option>Четверг</option><option>Пятница</option>
+    <div id="hw-page" class="page">
+        <div class="section-title">Новое задание</div>
+        <div class="card">
+            <input type="date" id="hw-date">
+            <select id="hw-pair">
+                <option value="1">1 пара (09:00)</option>
+                <option value="2">2 пара (10:45)</option>
+                <option value="3">3 пара (13:15)</option>
+                <option value="4">4 пара (15:00)</option>
+                <option value="5">5 пара (16:45)</option>
             </select>
-            <select id="adm-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
-            <textarea id="adm-text" rows="10" placeholder="Текст расписания..."></textarea>
-            <button class="main" onclick="sendAdmin()">Обновить базу</button>
-            <button class="secondary" onclick="logout()">Выйти</button>
+            <input type="text" id="hw-subject" placeholder="Предмет (необязательно)">
+        </div>
+        
+        <div class="section-title">Содержание</div>
+        <div class="card">
+            <textarea id="hw-text" placeholder="Что задали?"></textarea>
+            <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                <input type="checkbox" id="hw-photo" style="width: 20px; height: 20px; margin: 0;">
+                <span style="font-size: 15px;">Прикрепить фото (далее в боте)</span>
+            </label>
+        </div>
+        <button class="btn btn-primary" onclick="submitHomework()">Сохранить задание</button>
+    </div>
+
+    <!-- СТРАНИЦА 3: АДМИН ПАНЕЛЬ -->
+    <div id="admin-page" class="page">
+        <!-- Вход -->
+        <div id="login-screen" style="text-align: center; margin-top: 50px;">
+            <div style="font-size: 40px; margin-bottom: 20px;">🔒</div>
+            <h3>Панель Администратора</h3>
+            <div class="card">
+                <input type="password" id="adm-pass" placeholder="Введите пароль" style="text-align: center;">
+            </div>
+            <button class="btn btn-primary" onclick="login()">Войти</button>
+            <p id="login-error" style="color: red; display: none; margin-top: 10px;">Неверный пароль</p>
+        </div>
+
+        <!-- Дашборд -->
+        <div id="dashboard-screen" style="display: none;">
+            <div class="section-title">Управление</div>
+            <div class="admin-grid">
+                <div class="admin-tile" onclick="openAdminSection('edit-sch')">
+                    <span>✏️</span>Редактор
+                </div>
+                <div class="admin-tile" onclick="openAdminSection('add-note')">
+                    <span>📌</span>Заметка
+                </div>
+                <div class="admin-tile" onclick="openAdminSection('broadcast')">
+                    <span>📢</span>Рассылка
+                </div>
+                <div class="admin-tile" onclick="sendAction('reset_temp')">
+                    <span>🗑</span>Сброс
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 20px;">Выйти</button>
+        </div>
+
+        <!-- Секция: РЕДАКТОР -->
+        <div id="section-edit-sch" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Редактировать постоянное</h3>
+            <div class="card">
+                <select id="ed-day">
+                    <option>Понедельник</option><option>Вторник</option><option>Среда</option>
+                    <option>Четверг</option><option>Пятница</option>
+                </select>
+                <select id="ed-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
+                <textarea id="ed-text" rows="8" placeholder="Расписание..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить</button>
+        </div>
+
+        <!-- Секция: ЗАМЕТКА -->
+        <div id="section-add-note" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Добавить временное изменение</h3>
+            <div class="card">
+                <input type="date" id="note-date">
+                <textarea id="note-text" placeholder="Пример: Пар нет, ко второй паре."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitNote()">Добавить заметку</button>
+        </div>
+
+        <!-- Секция: РАССЫЛКА -->
+        <div id="section-broadcast" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <h3>Массовая рассылка</h3>
+            <div class="card">
+                <textarea id="bc-text" placeholder="Текст сообщения для всех..."></textarea>
+                <label style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <input type="checkbox" id="bc-photo" style="width: 20px; height: 20px; margin: 0;">
+                    <span>Прикрепить фото (далее в боте)</span>
+                </label>
+            </div>
+            <button class="btn btn-primary" onclick="submitBroadcast()">Отправить всем</button>
         </div>
     </div>
 
-    <!-- МЕНЮ -->
+    <!-- НАВИГАЦИЯ -->
     <div class="nav-bar">
-        <div class="nav-btn active" onclick="go('view', this)"><span class="nav-icon">📅</span>Расписание</div>
-        <div class="nav-btn" onclick="go('add', this)"><span class="nav-icon">✍️</span>Д/З</div>
-        <div class="nav-btn" onclick="go('admin', this)"><span class="nav-icon">⚙️</span>Админ</div>
+        <div class="nav-item active" onclick="switchTab('view', this)">
+            <span class="nav-icon">📅</span>Расписание
+        </div>
+        <div class="nav-item" onclick="switchTab('hw', this)">
+            <span class="nav-icon">✍️</span>Д/З
+        </div>
+        <div class="nav-item" onclick="switchTab('admin', this)">
+            <span class="nav-icon">⚙️</span>Админ
+        </div>
     </div>
 
     <script>
@@ -108,14 +258,16 @@
         tg.ready();
         tg.expand();
 
-        // === НАСТРОЙКИ ===
-        const ADMIN_PASSWORD = "1234"; // <--- ЗАДАЙТЕ ПАРОЛЬ ТУТ
-
-        // Данные
+        // --- КОНФИГУРАЦИЯ ---
+        const ADMIN_PASS = "1234"; // ПАРОЛЬ АДМИНА
         let dbData = { perm: {} };
         let currentWeek = 'odd';
 
-        // 1. ПОЛУЧЕНИЕ ДАННЫХ
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        document.getElementById('hw-date').valueAsDate = new Date();
+        document.getElementById('note-date').valueAsDate = new Date();
+
+        // Читаем данные из URL
         const urlParams = new URLSearchParams(window.location.search);
         const rawData = urlParams.get('data');
 
@@ -123,41 +275,22 @@
             try {
                 dbData = JSON.parse(decodeURIComponent(rawData));
                 renderSchedule();
-            } catch (e) {
-                showEmptyState("Ошибка данных");
-            }
+            } catch (e) { renderEmptyState("Ошибка данных"); }
         } else {
-            // Если открыли через меню (данных нет)
-            showEmptyState();
+            renderEmptyState(); // Пустое состояние (открыто через меню)
         }
 
-        // Установка даты
-        document.getElementById('hw-date').valueAsDate = new Date();
-
-        // === ФУНКЦИИ ИНТЕРФЕЙСА ===
-
-        function showEmptyState(msg) {
-            const container = document.getElementById('schedule-list');
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div style="font-size: 40px; margin-bottom: 20px;">📂</div>
-                    <p>${msg || "Данные не загружены"}</p>
-                    <p style="font-size: 13px; color: #999;">Если вы открыли через меню,<br>нужно запросить актуальное расписание.</p>
-                    <button class="main" onclick="requestData()">🔄 Загрузить расписание</button>
-                </div>
-            `;
-        }
-
-        function requestData() {
-            // Отправляем боту сигнал, что нам нужны данные
-            const data = { action: "request_schedule_link" };
-            tg.sendData(JSON.stringify(data));
-        }
-
-        function go(pageId, btn) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        // --- ФУНКЦИИ ИНТЕРФЕЙСА ---
+        function switchTab(tabId, btn) {
+            // Закрываем все модалки админа при смене таба
+            closeAdminSection();
+            
+            document.querySelectorAll('.page').forEach(el => {
+                if(!el.classList.contains('modal')) el.classList.remove('active');
+            });
+            document.getElementById(tabId + '-page').classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             if(btn) btn.classList.add('active');
         }
 
@@ -168,13 +301,25 @@
             renderSchedule();
         }
 
+        function renderEmptyState(msg) {
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    <div style="font-weight: 600; font-size: 18px; margin-bottom: 10px;">Нет данных</div>
+                    <p style="font-size: 14px; margin-bottom: 20px;">Нажмите кнопку ниже, чтобы получить актуальное расписание от бота.</p>
+                    <button class="btn btn-primary" onclick="requestData()">🔄 Загрузить расписание</button>
+                    ${msg ? `<p style="color:red; font-size:12px; margin-top:10px">${msg}</p>` : ''}
+                </div>
+            `;
+        }
+
         function renderSchedule() {
-            const container = document.getElementById('schedule-list');
+            const container = document.getElementById('schedule-container');
             if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
                 container.innerHTML = "<div class='empty-state'>Расписание пустое</div>";
                 return;
             }
-            
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 
@@ -185,85 +330,114 @@
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 if (!text) return;
 
-                // Очистка тегов
-                text = text.replace(/<[^>]*>?/gm, '');
+                text = text.replace(/<[^>]*>?/gm, ''); // Чистим теги
 
                 const card = document.createElement('div');
-                card.className = 'sch-card';
-                card.innerHTML = `<div class="day-header">${day}</div><div style="white-space: pre-wrap; font-size: 14px;">${text}</div>`;
+                card.className = 'card';
+                card.innerHTML = `<div class="day-header">${day}</div><div class="lesson-text">${text}</div>`;
                 container.appendChild(card);
             });
         }
 
-        // === ЛОГИКА ПАРОЛЯ ===
-        function checkPass() {
-            const input = document.getElementById('adm-pass').value;
-            const err = document.getElementById('pass-error');
-            
-            if (input === ADMIN_PASSWORD) {
-                document.getElementById('admin-login').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
-                err.style.display = 'none';
+        // --- ЛОГИКА АДМИНА ---
+        function login() {
+            const pass = document.getElementById('adm-pass').value;
+            if (pass === ADMIN_PASS) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                document.getElementById('login-error').style.display = 'none';
             } else {
-                err.style.display = 'block';
+                document.getElementById('login-error').style.display = 'block';
             }
         }
 
         function logout() {
-            document.getElementById('admin-login').style.display = 'block';
-            document.getElementById('admin-content').style.display = 'none';
-            document.getElementById('adm-pass').value = "";
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('adm-pass').value = '';
         }
 
-        // === ОТПРАВКА ДАННЫХ ===
-        function sendHomework() {
-            const date = document.getElementById('hw-date').value;
-            if(!date) return tg.showAlert("Выберите дату");
+        function openAdminSection(sectionId) {
+            document.getElementById('dashboard-screen').style.display = 'none';
+            document.getElementById('section-' + sectionId).classList.add('active');
+        }
+
+        function closeAdminSection() {
+            document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
+            if(document.getElementById('dashboard-screen').offsetParent !== null || document.getElementById('section-edit-sch').classList.contains('active')) {
+                 document.getElementById('dashboard-screen').style.display = 'block';
+            }
+        }
+
+        // --- ОТПРАВКА ДАННЫХ БОТУ ---
+        function sendDataToBot(payload) {
+            tg.sendData(JSON.stringify(payload));
+        }
+
+        function requestData() {
+            sendDataToBot({ action: "request_schedule_link" });
+        }
+
+        // 1. Сохранить ДЗ
+        function submitHomework() {
+            const dateStr = document.getElementById('hw-date').value;
+            if(!dateStr) return tg.showAlert("Выберите дату");
             
-            const dObj = new Date(date);
-            const d = String(dObj.getDate()).padStart(2, '0');
-            const m = String(dObj.getMonth() + 1).padStart(2, '0');
-            const y = dObj.getFullYear();
+            const [y, m, d] = dateStr.split('-'); // input date дает YYYY-MM-DD
             const fmtDate = `${d}.${m}.${y}`;
 
-            const data = {
+            sendDataToBot({
                 action: "add_homework",
                 date: fmtDate,
                 pair: document.getElementById('hw-pair').value,
                 subject: document.getElementById('hw-subject').value,
                 text: document.getElementById('hw-text').value,
                 has_photo: document.getElementById('hw-photo').checked
-            };
-            tg.sendData(JSON.stringify(data));
+            });
         }
 
-        function sendAdmin() {
-            const data = {
+        // 2. Редактировать расписание
+        function submitEditSchedule() {
+            sendDataToBot({
                 action: "edit_perm",
-                day: document.getElementById('adm-day').value,
-                week_type: document.getElementById('adm-week').value,
-                text: document.getElementById('adm-text').value
-            };
-            tg.sendData(JSON.stringify(data));
+                day: document.getElementById('ed-day').value,
+                week_type: document.getElementById('ed-week').value,
+                text: document.getElementById('ed-text').value
+            });
+        }
+
+        // 3. Добавить заметку
+        function submitNote() {
+            const dateStr = document.getElementById('note-date').value;
+            if(!dateStr) return tg.showAlert("Выберите дату");
+            const [y, m, d] = dateStr.split('-');
+            const fmtDate = `${d}.${m}.${y}`;
+
+            sendDataToBot({
+                action: "add_note",
+                date: fmtDate,
+                text: document.getElementById('note-text').value
+            });
+        }
+
+        // 4. Рассылка
+        function submitBroadcast() {
+            const text = document.getElementById('bc-text').value;
+            if(!text) return tg.showAlert("Введите текст");
+
+            sendDataToBot({
+                action: "broadcast",
+                text: text,
+                has_photo: document.getElementById('bc-photo').checked
+            });
+        }
+
+        // 5. Простые действия (Сброс)
+        function sendAction(actName) {
+            if(confirm("Вы уверены?")) {
+                sendDataToBot({ action: actName });
+            }
         }
     </script>
 </body>
 </html>
-```
-
-### Настройка Бота (Python)
-
-Нужно добавить обработку новой кнопки **«🔄 Загрузить расписание»**. Добавьте этот кусочек кода в функцию `web_app_handler` в файле `bot_main.py` (или просто замените функцию целиком).
-
-```python
-# ВНУТРИ ФУНКЦИИ web_app_handler:
-        
-        # ... (код для edit_perm и add_homework) ...
-
-        elif action == "request_schedule_link":
-            # Пользователь нажал кнопку "Загрузить" в вебе
-            url = generate_webapp_url()
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="📥 Открыть с данными", web_app=WebAppInfo(url=url))]
-            ])
-            await message.answer("Данные готовы! Нажмите кнопку ниже:", reply_markup=kb)
