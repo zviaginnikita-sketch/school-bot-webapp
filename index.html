@@ -107,6 +107,7 @@
         }
         .countdown-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
         .countdown-value { font-size: 24px; font-weight: 800; color: #ffd60a; }
+        .countdown-days { font-size: 14px; font-weight: normal; color: #fff; }
 
         .poll-bar-bg { background: #e5e5ea; border-radius: 6px; height: 8px; margin-top: 4px; overflow: hidden; }
         .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
@@ -150,6 +151,7 @@
         .nav-item.active { color: var(--primary); }
         .nav-icon { display: block; font-size: 22px; margin-bottom: 3px; }
 
+        /* --- ОБЩЕЕ --- */
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: var(--text-sec); padding: 20px; }
         .empty-icon { font-size: 48px; margin-bottom: 15px; }
         .modal { display: none; } .modal.open { display: block; }
@@ -284,7 +286,7 @@
 
         <div id="section-global-notice" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Уведомление</h3>
-            <div class="card"><textarea id="global-notice-input" placeholder="Текст..."></textarea></div>
+            <div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div>
             <div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Опубликовать</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div>
         </div>
 
@@ -305,65 +307,28 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
 
+        const HARDCODED_ADMIN_ID = "697543617";
         let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [], aid: null, session: {} };
         let currentWeek = 'odd'; let realCurrentWeek = 'odd'; let confirmResolve = null; let isNextWeek = false; let ignoreHolidays = false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
         function getWeekNumber(d) { d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7)); var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7); }
         
-        const now = new Date();
-        realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
-        let checkDate = new Date(now);
-        if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
-        else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
-        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
-        setWeek(currentWeek);
-
-        document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
-
-        function updateWeekButtons() {
-            const oddBtn = document.getElementById('btn-odd'); const evenBtn = document.getElementById('btn-even');
-            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
-            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
-        } updateWeekButtons();
-
-        const urlParams = new URLSearchParams(window.location.search);
-        let rawData = urlParams.get('data');
-        if (rawData) {
-            try {
-                rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
-                const binaryString = window.atob(rawData);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-                let decodedString;
-                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } catch (e) { decodedString = new TextDecoder().decode(bytes); }
-                const parsed = JSON.parse(decodedString);
-                if (parsed.p) {
-                    dbData.perm = unminifyPerm(parsed.p); if (parsed.h) dbData.homework = parsed.h; if (parsed.t) dbData.temporary = parsed.t;
-                    if (parsed.n) dbData.notice = parsed.n; if (parsed.c) dbData.countdown = parsed.c; 
-                    if (parsed.P) dbData.polls = parsed.P; if(parsed.aid) dbData.aid = parsed.aid;
-                    if (parsed.s) dbData.session = parsed.s;
-                } else { dbData = parsed; }
-                const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                renderSchedule(); renderGlobalNotice(); renderCountdown(); checkAuth(); renderSession();
-            } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
-        } else { renderEmptyState(); }
-
-        function unminifyPerm(minifiedP) {
-            const daysMap = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]; const fullPerm = {};
-            for (let dKey in minifiedP) { fullPerm[daysMap[parseInt(dKey)]] = { "odd": minifiedP[dKey].o || "", "even": minifiedP[dKey].e || "" }; } return fullPerm;
-        }
-
+        // --- FUNCTIONS ---
         function checkAuth() {
-            if (dbData.aid && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                if (String(tg.initDataUnsafe.user.id) === String(dbData.aid)) {
-                    document.getElementById('nav-admin').style.display = 'block';
-                    document.getElementById('access-denied').style.display = 'none';
-                    document.getElementById('dashboard-screen').style.display = 'block';
-                    if(dbData.countdown) { document.getElementById('cd-active').checked = dbData.countdown.active; document.getElementById('cd-title').value = dbData.countdown.title || ""; document.getElementById('cd-date').value = dbData.countdown.date || ""; }
-                    if(dbData.notice) document.getElementById('global-notice-input').value = dbData.notice;
-                    if(dbData.session) { document.getElementById('session-text').value = dbData.session.text || ""; document.getElementById('session-active').checked = dbData.session.active; }
-                }
+            const user = tg.initDataUnsafe?.user;
+            if (!user) return; 
+
+            const myId = String(user.id);
+            const cloudAdminId = dbData.aid ? String(dbData.aid) : null;
+            
+            if (myId === cloudAdminId || myId === HARDCODED_ADMIN_ID) {
+                document.getElementById('nav-admin').style.display = 'block';
+                document.getElementById('access-denied').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                if(dbData.countdown) { document.getElementById('cd-active').checked = dbData.countdown.active; document.getElementById('cd-title').value = dbData.countdown.title || ""; document.getElementById('cd-date').value = dbData.countdown.date || ""; }
+                if(dbData.notice) document.getElementById('global-notice-input').value = dbData.notice;
+                if(dbData.session) { document.getElementById('session-text').value = dbData.session.text || ""; document.getElementById('session-active').checked = dbData.session.active; }
             }
         }
         function renderSession() {
@@ -377,7 +342,6 @@
              const act = document.getElementById('session-active').checked;
              sendDataToBot({ action: "update_session", text: txt, active: act });
         }
-
         function renderCountdown() {
             const banner = document.getElementById('countdown-banner'); const data = dbData.countdown;
             if (!data || !data.active) { banner.style.display = 'none'; return; }
@@ -389,45 +353,13 @@
             const active = document.getElementById('cd-active').checked; const title = document.getElementById('cd-title').value; const date = document.getElementById('cd-date').value;
             if (active && !date) return tg.showAlert("Дата?"); sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
         }
-
         function renderGlobalNotice() {
             const banner = document.getElementById('global-notice');
             if (dbData.notice && dbData.notice.trim() !== "") { document.getElementById('global-notice-text').innerText = dbData.notice; banner.style.display = 'block'; } else { banner.style.display = 'none'; }
         }
         function submitGlobalNotice() { const text = document.getElementById('global-notice-input').value.trim(); if (!text) return tg.showAlert("Введите текст"); sendDataToBot({ action: "set_global_notice", text: text }); }
         function deleteGlobalNotice() { if (confirm("Удалить?")) sendDataToBot({ action: "delete_global_notice" }); }
-
-        function renderSchedule() {
-            const container = document.getElementById('schedule-container');
-            if (!dbData.perm || Object.keys(dbData.perm).length === 0) { container.innerHTML = "<div class='empty-state'>Расписание пустое</div>"; return; }
-            container.innerHTML = ""; const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
-            let hasHolidays = false;
-            days.forEach((day, idx) => {
-                const dayObj = dbData.perm[day]; if (!dayObj) return;
-                let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
-                const dateKey = getDateForDay(idx);
-                const note = dbData.temporary ? dbData.temporary[dateKey] : null; const hasHw = dbData.homework && dbData.homework[dateKey];
-                
-                if (note && note.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
-                    hasHolidays = true; const reason = note.split("\n")[2] || ""; 
-                    container.innerHTML += `<div class='card holiday-card'><div class='holiday-title'>🎉 ВЫХОДНОЙ <span style='font-size:12px; margin-left:auto; color:#2e7d32'>${dateKey}</span></div><div class='holiday-reason'>${reason.replace('📍 Причина: ', '')}</div></div>`; return; 
-                }
-                if (!text && !note && !hasHw) return; text = text.replace(/<[^>]*>?/gm, ''); 
-                let html = `<div class='card'><div class='day-header'><span>${day}</span><span class='date-badge'>${dateKey}</span></div>`;
-                if (note) html += `<div class='note-block'>📌 <b>Внимание:</b> ${note}</div>`;
-                html += `<div class='lesson-text'>${text}</div>`;
-                if (hasHw) { html += `<div class='homework-block'><div class='hw-title'>Домашнее задание:</div>`; const dayHw = dbData.homework[dateKey]; for (let pair in dayHw) { html += `<div class='hw-item'><b>${pair} пара</b> (${dayHw[pair].subject || 'Предмет'}): ${dayHw[pair].text}</div>`; } html += `</div>`; }
-                html += `</div>`; container.innerHTML += html;
-            });
-            if (hasHolidays) { const btn = document.createElement('div'); btn.className = 'force-show-btn'; btn.innerText = '👁 Показать скрытое расписание'; btn.onclick = function() { ignoreHolidays = true; renderSchedule(); }; container.appendChild(btn); }
-        }
-        function getDateForDay(dayIndex) {
-            const d = new Date(); const currentDay = d.getDay() || 7; const targetDay = dayIndex === 0 ? 1 : dayIndex + 1; 
-            d.setDate(d.getDate() - currentDay + targetDay); if (currentWeek !== realCurrentWeek) d.setDate(d.getDate() + 7);
-            return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
-        }
-        function getDateKey(id) { const s = document.getElementById(id).value; if(!s) return null; const [y, m, d] = s.split('-'); return `${d}.${m}.${y}`; }
-        
+        function getDateKey(dateElemId) { const dateStr = document.getElementById(dateElemId).value; if(!dateStr) return null; const [y, m, d] = dateStr.split('-'); return `${d}.${m}.${y}`; }
         async function submitHomework() {
             const dateKey = getDateKey('hw-date'); if(!dateKey) return tg.showAlert("Дата?");
             const pair = document.getElementById('hw-pair').value; const newText = document.getElementById('hw-text').value.trim(); const newSubj = document.getElementById('hw-subject').value.trim();
@@ -439,32 +371,6 @@
         }
         function showConfirmModal(oldText) { return new Promise((resolve) => { confirmResolve = resolve; document.getElementById('confirm-old-text').innerText = oldText; document.getElementById('confirm-modal').style.display = 'flex'; }); }
         function resolveConfirm(result) { document.getElementById('confirm-modal').style.display = 'none'; if (confirmResolve) confirmResolve(result); }
-
-        function switchPollTab(tab) {
-            document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active');
-            document.getElementById('poll-create-view').style.display = 'none'; document.getElementById('poll-results-view').style.display = 'none';
-            document.getElementById('tab-poll-' + tab).classList.add('active'); document.getElementById('poll-' + tab + '-view').style.display = 'block';
-            if (tab === 'results') renderPolls();
-        }
-        function addPollOption() { const c = document.getElementById('poll-options-container'); if(c.children.length>9) return; const i = document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант'; c.appendChild(i); }
-        function submitPoll() {
-            const q = document.getElementById('poll-question').value.trim(); if(!q) return tg.showAlert("Вопрос?");
-            const opts = []; document.querySelectorAll('.poll-option-input').forEach(i => { if(i.value.trim()) opts.push(i.value.trim()); });
-            if(opts.length<2) return tg.showAlert("Мин 2 варианта"); sendDataToBot({ action: "create_poll", question: q, options: opts });
-        }
-        function renderPolls() {
-            const c = document.getElementById('polls-list-container'); c.innerHTML = "";
-            if(!dbData.polls || !dbData.polls.length) { c.innerHTML = "<p style='text-align:center;color:#999'>Нет опросов</p>"; return; }
-            dbData.polls.forEach(p => {
-                let html = `<div class='card'><div style='font-weight:bold;margin-bottom:10px;'>${p.q}</div>`;
-                const votes = p.v || {}; const total = Object.keys(votes).length; const counts = new Array(p.o.length).fill(0); const voters = new Array(p.o.length).fill().map(()=>[]);
-                for(let uid in votes) { const idx = votes[uid].idx; if(counts[idx]!==undefined) { counts[idx]++; voters[idx].push(votes[uid].name); } }
-                p.o.forEach((opt, i) => { const pct = total>0 ? Math.round((counts[i]/total)*100) : 0; html+=`<div style='margin-bottom:10px;font-size:14px;'><div style='display:flex;justify-content:space-between'><span>${opt}</span><span>${counts[i]} (${pct}%)</span></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div class='poll-voters'>${voters[i].join(', ')}</div></div>`; });
-                html+="</div>"; c.innerHTML += html;
-            });
-        }
-
-        // Standard Admin Functions
         function loadAdminHw() { 
             const d = getDateKey('adm-hw-date'); const p = document.getElementById('adm-hw-pair').value; 
             if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) { const h = dbData.homework[d][p]; document.getElementById('adm-hw-subj').value = h.subject||""; document.getElementById('adm-hw-text').value = h.text||""; } 
@@ -492,9 +398,14 @@
         function switchTab(t,b) { closeAdminSection(); document.querySelectorAll('.page').forEach(e=> {if(!e.classList.contains('modal'))e.classList.remove('active')}); document.getElementById(t+'-page').classList.add('active'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); }
         function setWeek(t) { currentWeek=t; ignoreHolidays=false; document.getElementById('btn-odd').className=t==='odd'?'wt-btn active':'wt-btn'; document.getElementById('btn-even').className=t==='even'?'wt-btn active':'wt-btn'; updateWeekButtons(); renderSchedule(); }
         function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw')loadAdminHw(); if(id==='polls')switchPollTab('create'); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
-        function closeAdminSection() { document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); if(document.getElementById('dashboard-screen').style.display === 'none') document.getElementById('dashboard-screen').style.display='block'; }
+        function closeAdminSection() { 
+            document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active'));
+            // Если экран входа скрыт (мы авторизованы) и мы не на вкладке сессии/расписания, то показываем меню
+            if(document.getElementById('access-denied').style.display === 'none') {
+                document.getElementById('dashboard-screen').style.display='block'; 
+            }
+        }
         function renderEmptyState(m) { document.getElementById('schedule-container').innerHTML=`<div class='empty-state'><div class='empty-icon'>📂</div><p>Нет данных</p><button class='btn btn-primary' onclick='requestData()'>🔄 Загрузить</button>${m?`<p style='color:red;font-size:12px'>${m}</p>`:''}</div>`; }
-        
         function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
         function loadDayText() { const d = document.getElementById('ed-day').value; const w = document.getElementById('ed-week').value; let txt = ""; if (dbData.perm && dbData.perm[d]) txt = typeof dbData.perm[d] === 'string' ? dbData.perm[d] : (dbData.perm[d][w] || ""); document.getElementById('ed-text').value = txt; }
         function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
@@ -512,6 +423,137 @@
              let pMap={}; txt.split(/(?=^\d{2}:\d{2} - \d{2}:\d{2})/m).forEach(p=>{ if(p.trim()) { const m=p.match(/\n(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } });
              if(pMap[num]) { delete pMap[num]; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); }
              else tg.showAlert("Нет такой пары");
+        }
+        function switchPollTab(tab) {
+            document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active');
+            document.getElementById('poll-create-view').style.display = 'none'; document.getElementById('poll-results-view').style.display = 'none';
+            document.getElementById('tab-poll-' + tab).classList.add('active'); document.getElementById('poll-' + tab + '-view').style.display = 'block';
+            if (tab === 'results') renderPolls();
+        }
+        function addPollOption() { const c = document.getElementById('poll-options-container'); if(c.children.length>9) return; const i = document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант'; c.appendChild(i); }
+        function submitPoll() {
+            const q = document.getElementById('poll-question').value.trim(); if(!q) return tg.showAlert("Вопрос?");
+            const opts = []; document.querySelectorAll('.poll-option-input').forEach(i => { if(i.value.trim()) opts.push(i.value.trim()); });
+            if(opts.length<2) return tg.showAlert("Мин 2 варианта"); sendDataToBot({ action: "create_poll", question: q, options: opts });
+        }
+        function renderPolls() {
+            const c = document.getElementById('polls-list-container'); c.innerHTML = "";
+            if(!dbData.polls || !dbData.polls.length) { c.innerHTML = "<p style='text-align:center;color:#999'>Нет опросов</p>"; return; }
+            dbData.polls.forEach(p => {
+                let html = `<div class='card'><div style='font-weight:bold;margin-bottom:10px;'>${p.q}</div>`;
+                const votes = p.v || {}; const total = Object.keys(votes).length; const counts = new Array(p.o.length).fill(0); const voters = new Array(p.o.length).fill().map(()=>[]);
+                for(let uid in votes) { const idx = votes[uid].idx; if(counts[idx]!==undefined) { counts[idx]++; voters[idx].push(votes[uid].name); } }
+                p.o.forEach((opt, i) => { const pct = total>0 ? Math.round((counts[i]/total)*100) : 0; html+=`<div style='margin-bottom:10px;font-size:14px;'><div style='display:flex;justify-content:space-between'><span>${opt}</span><span>${counts[i]} (${pct}%)</span></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div class='poll-voters'>${voters[i].join(', ')}</div></div>`; });
+                html+="</div>"; c.innerHTML += html;
+            });
+        }
+        
+        function updateWeekButtons() {
+            const oddBtn = document.getElementById('btn-odd'); const evenBtn = document.getElementById('btn-even');
+            oddBtn.innerText = "Нечетная"; evenBtn.innerText = "Четная";
+            if (realCurrentWeek === 'odd') { oddBtn.innerText += " (Текущая)"; evenBtn.innerText += " (Следующая)"; } else { evenBtn.innerText += " (Текущая)"; oddBtn.innerText += " (Следующая)"; }
+        }
+
+        // --- INIT ---
+        const now = new Date();
+        realCurrentWeek = (getWeekNumber(now) % 2 === 0) ? 'even' : 'odd';
+        let checkDate = new Date(now);
+        if (now.getDay() === 6) { checkDate.setDate(now.getDate() + 2); isNextWeek = true; }
+        else if (now.getDay() === 0) { checkDate.setDate(now.getDate() + 1); isNextWeek = true; }
+        currentWeek = (getWeekNumber(checkDate) % 2 === 0) ? 'even' : 'odd';
+        setWeek(currentWeek);
+
+        document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now; document.getElementById('note-date').valueAsDate = now; document.getElementById('holiday-date-start').valueAsDate = now;
+        updateWeekButtons();
+
+        // 1. ЧТЕНИЕ ДАННЫХ
+        const urlParams = new URLSearchParams(window.location.search);
+        let rawData = urlParams.get('data');
+        if (rawData) {
+            try {
+                rawData = rawData.replace(/-/g, '+').replace(/_/g, '/');
+                const binaryString = window.atob(rawData);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                let decodedString;
+                try { decodedString = new TextDecoder().decode(pako.inflate(bytes)); } catch (e) { decodedString = new TextDecoder().decode(bytes); }
+                const parsed = JSON.parse(decodedString);
+                if (parsed.p) {
+                    dbData.perm = unminifyPerm(parsed.p); if (parsed.h) dbData.homework = parsed.h; if (parsed.t) dbData.temporary = parsed.t;
+                    if (parsed.n) dbData.notice = parsed.n; if (parsed.c) dbData.countdown = parsed.c; 
+                    if (parsed.P) dbData.polls = parsed.P; if(parsed.aid) dbData.aid = parsed.aid;
+                    if (parsed.s) dbData.session = parsed.s;
+                } else { dbData = parsed; }
+                const d = new Date(); document.getElementById('last-updated-text').innerText = `Обновлено: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                renderSchedule(); renderGlobalNotice(); renderCountdown(); checkAuth(); renderSession();
+            } catch (e) { renderEmptyState("Ошибка чтения: " + e.message); }
+        } else { renderEmptyState(); }
+
+        function renderSchedule() {
+            const container = document.getElementById('schedule-container');
+            if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
+                container.innerHTML = "<div class='empty-state'>Расписание пустое</div>";
+                return;
+            }
+            container.innerHTML = "";
+            const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
+            
+            let hasHolidays = false;
+
+            days.forEach((day, idx) => {
+                const dayObj = dbData.perm[day];
+                if (!dayObj) return;
+                
+                let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
+                const dateKey = getDateForDay(idx);
+                const note = dbData.temporary ? dbData.temporary[dateKey] : null;
+                const hasHw = dbData.homework && dbData.homework[dateKey];
+                
+                if (note && note.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
+                    hasHolidays = true;
+                    const reason = note.split("\n")[2] || "Без причины"; 
+                    const card = document.createElement('div');
+                    card.className = 'card holiday-card';
+                    card.innerHTML = `
+                        <div class="day-header" style="color: var(--success)">
+                            <span>${day}</span><span class="date-badge">${dateKey}</span>
+                        </div>
+                        <div class="holiday-title">🎉 ВЫХОДНОЙ</div>
+                        <div class="holiday-reason">${reason.replace('📍 Причина: ', '')}</div>
+                    `;
+                    container.appendChild(card);
+                    return; 
+                }
+
+                if (!text && !note && !hasHw) return; 
+                // !!! ВАЖНОЕ ИЗМЕНЕНИЕ: Убираем replace, чтобы жирный шрифт <b> работал !!!
+                // text = text.replace(/<[^>]*>?/gm, ''); 
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                let html = `<div class="day-header"><span>${day}</span><span class="date-badge">${dateKey}</span></div>`;
+                if (note) html += `<div class="note-block">📌 <b>Внимание:</b> ${note}</div>`;
+                html += `<div class="lesson-text">${text}</div>`;
+                if (hasHw) {
+                    html += `<div class="homework-block"><div class="hw-title">Домашнее задание:</div>`;
+                    const dayHw = dbData.homework[dateKey];
+                    for (let pair in dayHw) {
+                        const task = dayHw[pair];
+                        html += `<div class="hw-item"><b>${pair} пара</b> (${task.subject || 'Предмет'}): ${task.text}</div>`;
+                    }
+                    html += `</div>`;
+                }
+                card.innerHTML = html;
+                container.appendChild(card);
+            });
+
+            if (hasHolidays) {
+                const btn = document.createElement('div');
+                btn.className = 'force-show-btn';
+                btn.innerText = '👁 Посмотреть расписание (скрыто из-за выходных)';
+                btn.onclick = function() { ignoreHolidays = true; renderSchedule(); };
+                container.appendChild(btn);
+            }
         }
     </script>
 </body>
