@@ -3,17 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Дневник (Диагностика)</title>
+    <title>Дневник</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; color: #000; margin: 0; padding-bottom: 80px; }
         
-        /* Блок диагностики - КРАСНЫЙ ЕСЛИ ОШИБКА, ЗЕЛЕНЫЙ ЕСЛИ ОК */
-        #diag-panel {
-            background: #333; color: #fff; padding: 10px; font-size: 11px; 
-            font-family: monospace; word-break: break-all; border-bottom: 2px solid #000;
-        }
-
+        /* Навигация */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: #fff; border-top: 1px solid #ddd;
@@ -26,6 +21,7 @@
         .page { display: none; padding: 16px; }
         .page.active { display: block; }
 
+        /* Карточки */
         .sch-card { background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .day-header { font-weight: bold; font-size: 18px; color: #007aff; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         .week-toggle { display: flex; background: #e0e0e0; border-radius: 8px; margin-bottom: 15px; }
@@ -33,13 +29,19 @@
         .wt-btn.active { background: #fff; font-weight: bold; }
         
         input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button.main { width: 100%; padding: 14px; background: #007aff; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+        button.main { width: 100%; padding: 14px; background: #007aff; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; margin-bottom: 10px;}
+        button.secondary { width: 100%; padding: 14px; background: #6c757d; color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+
+        /* Блок пароля */
+        #admin-login { text-align: center; padding: 20px; background: #fff; border-radius: 12px; margin-top: 20px; }
+        #admin-content { display: none; }
+        .error-msg { color: red; font-size: 14px; display: none; margin-bottom: 10px; }
+
+        /* Пустой экран */
+        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
     </style>
 </head>
 <body>
-
-    <!-- ПАНЕЛЬ ДИАГНОСТИКИ -->
-    <div id="diag-panel">Загрузка информации...</div>
 
     <!-- СТРАНИЦА 1: РАСПИСАНИЕ -->
     <div id="page-view" class="page active">
@@ -48,7 +50,7 @@
             <div class="wt-btn" id="btn-even" onclick="setWeek('even')">Четная</div>
         </div>
         <div id="schedule-list">
-            <div style="text-align: center; padding: 20px; color: #888;">Нет данных для отображения</div>
+            <!-- Сюда загрузится расписание или кнопка запроса -->
         </div>
     </div>
 
@@ -69,25 +71,36 @@
         <button class="main" onclick="sendHomework()">Сохранить</button>
     </div>
 
-    <!-- СТРАНИЦА 3: АДМИН -->
+    <!-- СТРАНИЦА 3: АДМИН (С ПАРОЛЕМ) -->
     <div id="page-admin" class="page">
-        <h3>Редактор расписания</h3>
-        <select id="adm-day">
-            <option>Понедельник</option><option>Вторник</option><option>Среда</option>
-            <option>Четверг</option><option>Пятница</option>
-        </select>
-        <select id="adm-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
-        <textarea id="adm-text" rows="10" placeholder="Текст расписания..."></textarea>
-        <button class="main" onclick="sendAdmin()">Обновить базу</button>
+        <!-- Экран входа -->
+        <div id="admin-login">
+            <h3>🔒 Вход для админа</h3>
+            <p style="font-size: 14px; color: #888;">Введите пароль доступа</p>
+            <input type="password" id="adm-pass" placeholder="Пароль" style="text-align: center;">
+            <div class="error-msg" id="pass-error">Неверный пароль</div>
+            <button class="main" onclick="checkPass()">Войти</button>
+        </div>
+
+        <!-- Контент админа (Скрыт) -->
+        <div id="admin-content">
+            <h3>Редактор расписания</h3>
+            <select id="adm-day">
+                <option>Понедельник</option><option>Вторник</option><option>Среда</option>
+                <option>Четверг</option><option>Пятница</option>
+            </select>
+            <select id="adm-week"><option value="odd">Нечетная</option><option value="even">Четная</option></select>
+            <textarea id="adm-text" rows="10" placeholder="Текст расписания..."></textarea>
+            <button class="main" onclick="sendAdmin()">Обновить базу</button>
+            <button class="secondary" onclick="logout()">Выйти</button>
+        </div>
     </div>
 
     <!-- МЕНЮ -->
     <div class="nav-bar">
         <div class="nav-btn active" onclick="go('view', this)"><span class="nav-icon">📅</span>Расписание</div>
         <div class="nav-btn" onclick="go('add', this)"><span class="nav-icon">✍️</span>Д/З</div>
-        <div class="nav-btn" id="nav-admin" style="display: none;" onclick="go('admin', this)">
-            <span class="nav-icon">⚙️</span>Админ
-        </div>
+        <div class="nav-btn" onclick="go('admin', this)"><span class="nav-icon">⚙️</span>Админ</div>
     </div>
 
     <script>
@@ -95,66 +108,51 @@
         tg.ready();
         tg.expand();
 
-        // ВАШ ID
-        const ADMIN_ID = 697543617; 
+        // === НАСТРОЙКИ ===
+        const ADMIN_PASSWORD = "1234"; // <--- ЗАДАЙТЕ ПАРОЛЬ ТУТ
 
-        // === ДИАГНОСТИКА ===
-        const diag = document.getElementById('diag-panel');
-        let diagText = "";
-        let hasError = false;
-
-        // 1. Проверка URL и данных
-        const fullUrl = window.location.href;
-        const urlParams = new URLSearchParams(window.location.search);
-        const rawData = urlParams.get('data');
-        
-        diagText += `URL Len: ${fullUrl.length} chars. `;
-        if (!rawData) {
-            diagText += "[ОШИБКА: НЕТ ДАННЫХ В ССЫЛКЕ]. ";
-            diagText += "Вы нажали кнопку меню? Нажмите большую кнопку в чате! ";
-            hasError = true;
-        } else {
-            diagText += "[Данные есть]. ";
-        }
-
-        // 2. Проверка User ID
-        let userId = null;
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            userId = tg.initDataUnsafe.user.id;
-            diagText += `ID: ${userId}. `;
-        } else {
-            diagText += "[ОШИБКА: ID НЕ НАЙДЕН]. Открыто не в Telegram? ";
-            hasError = true;
-        }
-
-        // Вывод диагностики
-        diag.innerText = diagText;
-        diag.style.background = hasError ? "#d9534f" : "#5cb85c";
-
-        // === ЛОГИКА АДМИНА ===
-        if (userId && String(userId) === String(ADMIN_ID)) {
-            document.getElementById('nav-admin').style.display = 'block';
-            diag.innerText += " (Вы Админ)";
-        }
-
-        // === ОБРАБОТКА ДАННЫХ ===
+        // Данные
         let dbData = { perm: {} };
         let currentWeek = 'odd';
+
+        // 1. ПОЛУЧЕНИЕ ДАННЫХ
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawData = urlParams.get('data');
 
         if (rawData) {
             try {
                 dbData = JSON.parse(decodeURIComponent(rawData));
                 renderSchedule();
             } catch (e) {
-                document.getElementById('schedule-list').innerHTML = "Ошибка чтения JSON: " + e.message;
+                showEmptyState("Ошибка данных");
             }
         } else {
-             document.getElementById('schedule-list').innerHTML = 
-                "<div style='padding:20px; text-align:center'><b>Пусто.</b><br>1. Напишите боту /start<br>2. Нажмите кнопку внизу чата</div>";
+            // Если открыли через меню (данных нет)
+            showEmptyState();
         }
 
-        // === ФУНКЦИИ ИНТЕРФЕЙСА ===
+        // Установка даты
         document.getElementById('hw-date').valueAsDate = new Date();
+
+        // === ФУНКЦИИ ИНТЕРФЕЙСА ===
+
+        function showEmptyState(msg) {
+            const container = document.getElementById('schedule-list');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 40px; margin-bottom: 20px;">📂</div>
+                    <p>${msg || "Данные не загружены"}</p>
+                    <p style="font-size: 13px; color: #999;">Если вы открыли через меню,<br>нужно запросить актуальное расписание.</p>
+                    <button class="main" onclick="requestData()">🔄 Загрузить расписание</button>
+                </div>
+            `;
+        }
+
+        function requestData() {
+            // Отправляем боту сигнал, что нам нужны данные
+            const data = { action: "request_schedule_link" };
+            tg.sendData(JSON.stringify(data));
+        }
 
         function go(pageId, btn) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -172,7 +170,10 @@
 
         function renderSchedule() {
             const container = document.getElementById('schedule-list');
-            if (!dbData.perm || Object.keys(dbData.perm).length === 0) return;
+            if (!dbData.perm || Object.keys(dbData.perm).length === 0) {
+                container.innerHTML = "<div class='empty-state'>Расписание пустое</div>";
+                return;
+            }
             
             container.innerHTML = "";
             const days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
@@ -184,7 +185,7 @@
                 let text = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 if (!text) return;
 
-                // Убираем HTML теги
+                // Очистка тегов
                 text = text.replace(/<[^>]*>?/gm, '');
 
                 const card = document.createElement('div');
@@ -194,6 +195,27 @@
             });
         }
 
+        // === ЛОГИКА ПАРОЛЯ ===
+        function checkPass() {
+            const input = document.getElementById('adm-pass').value;
+            const err = document.getElementById('pass-error');
+            
+            if (input === ADMIN_PASSWORD) {
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                err.style.display = 'none';
+            } else {
+                err.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            document.getElementById('admin-login').style.display = 'block';
+            document.getElementById('admin-content').style.display = 'none';
+            document.getElementById('adm-pass').value = "";
+        }
+
+        // === ОТПРАВКА ДАННЫХ ===
         function sendHomework() {
             const date = document.getElementById('hw-date').value;
             if(!date) return tg.showAlert("Выберите дату");
@@ -227,3 +249,21 @@
     </script>
 </body>
 </html>
+```
+
+### Настройка Бота (Python)
+
+Нужно добавить обработку новой кнопки **«🔄 Загрузить расписание»**. Добавьте этот кусочек кода в функцию `web_app_handler` в файле `bot_main.py` (или просто замените функцию целиком).
+
+```python
+# ВНУТРИ ФУНКЦИИ web_app_handler:
+        
+        # ... (код для edit_perm и add_homework) ...
+
+        elif action == "request_schedule_link":
+            # Пользователь нажал кнопку "Загрузить" в вебе
+            url = generate_webapp_url()
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="📥 Открыть с данными", web_app=WebAppInfo(url=url))]
+            ])
+            await message.answer("Данные готовы! Нажмите кнопку ниже:", reply_markup=kb)
