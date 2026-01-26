@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE STABILITY 2.1) --- */
+        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE STABILITY 2.2) --- */
         :root {
             --bg-color: #f2f2f7;
             --card-bg: #ffffff;
@@ -57,7 +57,7 @@
 
         body { padding-bottom: 120px; }
 
-        /* Фикс белого поля внизу для темной темы */
+        /* Устранение белого поля внизу */
         body::after {
             content: "";
             position: fixed;
@@ -140,7 +140,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 4px 0;
+            padding: 8px 0;
             margin-bottom: 12px;
         }
         input[type="checkbox"] {
@@ -182,7 +182,7 @@
         .lesson-details { font-size: 14px; color: var(--text-sec); font-weight: 500; margin-top: 4px; }
 
         .day-header { font-weight: 900; font-size: 22px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .date-badge { font-size: 10px; color: var(--text-sec); background: var(--tab-bg); padding: 4px 10px; border-radius: 40px; font-weight: 800; letter-spacing: 0.3px; }
+        .date-badge { font-size: 10px; color: var(--text-sec); background: var(--tab-bg); padding: 3px 10px; border-radius: 40px; font-weight: 800; letter-spacing: 0.3px; }
 
         .homework-block { margin-top: 16px; padding: 14px; background: var(--bg-color); border-radius: 12px; }
         .hw-title { font-size: 10px; font-weight: 900; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -197,10 +197,10 @@
             transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .admin-tile:active { transform: scale(0.95); }
-        .admin-tile svg { width: 42px; height: 42px; stroke: var(--primary); fill: none; stroke-width: 1.8; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        .admin-tile svg { width: 38px; height: 38px; stroke: var(--primary); fill: none; stroke-width: 1.8; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
 
         /* --- STATS --- */
-        .stat-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: 600; }
+        .stat-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; font-weight: 600; }
         .stat-val { font-weight: 800; color: var(--primary); }
         .user-item { padding: 16px; border-radius: 14px; background: var(--input-bg); margin-bottom: 12px; font-size: 14px; border: 1px solid var(--border-color); }
         .last-seen { font-size: 11px; color: var(--text-sec); font-weight: 700; margin-top: 6px; text-transform: uppercase; }
@@ -237,6 +237,8 @@
         .modal-content { background: var(--card-bg); width: 85%; max-width: 360px; padding: 32px; border-radius: 32px; text-align: center; border: 1px solid var(--border-color); }
         
         .voter-pill { display: inline-block; background: var(--accent-soft); color: var(--primary); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 10px; margin: 4px 4px 0 0; }
+        
+        .admin-sub { display: none; }
     </style>
 </head>
 <body data-theme="light">
@@ -252,7 +254,7 @@
 
     <!-- ШАПКА -->
     <div class="header-controls">
-        <h2 style="margin:0; font-size: 24px; font-weight: 950; letter-spacing: -1px; color: var(--text-main);">Ассистент</h2>
+        <h2 style="margin:0; font-size: 24px; font-weight: 950; letter-spacing: -1px; color: var(--text-main);">Дневник</h2>
         <div class="theme-toggle" id="theme-btn" onclick="toggleTheme()"></div>
     </div>
 
@@ -261,12 +263,12 @@
         <div id="global-notice" class="global-notice-banner"><div class="notice-text" id="global-notice-text"></div></div>
         
         <div id="countdown-banner" class="countdown-card">
-            <div style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 4px; letter-spacing: 1px;">ДО СОБЫТИЯ ОСТАЛОСЬ:</div>
+            <div id="cd-label" style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 6px; letter-spacing: 1px;">ДО СОБЫТИЯ ОСТАЛОСЬ:</div>
             <span class="countdown-value" id="cd-days">0</span> <span style="font-size:20px; font-weight: 950; opacity: 0.8;">ДН.</span>
         </div>
         
-        <div class="refresh-hint" onclick="requestData()">🔄 Обновить данные</div>
-        <div class="last-updated" id="last-updated-text">Ожидание синхронизации...</div>
+        <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
+        <div class="last-updated" id="last-updated-text">Синхронизация...</div>
         
         <div class="week-toggle">
             <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
@@ -292,13 +294,13 @@
 
     <!-- 3. СЕССИЯ -->
     <div id="session-page" class="page">
-        <div class="section-title">Расписание сессии</div>
+        <div class="section-title">Экзамены и зачеты</div>
         <div class="card" style="border-left: 5px solid var(--primary);">
             <div id="session-content" class="lesson-text" style="min-height: 120px; font-weight: 500; color: var(--text-main);">Данные не загружены.</div>
         </div>
     </div>
 
-    <!-- 4. АДМИН -->
+    <!-- 4. АДМИНКА -->
     <div id="admin-page" class="page">
         <div id="login-screen" style="text-align: center; margin-top: 60px;">
             <div style="font-size: 60px; margin-bottom: 24px;">🛡️</div>
@@ -310,7 +312,7 @@
         </div>
 
         <div id="dashboard-screen" style="display: none;">
-            <div class="section-title">Панель управления</div>
+            <div class="section-title">Инструменты</div>
             <div class="admin-grid">
                 <div class="admin-tile" onclick="openAdminSection('stats')">
                     <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика
@@ -349,11 +351,11 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 40px; opacity: 0.5;">Выход</button>
         </div>
 
-        <!-- СЕКЦИИ АДМИНКИ -->
-        <div id="section-stats" class="page admin-sub">
+        <!-- ПОДРАЗДЕЛЫ АДМИНКИ -->
+        <div id="section-stats" class="admin-sub">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <div class="card">
-                <div class="stat-row"><span>Студентов:</span><span class="stat-val" id="st-total-u">0</span></div>
+                <div class="stat-row"><span>Всего студентов:</span><span class="stat-val" id="st-total-u">0</span></div>
                 <div class="stat-row"><span>Активны сегодня:</span><span class="stat-val" id="st-day-u">0</span></div>
                 <div class="stat-row"><span>Записано ДЗ:</span><span class="stat-val" id="st-total-hw">0</span></div>
             </div>
@@ -361,19 +363,19 @@
             <div id="users-list-container"></div>
         </div>
 
-        <div id="section-manage-hw" class="page admin-sub">
+        <div id="section-manage-hw" class="admin-sub">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <div class="card">
                 <input type="date" id="adm-hw-date" onchange="loadAdminHw()">
                 <select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select>
                 <input type="text" id="adm-hw-subj" placeholder="Предмет">
-                <textarea id="adm-hw-text" placeholder="Текст задания..."></textarea>
-                <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить изменения</button>
-                <button class="btn btn-danger" onclick="deleteAdminHw()" style="margin-top:10px">Удалить ДЗ</button>
+                <textarea id="adm-hw-text" placeholder="Текст ДЗ..."></textarea>
+                <button class="btn btn-primary" onclick="submitAdminHw()">Обновить ДЗ</button>
+                <button class="btn btn-danger" onclick="deleteAdminHw()" style="margin-top:10px">Удалить</button>
             </div>
         </div>
 
-        <div id="section-edit-sch" class="page admin-sub">
+        <div id="section-edit-sch" class="admin-sub">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <div class="card">
                 <div style="display: flex; gap: 10px; margin-bottom:14px;">
@@ -388,17 +390,17 @@
                 <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить пару</button>
                 <button class="btn btn-danger" onclick="deleteSinglePair()" style="margin-top:10px">Удалить пару</button>
             </div>
-            <div class="section-title">Весь день (Текст)</div>
-            <div class="card"><textarea id="ed-text" rows="10"></textarea><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить весь день</button></div>
+            <div class="section-title">Весь день целиком</div>
+            <div class="card"><textarea id="ed-text" rows="10"></textarea><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить день</button></div>
         </div>
 
-        <div id="section-polls" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="btn btn-secondary" onclick="addPollOption()" style="padding:12px; font-size:14px;">+ Вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Отправить опрос</button><div id="polls-list-container" style="margin-top:20px"></div></div>
-        <div id="section-countdown-settings" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="cd-active"><label for="cd-active" style="font-weight:700">Включить таймер</label></div><input type="text" id="cd-title" placeholder="Заголовок"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button></div>
-        <div id="section-global-notice" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="global-notice-input" placeholder="Текст уведомления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Сохранить</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
-        <div id="section-add-note" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text"></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
-        <div id="section-add-holiday" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label>Дата:</label><input type="date" id="holiday-date-start"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
-        <div id="section-broadcast" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="bc-text" placeholder="Текст рассылки..."></textarea><label style="display:flex;align-items:center;gap:10px;margin-top:10px;"><input type="checkbox" id="bc-photo"><span>С фото</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить всем</button></div>
-        <div id="section-edit-session" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><input type="checkbox" id="session-active"><span>Показывать всем</span></label><textarea id="session-text" rows="10"></textarea></div><button class="btn btn-primary" onclick="saveSession()">Сохранить</button></div>
+        <div id="section-polls" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="btn btn-secondary" onclick="addPollOption()" style="padding:12px; font-size:14px;">+ Вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Отправить всем</button><div id="polls-list-container" style="margin-top:20px"></div></div>
+        <div id="section-countdown-settings" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="cd-active"><label for="cd-active" style="font-weight:800; cursor:pointer;">Включить таймер</label></div><input type="text" id="cd-title" placeholder="Напр: До сессии"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button></div>
+        <div id="section-global-notice" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="global-notice-input" placeholder="Текст объявления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Повесить</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Снять</button></div></div>
+        <div id="section-add-note" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Заметка на день..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
+        <div id="section-add-holiday" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label style="font-size:12px; font-weight:800; color:var(--text-sec); margin-bottom:8px; display:block;">ДАТА ВЫХОДНОГО:</label><input type="date" id="holiday-date-start"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
+        <div id="section-broadcast" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="bc-text" placeholder="Текст рассылки..."></textarea><div class="checkbox-row"><input type="checkbox" id="bc-photo"><label for="bc-photo" style="font-weight:700">Жду картинку</label></div></div><button class="btn btn-primary" onclick="submitBroadcast()">Разослать</button></div>
+        <div id="section-edit-session" class="admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="session-active"><label for="session-active" style="font-weight:700">Показывать всем</label></div><textarea id="session-text" rows="10"></textarea></div><button class="btn btn-primary" onclick="saveSession()">Сохранить сессию</button></div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
@@ -428,6 +430,7 @@
         function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
         function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
         function isWeekend(dateStr) { if(!dateStr) return false; const parts=dateStr.split('-'); const d=new Date(parts[0],parts[1]-1,parts[2]); return (d.getDay()===0 || d.getDay()===6); }
+        
         function updateWeekButtons() { document.getElementById('btn-odd').className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn'; document.getElementById('btn-even').className = currentWeek === 'even' ? 'wt-btn active' : 'wt-btn'; }
 
         function getDateForDay(idx) { 
@@ -488,7 +491,7 @@
             document.getElementById('st-day-u').innerText=s.day_u||0;
             document.getElementById('st-total-hw').innerText=s.total_hw||0;
             const container=document.getElementById('users-list-container'); container.innerHTML="";
-            if(s.users_list) s.users_list.forEach(u => { container.innerHTML += `<div class="user-item"><b>${u.name}</b><div class="last-seen">В сети: ${u.last_seen}</div></div>`; });
+            if(s.users_list) s.users_list.forEach(u => { container.innerHTML += `<div class="user-item"><b>${u.name}</b><div class="last-seen">Вход: ${u.last_seen}</div></div>`; });
         }
 
         function renderPolls() {
@@ -505,14 +508,44 @@
             });
         }
 
+        function renderCountdown() {
+            const b = document.getElementById('countdown-banner');
+            const data = dbData.countdown;
+            if (!data || !data.active || !data.date) { b.style.display = 'none'; return; }
+            const target = new Date(data.date); target.setHours(0, 0, 0, 0);
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('cd-days').innerText = diffDays > 0 ? diffDays : 0;
+            b.style.display = 'block';
+        }
+
         function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
         function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
         function requestData() { sendDataToBot({action:"request_schedule_link"}); }
         
         function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
         function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
-        function openAdminSection(id) { document.querySelectorAll('#admin-page > .admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); document.getElementById('section-'+id).style.display='block'; if(id==='edit-sch')loadDayText(); if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } if(id==='stats')renderStats(); if(id==='polls')renderPolls(); }
-        function closeAdminSection() { document.querySelectorAll('.admin-sub').forEach(el=>el.style.display='none'); document.getElementById('dashboard-screen').style.display='block'; }
+        
+        function openAdminSection(id) { 
+            document.querySelectorAll('#admin-page > .admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); 
+            document.getElementById('section-'+id).style.display='block'; 
+            if(id==='edit-sch') loadDayText(); 
+            if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } 
+            if(id==='stats') renderStats(); 
+            if(id==='polls') renderPolls(); 
+            if(id==='countdown-settings') {
+                if(dbData.countdown){
+                    document.getElementById('cd-active').checked = dbData.countdown.active;
+                    document.getElementById('cd-title').value = dbData.countdown.title || "";
+                    document.getElementById('cd-date').value = dbData.countdown.date || "";
+                }
+            }
+        }
+        function closeAdminSection() { 
+            document.querySelectorAll('.admin-sub').forEach(el=>el.style.display='none'); 
+            document.getElementById('dashboard-screen').style.display='block'; 
+        }
 
         function saveSession() { sendDataToBot({action:"update_session", text:document.getElementById('session-text').value, active:document.getElementById('session-active').checked}); }
         function saveCountdown() { sendDataToBot({action:"update_countdown", active:document.getElementById('cd-active').checked, title:document.getElementById('cd-title').value, date:document.getElementById('cd-date').value}); }
@@ -522,9 +555,9 @@
         function submitHoliday() { sendDataToBot({action:"add_holiday_batch", dates:[getDateKey('holiday-date-start')], text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${document.getElementById('holiday-reason').value}`}); }
         function removeHoliday() { sendDataToBot({action:"delete_note_batch", dates:[getDateKey('holiday-date-start')]}); }
         function submitBroadcast() { sendDataToBot({action:"broadcast", text:document.getElementById('bc-text').value, has_photo:document.getElementById('bc-photo').checked}); }
-        function sendAction(a) { if(confirm("Вы уверены?")) sendDataToBot({action:a}); }
         function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
-        
+        function sendAction(a) { if(confirm("Вы уверены?")) sendDataToBot({action:a}); }
+
         async function submitHomework() {
             const raw=document.getElementById('hw-date').value; if(!raw || isWeekend(raw)) return tg.showAlert("Выберите будний день!");
             const d=getDateKey('hw-date'), p=document.getElementById('hw-pair').value, t=document.getElementById('hw-text').value.trim(), s=document.getElementById('hw-subject').value.trim();
@@ -562,9 +595,7 @@
             if(pMap[num]){ delete pMap[num]; let res=""; Object.keys(pMap).sort().forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); }
         }
         function addPollOption() { const c=document.getElementById('poll-options-container'); const i=document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант '+(c.children.length+1); c.appendChild(i); }
-        function submitPoll() { const q=document.getElementById('poll-question').value.trim(); const o=[]; document.querySelectorAll('.poll-option-input').forEach(i=>{if(i.value.trim())o.push(i.value.trim())}); if(!q||o.length<2)return tg.showAlert("Нужно 2 варианта!"); sendDataToBot({action:"create_poll", question:q, options:o}); }
-        function setEditMode(m) { document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
-        function loadAdminHw() { const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value; if(dbData.homework&&dbData.homework[d]&&dbData.homework[d][p]) { const h=dbData.homework[d][p]; document.getElementById('adm-hw-subj').value=h.subject||""; document.getElementById('adm-hw-text').value=h.text||""; } else { document.getElementById('adm-hw-subj').value=""; document.getElementById('adm-hw-text').value=""; } }
+        function submitPoll() { const q=document.getElementById('poll-question').value.trim(); const o=[]; document.querySelectorAll('.poll-option-input').forEach(i=>{if(i.value.trim())o.push(i.value.trim())}); if(!q||o.length<2)return tg.showAlert("Минимум 2 варианта!"); sendDataToBot({action:"create_poll", question:q, options:o}); }
         function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
         function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
 
@@ -575,6 +606,7 @@
             if (btn) btn.classList.add('active');
             const now = new Date(); document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now;
         }
+
         function setWeek(t) { currentWeek = t; updateWeekButtons(); renderSchedule(); }
 
         window.onload = function() {
