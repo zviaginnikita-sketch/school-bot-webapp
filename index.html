@@ -438,6 +438,34 @@
             return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; 
         }
 
+ // --- ЛОГИКА ТАЙМЕРА ---
+        function renderCountdown() {
+            const banner = document.getElementById('countdown-banner');
+            const data = dbData.countdown;
+            if (!data || !data.active) { banner.style.display = 'none'; return; }
+            
+            document.getElementById('cd-active').checked = data.active;
+            document.getElementById('cd-title').value = data.title || "";
+            document.getElementById('cd-date').value = data.date || "";
+
+            const target = new Date(data.date);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24)); 
+
+            document.getElementById('cd-label').innerText = (data.title || "До события") + ":";
+            document.getElementById('cd-days').innerText = diffDays;
+            banner.style.display = 'block';
+        }
+        function saveCountdown() {
+            const active = document.getElementById('cd-active').checked;
+            const title = document.getElementById('cd-title').value;
+            const date = document.getElementById('cd-date').value;
+            if (active && !date) return tg.showAlert("Выберите дату события");
+            sendDataToBot({ action: "update_countdown", active: active, title: title, date: date });
+        }
+
+        
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
             if(!dbData.perm || !Object.keys(dbData.perm).length) { container.innerHTML = `<div style="text-align:center; padding: 60px 20px; color: var(--text-sec); font-weight:700;"><p>📦 Расписание пусто</p></div>`; return; }
@@ -603,3 +631,4 @@
     </script>
 </body>
 </html>
+
