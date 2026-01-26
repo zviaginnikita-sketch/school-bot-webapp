@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE STABILITY 3.0) --- */
+        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE STABILITY 3.1) --- */
         :root {
             --bg-color: #f2f2f7;
             --card-bg: #ffffff;
@@ -24,6 +24,7 @@
             --nav-bg: rgba(255,255,255,0.85);
             --input-bg: #f2f2f7;
             --accent-soft: rgba(0, 122, 255, 0.08);
+            --notice-bg: linear-gradient(135deg, #007aff 0%, #5ac8fa 100%);
         }
 
         [data-theme="dark"] {
@@ -40,6 +41,7 @@
             --shadow: 0 12px 40px rgba(0,0,0,0.6);
             --nav-bg: rgba(28,28,30,0.9);
             --input-bg: #2c2c2e;
+            --notice-bg: linear-gradient(135deg, #0a84ff 0%, #0056b3 100%);
             color-scheme: dark;
         }
 
@@ -59,7 +61,7 @@
         body::after { content: ""; position: fixed; bottom: 0; left: 0; right: 0; height: 150px; background: var(--bg-color); z-index: -1; }
 
         /* --- HEADER --- */
-        .header-controls { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--bg-color); position: sticky; top: 0; z-index: 500; }
+        .header-controls { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: var(--bg-color); position: sticky; top: 0; z-index: 500; transition: background-color 0.4s ease; }
         .theme-toggle { width: 42px; height: 42px; background: var(--card-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); cursor: pointer; border: 1px solid var(--border-color); }
         .theme-toggle svg { width: 22px; height: 22px; fill: var(--text-main); }
 
@@ -73,7 +75,7 @@
         .section-title { font-size: 11px; text-transform: uppercase; color: var(--text-sec); margin: 24px 0 10px 8px; letter-spacing: 1.5px; font-weight: 800; }
 
         /* --- INPUTS --- */
-        input:not([type="checkbox"]), select, textarea { width: 100%; padding: 16px; border: 1.5px solid transparent; background: var(--input-bg); border-radius: 14px; font-size: 16px; box-sizing: border-box; margin-bottom: 12px; color: var(--text-main); outline: none; transition: 0.2s; }
+        input, select, textarea { width: 100%; padding: 16px; border: 1.5px solid transparent; background: var(--input-bg); border-radius: 14px; font-size: 16px; box-sizing: border-box; margin-bottom: 12px; color: var(--text-main); outline: none; transition: 0.2s; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: var(--card-bg); }
         .checkbox-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--input-bg); border-radius: 14px; margin-bottom: 12px; cursor: pointer;}
         input[type="checkbox"] { width: 22px; height: 22px; margin: 0; -webkit-appearance: checkbox; appearance: checkbox; accent-color: var(--primary); cursor: pointer; }
@@ -84,60 +86,81 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: var(--tab-bg); color: var(--text-main); }
         .btn:active { transform: scale(0.97); }
+        .add-option-btn { font-size: 14px; color: var(--primary); cursor: pointer; padding: 10px; text-align: center; border: 1px dashed var(--primary); border-radius: 8px; margin-bottom: 10px; }
 
-        /* --- SCHEDULE ENHANCED --- */
+        /* --- UI ELEMENTS --- */
+        
+        /* Улучшенное уведомление */
+        .global-notice-banner {
+            background: var(--notice-bg);
+            color: white; padding: 18px; border-radius: var(--radius);
+            margin-bottom: 16px; display: none;
+            box-shadow: 0 8px 24px rgba(0, 122, 255, 0.25);
+            position: relative; overflow: hidden;
+        }
+        .global-notice-banner::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(30deg); pointer-events: none;
+        }
+        .notice-icon { font-size: 24px; float: left; margin-right: 12px; margin-top: -2px; }
+        .notice-text { font-size: 15px; font-weight: 600; line-height: 1.5; white-space: pre-wrap; }
+
+        .countdown-card { background: var(--card-bg); color: var(--text-main); text-align: center; padding: 22px; margin-bottom: 24px; border-radius: var(--radius); border: 2.5px solid var(--primary); box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15); }
+        .countdown-value { font-size: 38px; font-weight: 950; color: var(--primary); letter-spacing: -1.5px; }
+
+        .refresh-hint { background: var(--primary-grad); color: white; border-radius: 16px; text-align: center; font-size: 15px; font-weight: 900; padding: 18px; cursor: pointer; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,122,255,0.25); }
+        .last-updated { font-size: 11px; color: var(--text-sec); text-align: center; margin-bottom: 20px; font-weight: 700; opacity: 0.7; }
+        
+        /* --- SCHEDULE --- */
         .today-card { border: 2.5px solid var(--primary); background: var(--accent-soft); }
-        .today-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 950; margin-right: 10px; vertical-align: middle; }
+        .day-header { font-weight: 900; font-size: 22px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .date-badge { font-size: 10px; color: var(--text-sec); background: var(--tab-bg); padding: 3px 10px; border-radius: 40px; font-weight: 800; letter-spacing: 0.3px; }
         .lesson-item { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
         .lesson-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
         .lesson-meta { display: flex; gap: 8px; margin-bottom: 4px; font-size: 11px; font-weight: 800; color: var(--text-sec); text-transform: uppercase; }
         .lesson-name { font-weight: 900; font-size: 18px; color: var(--text-main); display: block; line-height: 1.3; }
         .lesson-details { font-size: 14px; color: var(--text-sec); font-weight: 500; margin-top: 4px; }
-        .day-header { font-weight: 900; font-size: 22px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .date-badge { font-size: 10px; color: var(--text-sec); background: var(--tab-bg); padding: 3px 10px; border-radius: 40px; font-weight: 800; letter-spacing: 0.3px; }
         .homework-block { margin-top: 16px; padding: 14px; background: var(--bg-color); border-radius: 12px; }
         .hw-title { font-size: 10px; font-weight: 900; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .hw-item { font-size: 14px; margin-bottom: 8px; color: var(--text-main); border-left: 3px solid var(--primary); padding-left: 10px; font-weight: 500; }
         .note-block { background: rgba(255, 204, 0, 0.15); padding: 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; border: 1px solid rgba(255, 204, 0, 0.3); color: #B38600; font-weight: 600; }
         [data-theme="dark"] .note-block { color: #FFD60A; }
+        .holiday-card { background: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(52, 199, 89, 0.2) 100%); border: 2px solid var(--success); }
+        .holiday-title { color: var(--success); font-weight: 800; font-size: 18px; margin-bottom: 6px; }
+        .force-show-btn { font-size: 13px; color: var(--primary); background: rgba(0, 122, 255, 0.1); padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; margin-top: 15px; font-weight: 600; }
 
-        /* --- STATS GRID --- */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-        .stat-box { background: var(--bg-color); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .stat-num { font-size: 24px; font-weight: 900; color: var(--primary); }
-        .stat-label { font-size: 10px; color: var(--text-sec); font-weight: 700; text-transform: uppercase; margin-top: 4px; }
-        
-        .user-item { padding: 16px; border-radius: 14px; background: var(--input-bg); margin-bottom: 12px; font-size: 14px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .last-seen { font-size: 11px; color: var(--text-sec); font-weight: 700; text-transform: uppercase; }
+        /* --- NAVIGATION --- */
+        .nav-bar { 
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            background: var(--nav-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; 
+            padding: 10px 0 34px 0; z-index: 1000; 
+        }
+        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-icon { height: 26px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+        .nav-icon svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2.2; }
 
-        /* --- OTHERS --- */
+        /* --- ADMIN GRID & MISC --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .admin-tile { background: var(--card-bg); padding: 24px 10px; border-radius: 22px; text-align: center; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: var(--shadow); border: 1px solid var(--border-color); transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
         .admin-tile:active { transform: scale(0.95); }
-        .admin-tile svg { width: 38px; height: 38px; stroke: var(--primary); fill: none; stroke-width: 1.8; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
-        
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; padding: 12px 0 34px 0; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.2s; }
-        .nav-item.active { color: var(--primary); }
-        .nav-icon svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2.2; }
-
-        .countdown-card { background: var(--card-bg); color: var(--text-main); text-align: center; padding: 22px; margin-bottom: 24px; border-radius: var(--radius); border: 2.5px solid var(--primary); box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15); }
-        .countdown-value { font-size: 38px; font-weight: 950; color: var(--primary); letter-spacing: -1.5px; }
-        
-        .refresh-hint { background: var(--primary-grad); color: white; border-radius: 16px; text-align: center; font-size: 15px; font-weight: 900; padding: 18px; cursor: pointer; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2); }
-        .last-updated { font-size: 11px; color: var(--text-sec); text-align: center; margin-bottom: 20px; font-weight: 700; opacity: 0.7; }
-        
+        .admin-tile svg { width: 42px; height: 42px; stroke: var(--primary); fill: none; stroke-width: 1.8; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
         .week-toggle { display: flex; background: var(--tab-bg); border-radius: 14px; padding: 3px; margin-bottom: 20px; }
         .wt-btn { flex: 1; text-align: center; padding: 10px; border-radius: 11px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; color: var(--text-sec); }
         .wt-btn.active { background: var(--card-bg); box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--primary); }
-
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(12px); }
         .modal-content { background: var(--card-bg); width: 85%; max-width: 360px; padding: 32px; border-radius: 32px; text-align: center; border: 1px solid var(--border-color); }
-        
         .voter-pill { display: inline-block; background: var(--accent-soft); color: var(--primary); font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 10px; margin: 4px 4px 0 0; }
-        
         .admin-sub { display: none; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 16px; font-weight: 700; }
+        .poll-bar-bg { background: var(--tab-bg); border-radius: 6px; height: 8px; margin-top: 6px; overflow: hidden; }
+        .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
+        .user-item { padding: 16px; border-radius: 14px; background: var(--input-bg); margin-bottom: 12px; font-size: 14px; border: 1px solid var(--border-color); }
+        .last-seen { font-size: 11px; color: var(--text-sec); font-weight: 700; margin-top: 6px; text-transform: uppercase; }
+        .stat-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: 600; }
+        .stat-val { font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body data-theme="light">
@@ -153,16 +176,16 @@
 
     <!-- ШАПКА -->
     <div class="header-controls">
-        <h2 style="margin:0; font-size: 24px; font-weight: 950; letter-spacing: -1px; color: var(--text-main);">Ассистент</h2>
+        <h2 style="margin:0; font-size: 24px; font-weight: 950; letter-spacing: -0.5px;">Дневник</h2>
         <div class="theme-toggle" id="theme-btn" onclick="toggleTheme()"></div>
     </div>
 
     <!-- 1. РАСПИСАНИЕ -->
     <div id="view-page" class="page active">
-        <div id="global-notice" class="global-notice-banner"><div class="notice-text" id="global-notice-text"></div></div>
+        <div id="global-notice" class="global-notice-banner"><span class="notice-icon">🔔</span><div class="notice-text" id="global-notice-text"></div></div>
         
         <div id="countdown-banner" class="countdown-card">
-            <div id="cd-label" style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 6px; letter-spacing: 1px;">СОБЫТИЕ:</div>
+            <div id="cd-label" style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 5px; letter-spacing: 1px;">ДО СОБЫТИЯ ОСТАЛОСЬ:</div>
             <span class="countdown-value" id="cd-days-val">0</span> <span style="font-size:20px; font-weight: 950; opacity: 0.8;">ДН.</span>
         </div>
         
@@ -177,15 +200,18 @@
         <div id="schedule-container"></div>
     </div>
 
-    <!-- 2. ДЗ -->
+    <!-- 2. ДЗ (УЛУЧШЕННОЕ) -->
     <div id="hw-page" class="page">
-        <div class="section-title">Создать задание</div>
+        <div class="section-title">Новое задание</div>
         <div class="card">
             <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ДАТА УРОКА</label>
-            <input type="date" id="hw-date">
-            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">НОМЕР ПАРЫ</label>
-            <select id="hw-pair"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
-            <input type="text" id="hw-subject" placeholder="Название предмета">
+            <input type="date" id="hw-date" onchange="updateHomeworkOptions()">
+            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ПРЕДМЕТ И ПАРА</label>
+            <select id="hw-lesson-select" onchange="checkCustomSubject()">
+                <option value="" disabled selected>Сначала выберите дату</option>
+            </select>
+            <!-- Скрытое поле для своего варианта -->
+            <input type="text" id="hw-custom-subject" placeholder="Введите название предмета..." style="display:none; margin-top:10px;">
         </div>
         <div class="card"><textarea id="hw-text" placeholder="Что нужно сделать к уроку?"></textarea></div>
         <button class="btn btn-primary" onclick="submitHomework()">Опубликовать ДЗ</button>
@@ -207,57 +233,34 @@
             <p style="color: var(--text-sec); font-size: 15px; margin-bottom: 24px;">Требуется мастер-пароль</p>
             <div class="card" style="max-width: 280px; margin: 0 auto 20px;"><input type="password" id="adm-pass" placeholder="••••" style="text-align: center; font-size: 24px; background: none; margin: 0; letter-spacing: 4px; border: none;"></div>
             <button class="btn btn-primary" style="max-width: 280px;" onclick="login()">Войти</button>
-            <p id="login-error" style="color: var(--danger); display: none; margin-top: 15px; font-weight: 900;">Неверно</p>
+            <p id="login-error" style="color: var(--danger); display: none; margin-top: 15px; font-weight: 900;">Доступ запрещен</p>
         </div>
 
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Инструменты</div>
             <div class="admin-grid">
-                <div class="admin-tile" onclick="openAdminSection('stats')">
-                    <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('edit-sch')">
-                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Редактор
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('manage-hw')">
-                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Упр. ДЗ
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('edit-session')">
-                    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Сессия
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('add-note')">
-                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Заметка
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('add-holiday')">
-                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Выходной
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('countdown-settings')">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Таймер
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('polls')">
-                    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Опросы
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('global-notice')">
-                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Уведомление
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('broadcast')">
-                    <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Рассылка
-                </div>
-                <div class="admin-tile" style="grid-column: span 2; border-color: var(--danger); color: var(--danger);" onclick="sendAction('reset_temp')">
-                    <svg style="stroke: var(--danger);" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Сброс данных
-                </div>
+                <div class="admin-tile" onclick="openAdminSection('stats')"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика</div>
+                <div class="admin-tile" onclick="openAdminSection('edit-sch')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Редактор</div>
+                <div class="admin-tile" onclick="openAdminSection('manage-hw')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ДЗ</div>
+                <div class="admin-tile" onclick="openAdminSection('edit-session')"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Сессия</div>
+                <div class="admin-tile" onclick="openAdminSection('add-note')"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Заметка</div>
+                <div class="admin-tile" onclick="openAdminSection('add-holiday')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Выходной</div>
+                <div class="admin-tile" onclick="openAdminSection('countdown-settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Таймер</div>
+                <div class="admin-tile" onclick="openAdminSection('polls')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Опросы</div>
+                <div class="admin-tile" onclick="openAdminSection('global-notice')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Инфо</div>
+                <div class="admin-tile" onclick="openAdminSection('broadcast')"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Рассылка</div>
+                <div class="admin-tile" style="grid-column: span 2; border-color: var(--danger); color: var(--danger);" onclick="sendAction('reset_temp')"><svg style="stroke: var(--danger);" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Сброс данных</div>
             </div>
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 40px; opacity: 0.5;">Выход</button>
         </div>
 
-        <!-- ПОДРАЗДЕЛЫ -->
+        <!-- СЕКЦИИ -->
         <div id="section-stats" class="page admin-sub">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <div class="stats-grid">
-                <div class="stat-box"><span class="stat-num" id="st-total-u">0</span><span class="stat-label">Всего</span></div>
-                <div class="stat-box"><span class="stat-num" id="st-day-u">0</span><span class="stat-label">Сегодня</span></div>
-                <div class="stat-box"><span class="stat-num" id="st-total-hw">0</span><span class="stat-label">ДЗ</span></div>
-                <div class="stat-box"><span class="stat-num" id="st-day-n">0</span><span class="stat-label">Заметок</span></div>
+            <div class="card">
+                <div class="stat-row"><span>Студентов:</span><span class="stat-val" id="st-total-u">0</span></div>
+                <div class="stat-row"><span>Активны сегодня:</span><span class="stat-val" id="st-day-u">0</span></div>
+                <div class="stat-row"><span>Записано ДЗ:</span><span class="stat-val" id="st-total-hw">0</span></div>
             </div>
             <div class="section-title">Список студентов</div>
             <div id="users-list-container"></div>
@@ -296,19 +299,10 @@
 
         <div id="section-polls" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="btn btn-secondary" onclick="addPollOption()" style="padding:12px; font-size:14px; margin-top:8px;">+ Добавить вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Запустить опрос</button><div id="polls-list-container" style="margin-top:20px"></div></div>
         
-        <div id="section-countdown-settings" class="page admin-sub">
-            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
-            <div class="card">
-                <div class="checkbox-row"><input type="checkbox" id="cd-active"><label for="cd-active" style="font-weight:800; cursor:pointer;">Включить таймер</label></div>
-                <input type="text" id="cd-title" placeholder="Название события (напр. Сессия)">
-                <input type="date" id="cd-date">
-            </div>
-            <button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button>
-        </div>
-        
+        <div id="section-countdown-settings" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="cd-active"><label for="cd-active" style="font-weight:800; cursor:pointer;">Включить таймер</label></div><input type="text" id="cd-title" placeholder="Название события (напр. Сессия)"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button></div>
         <div id="section-global-notice" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="global-notice-input" placeholder="Текст уведомления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Повесить</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Снять</button></div></div>
         <div id="section-add-note" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст заметки..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Сохранить</button></div>
-        <div id="section-add-holiday" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label style="font-size:11px; font-weight:800; margin-bottom:8px; display:block;">ДАТА ВЫХОДНОГО:</label><input type="date" id="holiday-date-start"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
+        <div id="section-add-holiday" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div style="margin-bottom:12px"><label style="font-size:11px;font-weight:800;display:block;margin-bottom:6px;">С ДАТЫ:</label><input type="date" id="holiday-date-start"></div><div><label style="font-size:11px;font-weight:800;display:block;margin-bottom:6px;">ПО ДАТУ:</label><input type="date" id="holiday-date-end"></div><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
         <div id="section-broadcast" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="bc-text" placeholder="Текст рассылки..."></textarea><div class="checkbox-row"><input type="checkbox" id="bc-photo"><label for="bc-photo" style="font-weight:700">Жду картинку</label></div></div><button class="btn btn-primary" onclick="submitBroadcast()">Разослать всем</button></div>
         <div id="section-edit-session" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="session-active"><label for="session-active" style="font-weight:700">Показывать всем</label></div><textarea id="session-text" rows="10"></textarea></div><button class="btn btn-primary" onclick="saveSession()">Сохранить сессию</button></div>
     </div>
@@ -327,6 +321,7 @@
         let dbData = { perm: {}, homework: {}, temporary: {}, notice: "", countdown: {}, polls: [], session: {}, stats: {} };
         let currentWeek='odd', realCurrentWeek='odd', confirmResolve=null, ignoreHolidays=false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
+        const DAYS = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 
         function applyTheme(theme) {
             document.body.setAttribute('data-theme', theme);
@@ -334,20 +329,13 @@
             btn.innerHTML = theme === 'dark' ? `<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` : `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
             localStorage.setItem('school-bot-theme', theme);
             tg.setHeaderColor(theme === 'dark' ? '#000000' : '#f2f2f7');
-            tg.setBackgroundColor(theme === 'dark' ? '#000000' : '#f2f2f7');
         }
         function toggleTheme() { applyTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
 
         function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
         function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
         function isWeekend(dateStr) { if(!dateStr) return false; const parts=dateStr.split('-'); const d=new Date(parts[0],parts[1]-1,parts[2]); return (d.getDay()===0 || d.getDay()===6); }
-        function updateWeekButtons() { 
-            const o=document.getElementById('btn-odd'), e=document.getElementById('btn-even'); 
-            o.className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn';
-            e.className = currentWeek === 'even' ? 'wt-btn active' : 'wt-btn';
-            o.innerText = (realCurrentWeek === 'odd') ? "Нечетная (Тек.)" : "Нечетная (След.)";
-            e.innerText = (realCurrentWeek === 'even') ? "Четная (Тек.)" : "Четная (След.)";
-        }
+        function updateWeekButtons() { document.getElementById('btn-odd').className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn'; document.getElementById('btn-even').className = currentWeek === 'even' ? 'wt-btn active' : 'wt-btn'; }
 
         function getDateForDay(idx) { 
             const d = new Date(); const realDay = d.getDay() || 7; const targetDay = (idx + 1); 
@@ -357,6 +345,7 @@
             return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; 
         }
 
+        // --- RENDERERS ---
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
             if(!dbData.perm || !Object.keys(dbData.perm).length) { container.innerHTML = `<div style="text-align:center; padding: 60px 20px; color: var(--text-sec); font-weight:700;"><p>📦 Расписание пусто</p></div>`; return; }
@@ -377,7 +366,7 @@
                 let html = "";
                 if (nt && nt.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
                     hasHolidays = true;
-                    html = `<div class='card holiday-card'><div class='day-header'><span>${day}</span><span class='date-badge'>${dk}</span></div><div style='font-weight: 950; color: var(--success); font-size: 20px;'>🎉 ВЫХОДНОЙ</div><div style='margin-top:10px; font-weight: 600; opacity: 0.9;'>${nt.split('\n')[2]?.replace('📍 Причина: ','') || 'Свободный день'}</div></div>`;
+                    html = `<div class='card holiday-card'><div class='holiday-title'>🎉 ВЫХОДНОЙ <span class='date-badge' style='margin-left:auto;'>${dk}</span></div><div class='holiday-reason'>${nt.split('\n')[2]?.replace('📍 Причина: ','') || 'Свободный день'}</div></div>`;
                 } else if (rawTxt || nt || hw) {
                     const isToday = (day === todayDayName && currentWeek === realCurrentWeek);
                     html = `<div class='card ${isToday ? 'today-card' : ''}'><div class='day-header'><span>${isToday ? '<span class="today-badge">СЕГОДНЯ</span> ' : ''}${day}</span><span class='date-badge'>${dk}</span></div>`;
@@ -407,88 +396,82 @@
 
             if (todayHtml) container.innerHTML += todayHtml + (otherHtml.length ? '<div class="section-title">Вся неделя</div>' : '');
             container.innerHTML += otherHtml.join('');
-            if(hasHolidays) { const b = document.createElement('div'); b.className = 'force-show-btn'; b.innerText = '👁 Показать скрытые пары'; b.onclick = () => { ignoreHolidays = true; renderSchedule(); }; container.appendChild(b); }
+            
+            if(hasHolidays) {
+                const b = document.createElement('div'); b.className = 'force-show-btn'; b.innerText = '👁 Показать скрытые пары';
+                b.onclick = () => { ignoreHolidays = true; renderSchedule(); }; container.appendChild(b);
+            }
         }
 
-        function renderStats() {
-            const s=dbData.stats; if(!s) return;
-            document.getElementById('st-total-u').innerText=s.total_u||0;
-            document.getElementById('st-day-u').innerText=s.day_u||0;
-            document.getElementById('st-total-hw').innerText=s.total_hw||0;
-            const container=document.getElementById('users-list-container'); container.innerHTML="";
-            if(!s.users_list) return;
-            s.users_list.forEach(u => {
-                container.innerHTML += `<div class="user-item"><b>${u.name}</b><div class="last-seen">В сети: ${u.last_seen}</div></div>`;
-            });
-        }
+        // --- УМНЫЙ ВЫБОР ДЗ ---
+        function updateHomeworkOptions() {
+            const dateStr = document.getElementById('hw-date').value;
+            const select = document.getElementById('hw-lesson-select');
+            select.innerHTML = '<option value="" disabled selected>Загрузка...</option>';
+            document.getElementById('hw-custom-subject').style.display = 'none';
 
-        function renderPolls() {
-            const c=document.getElementById('polls-list-container'); c.innerHTML=""; if(!dbData.polls) return;
-            dbData.polls.forEach(p => {
-                let h=`<div class='card'><div style='font-weight:900; margin-bottom:12px;'>${p.q}</div>`;
-                const v=p.v||{}, total=Object.keys(v).length, counts=new Array(p.o.length).fill(0), names=new Array(p.o.length).fill().map(()=>[]);
-                for(let u in v) { if(counts[v[u].idx]!==undefined) { counts[v[u].idx]++; names[v[u].idx].push(v[u].name); } }
-                p.o.forEach((o,i)=>{ 
-                    const pct=total>0?Math.round((counts[i]/total)*100):0; 
-                    h+=`<div style='margin-bottom:14px; font-size:14px;'><div style='display:flex; justify-content:space-between; margin-bottom:4px;'><span>${o}</span><b>${pct}%</b></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div style="margin-top:6px; display:flex; flex-wrap:wrap;">${names[i].map(n=>`<span class="voter-pill">${n}</span>`).join('')}</div></div>`; 
+            if(!dateStr) return;
+
+            const date = new Date(dateStr);
+            const dayIdx = date.getDay() === 0 ? 6 : date.getDay() - 1; // 0=Mon, 6=Sun
+            const dayName = DAYS[dayIdx];
+            
+            // Определяем четность
+            const weekNum = getWeekNumber(date);
+            const parity = weekNum % 2 === 0 ? 'even' : 'odd';
+
+            if (!dbData.perm || !dbData.perm[dayName]) {
+                select.innerHTML = '<option value="custom">Другое (ввести вручную)</option>';
+                checkCustomSubject();
+                return;
+            }
+
+            const rawTxt = typeof dbData.perm[dayName] === 'string' ? dbData.perm[dayName] : (dbData.perm[dayName][parity] || "");
+            
+            select.innerHTML = '';
+            let hasOptions = false;
+
+            if (rawTxt) {
+                const lessons = rawTxt.split('\n\n').filter(l => l.trim());
+                lessons.forEach(lStr => {
+                    const match = lStr.match(/(\d)\s*пара\s*\n(.+)/); // Ищем "N пара" и следующую строку (предмет)
+                    if (match) {
+                        const pairNum = match[1];
+                        const subject = match[2].trim();
+                        // Value format: "PAIR_NUM|SUBJECT"
+                        const opt = document.createElement('option');
+                        opt.value = `${pairNum}|${subject}`;
+                        opt.innerText = `${pairNum} пара: ${subject}`;
+                        select.appendChild(opt);
+                        hasOptions = true;
+                    }
                 });
-                h+="</div>"; c.innerHTML+=h;
-            });
+            }
+
+            // Всегда добавляем опцию "Другое"
+            const customOpt = document.createElement('option');
+            customOpt.value = 'custom';
+            customOpt.innerText = hasOptions ? 'Другое / Ввести вручную' : 'Пар нет - Ввести вручную';
+            select.appendChild(customOpt);
+            
+            // Если пар нет, сразу выбираем "Другое"
+            if(!hasOptions) {
+                select.value = 'custom';
+                checkCustomSubject();
+            }
         }
 
-        function renderCountdown() {
-            const banner = document.getElementById('countdown-banner');
-            const data = dbData.countdown;
-            if (!data || !data.active || !data.date) { banner.style.display = 'none'; return; }
-            
-            const target = new Date(data.date); 
-            const now = new Date();
-            // Сбрасываем время в 00:00 для корректного сравнения дат
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-            
-            const diffTime = targetDay - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            document.getElementById('cd-label').innerText = (data.title || "До события").toUpperCase() + ":";
-            document.getElementById('cd-days-val').innerText = diffDays > 0 ? diffDays : 0;
-            banner.style.display = 'block';
+        function checkCustomSubject() {
+            const val = document.getElementById('hw-lesson-select').value;
+            document.getElementById('hw-custom-subject').style.display = (val === 'custom') ? 'block' : 'none';
         }
-        function renderGlobalNotice() { const b = document.getElementById('global-notice'); if(dbData.notice) { document.getElementById('global-notice-text').innerText=dbData.notice; b.style.display='block'; } else b.style.display='none'; }
-        function renderSession() { if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Данных нет."; } else document.getElementById('nav-session').style.display='none'; }
 
         // --- ACTIONS ---
         function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
         function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
         function requestData() { sendDataToBot({action:"request_schedule_link"}); }
-        
-        function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
-        function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
-        
-        function openAdminSection(id) { 
-            document.querySelectorAll('.admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); 
-            const section = document.getElementById('section-'+id);
-            if(section) {
-                section.style.display='block';
-                if(id==='edit-sch') loadDayText(); 
-                if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } 
-                if(id==='stats') renderStats(); 
-                if(id==='polls') renderPolls(); 
-                if(id==='countdown-settings' && dbData.countdown) {
-                    document.getElementById('cd-active').checked = dbData.countdown.active;
-                    document.getElementById('cd-title').value = dbData.countdown.title || "";
-                    document.getElementById('cd-date').value = dbData.countdown.date || "";
-                }
-            }
-        }
-        function closeAdminSection() { 
-            document.querySelectorAll('.admin-sub').forEach(el=>el.style.display='none'); 
-            document.getElementById('dashboard-screen').style.display='block'; 
-        }
-
-        // --- SUB ACTIONS ---
         function saveSession() { sendDataToBot({action:"update_session", text:document.getElementById('session-text').value, active:document.getElementById('session-active').checked}); }
-        function saveCountdown() { const active=document.getElementById('cd-active').checked, title=document.getElementById('cd-title').value, date=document.getElementById('cd-date').value; if(active && !date) return tg.showAlert("Выберите дату"); sendDataToBot({action:"update_countdown", active:active, title:title, date:date}); }
+        function saveCountdown() { const a=document.getElementById('cd-active').checked, d=document.getElementById('cd-date').value; if(a&&!d)return tg.showAlert("Выберите дату!"); sendDataToBot({action:"update_countdown", active:a, title:document.getElementById('cd-title').value, date:d}); }
         function submitGlobalNotice() { sendDataToBot({action:"set_global_notice", text:document.getElementById('global-notice-input').value.trim()}); }
         function deleteGlobalNotice() { if(confirm("Удалить?")) sendDataToBot({action:"delete_global_notice"}); }
         function submitNote() { sendDataToBot({action:"add_note", date:getDateKey('note-date'), text:document.getElementById('note-text').value}); }
@@ -499,13 +482,40 @@
         function sendAction(a) { if(confirm("Вы уверены?")) sendDataToBot({action:a}); }
 
         async function submitHomework() {
-            const raw=document.getElementById('hw-date').value; if(!raw || isWeekend(raw)) return tg.showAlert("Выберите будний день!");
-            const d=getDateKey('hw-date'), p=document.getElementById('hw-pair').value, t=document.getElementById('hw-text').value.trim(), s=document.getElementById('hw-subject').value.trim();
-            if(!t)return tg.showAlert("Текст задания пуст!");
-            let ex=null; if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) ex=dbData.homework[d][p];
-            let ft=t; if(ex) { if(await showConfirmModal(ex.text)) ft=ex.text+"\n\n"+t; else return; }
-            sendDataToBot({action:"add_homework", date:d, pair:p, subject:s||(ex?ex.subject:""), text:ft, has_photo:false});
+            const raw = document.getElementById('hw-date').value; 
+            if(!raw) return tg.showAlert("Выберите дату!");
+            if(isWeekend(raw)) return tg.showAlert("Нельзя на выходные!");
+            
+            const d = getDateKey('hw-date');
+            const selectVal = document.getElementById('hw-lesson-select').value;
+            const text = document.getElementById('hw-text').value.trim();
+
+            if (!selectVal) return tg.showAlert("Выберите предмет!");
+            if (!text) return tg.showAlert("Текст задания пуст!");
+
+            let pair, subject;
+            if (selectVal === 'custom') {
+                pair = prompt("Введите номер пары (цифрой):"); // Простой способ для custom
+                if(!pair || isNaN(pair)) return tg.showAlert("Нужен номер пары!");
+                subject = document.getElementById('hw-custom-subject').value.trim();
+                if(!subject) return tg.showAlert("Введите название предмета!");
+            } else {
+                [pair, subject] = selectVal.split('|');
+            }
+
+            let ex=null; if(dbData.homework && dbData.homework[d] && dbData.homework[d][pair]) ex=dbData.homework[d][pair];
+            let ft=text; if(ex) { if(await showConfirmModal(ex.text)) ft=ex.text+"\n\n"+text; else return; }
+            
+            sendDataToBot({
+                action: "add_homework", 
+                date: d, 
+                pair: pair, 
+                subject: subject, 
+                text: ft, 
+                has_photo: false
+            });
         }
+
         function submitAdminHw() { sendDataToBot({action:"add_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value, subject:document.getElementById('adm-hw-subj').value, text:document.getElementById('adm-hw-text').value, has_photo:false}); }
         function deleteAdminHw() { if(confirm("Удалить?")) sendDataToBot({action:"delete_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value}); }
 
@@ -547,7 +557,74 @@
             const now = new Date(); document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now;
         }
 
-        function setWeek(t) { currentWeek = t; updateWeekButtons(); renderSchedule(); }
+        function setWeek(t) { currentWeek = t; ignoreHolidays = false; updateWeekButtons(); renderSchedule(); }
+        function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
+        function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
+        function openAdminSection(id) { 
+            document.querySelectorAll('.admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); 
+            const section = document.getElementById('section-'+id);
+            if(section) {
+                section.style.display='block';
+                if(id==='edit-sch') loadDayText(); 
+                if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } 
+                if(id==='stats') renderStats(); 
+                if(id==='polls') renderPolls(); 
+                if(id==='countdown-settings' && dbData.countdown) {
+                    document.getElementById('cd-active').checked = dbData.countdown.active;
+                    document.getElementById('cd-title').value = dbData.countdown.title || "";
+                    document.getElementById('cd-date').value = dbData.countdown.date || "";
+                }
+            }
+        }
+        function closeAdminSection() { 
+            document.querySelectorAll('.admin-sub').forEach(el=>el.style.display='none'); 
+            document.getElementById('dashboard-screen').style.display='block'; 
+        }
+
+        function renderStats() {
+            const s=dbData.stats; if(!s) return;
+            document.getElementById('st-total-u').innerText=s.total_u||0;
+            document.getElementById('st-day-u').innerText=s.day_u||0;
+            document.getElementById('st-total-hw').innerText=s.total_hw||0;
+            const container=document.getElementById('users-list-container'); container.innerHTML="";
+            if(!s.users_list) return;
+            s.users_list.forEach(u => {
+                container.innerHTML += `<div class="user-item"><b>${u.name}</b><div class="last-seen">В сети: ${u.last_seen}</div></div>`;
+            });
+        }
+
+        function renderPolls() {
+            const c=document.getElementById('polls-list-container'); c.innerHTML=""; if(!dbData.polls) return;
+            dbData.polls.forEach(p => {
+                let h=`<div class='card'><div style='font-weight:900; margin-bottom:12px;'>${p.q}</div>`;
+                const v=p.v||{}, total=Object.keys(v).length, counts=new Array(p.o.length).fill(0), names=new Array(p.o.length).fill().map(()=>[]);
+                for(let u in v) { if(counts[v[u].idx]!==undefined) { counts[v[u].idx]++; names[v[u].idx].push(v[u].name); } }
+                p.o.forEach((o,i)=>{ 
+                    const pct=total>0?Math.round((counts[i]/total)*100):0; 
+                    h+=`<div style='margin-bottom:14px; font-size:14px;'><div style='display:flex; justify-content:space-between; margin-bottom:4px;'><span>${o}</span><b>${pct}%</b></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div><div style="margin-top:6px; display:flex; flex-wrap:wrap;">${names[i].map(n=>`<span class="voter-pill">${n}</span>`).join('')}</div></div>`; 
+                });
+                h+="</div>"; c.innerHTML+=h;
+            });
+        }
+
+        function renderCountdown() {
+            const b = document.getElementById('countdown-banner'), d = dbData.countdown;
+            if (!d || !d.active || !d.date) { b.style.display = 'none'; return; }
+            
+            const target = new Date(d.date); 
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+            
+            const diffTime = targetDay - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('cd-label').innerText = (d.title || "До события").toUpperCase() + ":";
+            document.getElementById('cd-days-val').innerText = diffDays > 0 ? diffDays : 0;
+            b.style.display = 'block';
+        }
+        function renderGlobalNotice() { const b = document.getElementById('global-notice'); if(dbData.notice) { document.getElementById('global-notice-text').innerText=dbData.notice; b.style.display='block'; } else b.style.display='none'; }
+        function renderSession() { if(dbData.session && dbData.session.active) { document.getElementById('nav-session').style.display='block'; document.getElementById('session-content').innerText=dbData.session.text||"Данных нет."; } else document.getElementById('nav-session').style.display='none'; }
 
         window.onload = function() {
             const savedTheme = localStorage.getItem('school-bot-theme') || 'light';
@@ -575,10 +652,6 @@
                     } else dbData = parsed;
                     const d = new Date(); document.getElementById('last-updated-text').innerText = `Синхронизация: ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
                     renderSchedule(); renderGlobalNotice(); renderCountdown(); renderSession();
-                    // Admin preload
-                    if(dbData.countdown) { document.getElementById('cd-active').checked=dbData.countdown.active; document.getElementById('cd-title').value=dbData.countdown.title||""; document.getElementById('cd-date').value=dbData.countdown.date||""; }
-                    if(dbData.notice) document.getElementById('global-notice-input').value=dbData.notice;
-                    if(dbData.session) { document.getElementById('session-text').value=dbData.session.text||""; document.getElementById('session-active').checked=dbData.session.active; }
                 } catch (e) { console.error(e); }
             } else renderSchedule();
         }
