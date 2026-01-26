@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE THEMING) --- */
+        /* --- ДИЗАЙН-СИСТЕМА (ULTIMATE STABILITY) --- */
         :root {
             --bg-color: #f2f2f7;
             --card-bg: #ffffff;
@@ -21,7 +21,7 @@
             --border-color: rgba(0,0,0,0.06);
             --tab-bg: #e5e5ea;
             --shadow: 0 4px 16px rgba(0,0,0,0.04);
-            --nav-bg: rgba(255,255,255,0.8);
+            --nav-bg: rgba(255,255,255,0.85);
             --input-bg: #efeff4;
         }
 
@@ -36,9 +36,10 @@
             --text-sec: #98989d;
             --border-color: rgba(255,255,255,0.12);
             --tab-bg: #2c2c2e;
-            --shadow: 0 12px 40px rgba(0,0,0,0.6);
-            --nav-bg: rgba(28,28,30,0.85);
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+            --nav-bg: rgba(28,28,30,0.9); /* Устраняем белый засвет внизу */
             --input-bg: #2c2c2e;
+            color-scheme: dark;
         }
 
         html, body {
@@ -46,45 +47,48 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 0 0 110px 0;
+            padding: 0;
+            min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.4s ease, color 0.4s ease;
-            user-select: text;
-            -webkit-user-select: text;
+            transition: background-color 0.4s ease;
+            overflow-x: hidden;
         }
 
-        /* --- UI COMPONENTS --- */
+        body { padding-bottom: 120px; }
+
+        /* --- HEADER & THEME --- */
         .header-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 20px 20px 10px;
+            background: var(--bg-color);
             position: sticky;
             top: 0;
-            background: var(--bg-color);
             z-index: 500;
+            transition: background-color 0.4s ease;
         }
         
         .theme-toggle {
             width: 44px;
             height: 44px;
             background: var(--card-bg);
-            border-radius: 14px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: var(--shadow);
             cursor: pointer;
             border: 1px solid var(--border-color);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .theme-toggle:active { transform: scale(0.85); }
         .theme-toggle svg { width: 22px; height: 22px; fill: var(--text-main); }
 
+        /* --- PAGES --- */
         .page { display: none; padding: 0 16px; animation: slideUp 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); }
         .page.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* --- CARDS --- */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -92,15 +96,17 @@
             margin-bottom: 16px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
         }
         
         .section-title {
             font-size: 13px;
             text-transform: uppercase;
             color: var(--text-sec);
-            margin: 32px 0 12px 6px;
+            margin: 28px 0 10px 6px;
             letter-spacing: 1.2px;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         /* --- INPUTS --- */
@@ -134,9 +140,9 @@
         .btn-primary { background: var(--primary-grad); color: white; box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
         .btn-danger { background: var(--danger); color: white; }
         .btn-secondary { background: var(--tab-bg); color: var(--text-main); }
-        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn:active { transform: scale(0.97); opacity: 0.9; }
 
-        /* --- SCHEDULE ENHANCED --- */
+        /* --- SCHEDULE LIST --- */
         .lesson-item {
             margin-bottom: 20px;
             padding-bottom: 16px;
@@ -144,7 +150,7 @@
         }
         .lesson-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
         
-        .lesson-meta { display: flex; gap: 8px; margin-bottom: 4px; font-size: 12px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; }
+        .lesson-meta { display: flex; gap: 8px; margin-bottom: 4px; font-size: 12px; font-weight: 800; color: var(--text-sec); text-transform: uppercase; }
         .lesson-name { font-weight: 800; font-size: 18px; color: var(--text-main); margin: 4px 0; display: block; line-height: 1.3; }
         .lesson-details { font-size: 14px; color: var(--text-sec); line-height: 1.5; font-weight: 500; }
 
@@ -166,42 +172,47 @@
             font-weight: 800;
         }
 
-        .homework-block {
-            margin-top: 20px;
-            padding: 16px;
-            background: var(--bg-color);
-            border-radius: 14px;
-        }
-        .hw-title { font-size: 11px; font-weight: 900; color: var(--primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .homework-block { margin-top: 20px; padding: 16px; background: var(--bg-color); border-radius: 14px; }
+        .hw-title { font-size: 11px; font-weight: 900; color: var(--primary); margin-bottom: 10px; text-transform: uppercase; }
         .hw-item { font-size: 14px; margin-bottom: 10px; color: var(--text-main); line-height: 1.5; border-left: 3px solid var(--primary); padding-left: 12px; }
-        .hw-item:last-child { margin-bottom: 0; }
+
+        /* --- WEEK TOGGLE --- */
+        .week-toggle { display: flex; background: var(--tab-bg); border-radius: 16px; padding: 4px; margin-bottom: 24px; }
+        .wt-btn { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.25s; color: var(--text-sec); }
+        .wt-btn.active { background: var(--card-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: var(--primary); }
 
         /* --- NAVIGATION --- */
         .nav-bar { 
             position: fixed; bottom: 0; left: 0; right: 0; 
-            background: var(--nav-bg); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            background: var(--nav-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; 
             padding: 12px 0 34px 0; z-index: 1000; 
         }
         .nav-item { flex: 1; text-align: center; color: var(--text-sec); font-size: 10px; cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.3s; }
         .nav-item.active { color: var(--primary); }
         .nav-icon { height: 28px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
-        .nav-icon svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2.2; transition: 0.3s; }
+        .nav-icon svg { width: 26px; height: 26px; stroke: currentColor; fill: none; stroke-width: 2.2; }
         .nav-item.active svg { fill: rgba(0, 122, 255, 0.1); }
 
         /* --- ADMIN TILES --- */
-        .admin-tile svg { width: 32px; height: 32px; stroke: var(--primary); fill: none; stroke-width: 2; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .admin-tile {
+            background: var(--card-bg); padding: 24px 10px; border-radius: 20px;
+            text-align: center; font-size: 13px; font-weight: 800; cursor: pointer;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .admin-tile svg { width: 38px; height: 38px; stroke: var(--primary); fill: none; stroke-width: 1.8; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
+
+        /* --- STATS --- */
+        .stat-row { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-color); font-size: 15px; font-weight: 600; }
+        .stat-val { font-weight: 800; color: var(--primary); }
+        .user-item { padding: 14px; border-radius: 12px; background: var(--input-bg); margin-bottom: 10px; font-size: 14px; border: 1px solid var(--border-color); }
         
-        /* --- WEEK TOGGLE --- */
-        .week-toggle { display: flex; background: var(--tab-bg); border-radius: 16px; padding: 4px; margin-bottom: 24px; }
-        .wt-btn { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.25s; color: var(--text-sec); }
-        .wt-btn.active { background: var(--card-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: var(--primary); }
-
-        /* --- SPECIAL CARD --- */
-        .countdown-card { background: #1c1c1e; color: #fff; text-align: center; padding: 24px; margin-bottom: 24px; display: none; border-radius: var(--radius); border-bottom: 4px solid #ffd60a; }
+        /* --- SPECIALS --- */
+        .countdown-card { background: #1c1c1e; color: #fff; text-align: center; padding: 24px; margin-bottom: 24px; border-radius: var(--radius); border-bottom: 4px solid #ffd60a; }
         .countdown-value { font-size: 38px; font-weight: 900; color: #ffd60a; letter-spacing: -1.5px; }
-
-        .refresh-hint { background: var(--primary-grad); color: white; border-radius: 16px; text-align: center; font-size: 16px; font-weight: 900; padding: 20px; cursor: pointer; margin-bottom: 12px; }
+        .refresh-hint { background: var(--primary-grad); color: white; border-radius: 16px; text-align: center; font-size: 16px; font-weight: 900; padding: 20px; cursor: pointer; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(0,122,255,0.25); }
     </style>
 </head>
 <body data-theme="light">
@@ -209,7 +220,7 @@
     <!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ -->
     <div id="confirm-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(15px);">
         <div style="background: var(--card-bg); width: 85%; max-width: 340px; padding: 32px; border-radius: 32px; text-align: center; border: 1px solid var(--border-color); box-shadow: var(--shadow);">
-            <h3 style="margin-top:0; font-weight: 900; font-size: 22px;">Конфликт ДЗ</h3>
+            <h3 style="margin-top:0; font-weight: 900; font-size: 22px;">Задание уже есть</h3>
             <div id="confirm-old-text" style="background: var(--bg-color); padding: 16px; border-radius: 18px; margin: 20px 0; font-size: 14px; text-align: left; max-height: 150px; overflow-y: auto; line-height: 1.6; color: var(--text-sec);"></div>
             <div style="display:flex; gap:14px;"><button class="btn btn-secondary" style="flex:1" onclick="resolveConfirm(false)">Отмена</button><button class="btn btn-primary" style="flex:1" onclick="resolveConfirm(true)">Добавить</button></div>
         </div>
@@ -217,7 +228,7 @@
 
     <!-- ШАПКА -->
     <div class="header-controls">
-        <h2 style="margin:0; font-size: 26px; font-weight: 950; letter-spacing: -1px; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Ассистент</h2>
+        <h2 style="margin:0; font-size: 26px; font-weight: 950; letter-spacing: -1px; color: var(--text-main);">Ассистент</h2>
         <div class="theme-toggle" id="theme-btn" onclick="toggleTheme()"></div>
     </div>
 
@@ -226,12 +237,12 @@
         <div id="global-notice" class="global-notice-banner"><div class="notice-text" id="global-notice-text"></div></div>
         
         <div id="countdown-banner" class="countdown-card">
-            <div style="font-size: 12px; font-weight: 900; opacity: 0.6; margin-bottom: 6px; letter-spacing: 1.5px;">ВРЕМЯ ДО СОБЫТИЯ</div>
+            <div style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 6px; letter-spacing: 1.5px;">ВРЕМЯ ДО СОБЫТИЯ</div>
             <span class="countdown-value" id="cd-days">0</span> <span style="font-size:22px; font-weight: 950; opacity: 0.9;">ДН.</span>
         </div>
         
         <div class="refresh-hint" onclick="requestData()">🔄 Обновить расписание</div>
-        <div class="last-updated" id="last-updated-text">Ожидание синхронизации...</div>
+        <div class="last-updated" id="last-updated-text">Синхронизация...</div>
         
         <div class="week-toggle">
             <div class="wt-btn" id="btn-odd" onclick="setWeek('odd')">Нечетная</div>
@@ -257,22 +268,22 @@
     <!-- 3. СЕССИЯ -->
     <div id="session-page" class="page">
         <div class="section-title">Экзамены и зачеты</div>
-        <div class="card"><div id="session-content" class="lesson-text" style="min-height: 120px; opacity: 0.6;">Расписание сессии пока не опубликовано.</div></div>
+        <div class="card"><div id="session-content" class="lesson-text" style="min-height: 120px; opacity: 0.7;">Расписание пока не опубликовано.</div></div>
     </div>
 
     <!-- 4. АДМИН -->
     <div id="admin-page" class="page">
         <div id="login-screen" style="text-align: center; margin-top: 60px;">
-            <div style="font-size: 60px; margin-bottom: 24px;">🛡️</div>
-            <h3 style="font-weight: 950; font-size: 24px;">Админ-панель</h3>
+            <div style="font-size: 64px; margin-bottom: 24px;">🛡️</div>
+            <h3 style="font-weight: 950; font-size: 26px;">Админ-центр</h3>
             <p style="color: var(--text-sec); font-size: 15px; margin-bottom: 24px;">Требуется мастер-пароль</p>
-            <div class="card" style="max-width: 280px; margin: 0 auto 20px;"><input type="password" id="adm-pass" placeholder="••••" style="text-align: center; font-size: 24px; background: none; margin: 0; letter-spacing: 4px; border: none;"></div>
+            <div class="card" style="max-width: 280px; margin: 0 auto 20px;"><input type="password" id="adm-pass" placeholder="••••" style="text-align: center; font-size: 26px; background: none; margin: 0; letter-spacing: 4px; border: none;"></div>
             <button class="btn btn-primary" style="max-width: 280px;" onclick="login()">Войти</button>
             <p id="login-error" style="color: var(--danger); display: none; margin-top: 15px; font-weight: 900;">Доступ запрещен</p>
         </div>
 
         <div id="dashboard-screen" style="display: none;">
-            <div class="section-title">Инструменты управления</div>
+            <div class="section-title">Панель управления</div>
             <div class="admin-grid">
                 <div class="admin-tile" onclick="openAdminSection('stats')">
                     <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика
@@ -281,7 +292,7 @@
                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Редактор
                 </div>
                 <div class="admin-tile" onclick="openAdminSection('manage-hw')">
-                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Упр. ДЗ
+                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ДЗ
                 </div>
                 <div class="admin-tile" onclick="openAdminSection('edit-session')">
                     <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Сессия
@@ -308,7 +319,7 @@
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 40px; opacity: 0.5;">Выйти из панели</button>
         </div>
 
-        <!-- СЕКЦИИ -->
+        <!-- СЕКЦИИ АДМИНКИ -->
         <div id="section-stats" class="modal page">
             <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
             <div class="card">
@@ -320,7 +331,56 @@
             <div id="users-list-container"></div>
         </div>
 
-        <div id="section-manage-hw" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="adm-hw-date" onchange="loadAdminHw()"><select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div class="card"><input type="text" id="adm-hw-subj" placeholder="Предмет"><textarea id="adm-hw-text"></textarea></div><button class="btn btn-primary" onclick="submitAdminHw()">Сохранить</button><button class="btn btn-danger" onclick="deleteAdminHw()" style="margin-top:10px">Удалить ДЗ</button></div>
+        <div id="section-manage-hw" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <div class="card">
+                <input type="date" id="adm-hw-date" onchange="loadAdminHw()">
+                <select id="adm-hw-pair" onchange="loadAdminHw()"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select>
+            </div>
+            <div class="card">
+                <input type="text" id="adm-hw-subj" placeholder="Предмет">
+                <textarea id="adm-hw-text" placeholder="Текст задания..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitAdminHw()">Сохранить изменения</button>
+            <button class="btn btn-danger" onclick="deleteAdminHw()" style="margin-top:10px">Удалить это ДЗ</button>
+        </div>
+
+        <div id="section-edit-sch" class="modal page">
+            <div class="back-btn" onclick="closeAdminSection()">‹ Назад</div>
+            <div class="card">
+                <div style="display: flex; gap: 8px;">
+                    <select id="ed-day" onchange="loadDayText()"><option value="Понедельник">Пн</option><option value="Вторник">Вт</option><option value="Среда">Ср</option><option value="Четверг">Чт</option><option value="Пятница">Пт</option><option value="Суббота">Сб</option></select>
+                    <select id="ed-week" onchange="loadDayText()"><option value="odd">Нечет</option><option value="even">Чет</option></select>
+                </div>
+            </div>
+            <div class="tabs-header">
+                <div class="tab-btn active" id="tab-pair" onclick="setEditMode('pair')">Пара</div>
+                <div class="tab-btn" id="tab-full" onclick="setEditMode('full')">Весь день</div>
+            </div>
+            <div id="edit-mode-pair">
+                <div class="card">
+                    <select id="ed-pair-num"><option value="1">1 пара</option><option value="2">2 пара</option><option value="3">3 пара</option><option value="4">4 пара</option><option value="5">5 пара</option></select>
+                    <input type="text" id="ed-pair-subj" placeholder="Предмет">
+                    <input type="text" id="ed-pair-type" placeholder="Тип">
+                    <input type="text" id="ed-pair-room" placeholder="Ауд">
+                    <input type="text" id="ed-pair-teach" placeholder="Препод">
+                </div>
+                <button class="btn btn-primary" onclick="saveSinglePair()">Сохранить</button>
+                <button class="btn btn-danger" onclick="deleteSinglePair()" style="margin-top:10px">Удалить</button>
+            </div>
+            <div id="edit-mode-full" style="display: none;">
+                <div class="card"><textarea id="ed-text" rows="12"></textarea></div>
+                <button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить всё</button>
+            </div>
+        </div>
+
+        <div id="section-edit-session" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Сессия</h3><div class="card"><label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><input type="checkbox" id="session-active"><span>Показывать всем</span></label><textarea id="session-text" rows="10"></textarea></div><button class="btn btn-primary" onclick="saveSession()">Сохранить</button></div>
+        <div id="section-polls" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><h3>Опросы</h3><div id="poll-results-view"><button class="btn btn-secondary" onclick="requestData()">🔄 Обновить результаты</button><div id="polls-list-container" style="margin-top:16px"></div></div></div>
+        <div id="section-countdown-settings" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="cd-active"><span>Включить</span></label><input type="text" id="cd-title" placeholder="Заголовок"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить</button></div>
+        <div id="section-global-notice" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="global-notice-input"></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Сохранить</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Удалить</button></div></div>
+        <div id="section-add-note" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text"></textarea></div><button class="btn btn-primary" onclick="submitNote()">Добавить</button></div>
+        <div id="section-add-holiday" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label>С:</label><input type="date" id="holiday-date-start"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
+        <div id="section-broadcast" class="modal page"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="bc-text" placeholder="Текст сообщения..."></textarea><label style="display:flex;align-items:center;gap:10px;margin-top:10px;"><input type="checkbox" id="bc-photo"><span>С картинкой</span></label></div><button class="btn btn-primary" onclick="submitBroadcast()">Отправить всем</button></div>
     </div>
 
     <!-- НАВИГАЦИЯ -->
@@ -350,7 +410,7 @@
         let currentWeek='odd', realCurrentWeek='odd', confirmResolve=null, ignoreHolidays=false;
         const PAIR_TIMES = { "1": "09:00 - 10:30", "2": "10:45 - 12:15", "3": "13:15 - 14:45", "4": "15:00 - 16:30", "5": "16:45 - 18:15" };
 
-        // --- THEME LOGIC ---
+        // --- THEME ---
         function applyTheme(theme) {
             document.body.setAttribute('data-theme', theme);
             const btn = document.getElementById('theme-btn');
@@ -361,6 +421,7 @@
             }
             localStorage.setItem('school-bot-theme', theme);
             tg.setHeaderColor(theme === 'dark' ? '#000000' : '#f2f2f7');
+            tg.setBackgroundColor(theme === 'dark' ? '#000000' : '#f2f2f7');
         }
 
         function toggleTheme() {
@@ -368,11 +429,10 @@
             applyTheme(current === 'light' ? 'dark' : 'light');
         }
 
-        // --- CORE LOGIC ---
+        // --- CORE ---
         function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
         function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
         function isWeekend(dateStr) { if(!dateStr) return false; const parts=dateStr.split('-'); const d=new Date(parts[0],parts[1]-1,parts[2]); return (d.getDay()===0 || d.getDay()===6); }
-        
         function updateWeekButtons() { 
             const o=document.getElementById('btn-odd'), e=document.getElementById('btn-even'); 
             o.className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn';
@@ -383,7 +443,7 @@
 
         function getDateForDay(idx) { 
             const d = new Date(); 
-            const realDay = d.getDay() || 7; 
+            const realDay = d.getDay() || 7;
             const targetDay = (idx + 1); 
             let diff = targetDay - realDay;
             if (currentWeek !== realCurrentWeek) diff += 7;
@@ -392,25 +452,18 @@
         }
 
         // --- RENDERERS ---
-        function renderEmptyState() {
-            document.getElementById('schedule-container').innerHTML = `
-                <div style="text-align:center; padding: 60px 20px; color: var(--text-sec);">
-                    <div style="font-size: 50px; margin-bottom: 20px;">📦</div>
-                    <p style="font-weight: 700;">Расписание пусто</p>
-                    <p style="font-size: 13px;">Обновите данные, если это ошибка</p>
-                </div>`;
-        }
-
         function renderSchedule() {
             const container = document.getElementById('schedule-container');
-            if(!dbData.perm || !Object.keys(dbData.perm).length) { renderEmptyState(); return; }
+            if(!dbData.perm || !Object.keys(dbData.perm).length) {
+                container.innerHTML = `<div style="text-align:center; padding: 60px 20px; color: var(--text-sec);"><p>Расписание пусто</p></div>`;
+                return;
+            }
             container.innerHTML = "";
             const days = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
             let hasHolidays = false;
 
             days.forEach((day, i) => {
-                const dayObj = dbData.perm[day];
-                if (!dayObj) return;
+                const dayObj = dbData.perm[day]; if (!dayObj) return;
                 let rawTxt = typeof dayObj === 'string' ? dayObj : (dayObj[currentWeek] || "");
                 const dk = getDateForDay(i);
                 const nt = dbData.temporary ? dbData.temporary[dk] : null;
@@ -418,16 +471,14 @@
 
                 if (nt && nt.startsWith("🎉 ВЫХОДНОЙ") && !ignoreHolidays) {
                     hasHolidays = true;
-                    container.innerHTML += `<div class='card' style='border: 2px solid var(--success); background: rgba(52, 199, 89, 0.05);'><div class='day-header'><span>${day}</span><span class='date-badge'>${dk}</span></div><div style='font-weight: 900; color: var(--success); font-size: 20px;'>🎉 ВЫХОДНОЙ</div><div style='margin-top:8px; font-weight: 600; opacity: 0.8;'>${nt.split('\n')[2]?.replace('📍 Причина: ','') || 'Причина не указана'}</div></div>`;
+                    container.innerHTML += `<div class='card' style='border: 2px solid var(--success); background: rgba(52, 199, 89, 0.1);'><div class='day-header'><span>${day}</span><span class='date-badge'>${dk}</span></div><div style='font-weight: 950; color: var(--success); font-size: 22px; letter-spacing:-0.5px;'>🎉 ВЫХОДНОЙ</div><div style='margin-top:10px; font-weight: 600; opacity: 0.9;'>${nt.split('\n')[2]?.replace('📍 Причина: ','') || 'Свободный день'}</div></div>`;
                     return;
                 }
-
                 if (!rawTxt && !nt && !hw) return;
 
                 let html = `<div class='card'><div class='day-header'><span>${day}</span><span class='date-badge'>${dk}</span></div>`;
                 if(nt) html += `<div class='note-block'>📌 ${nt}</div>`;
 
-                // Smart Lesson Rendering
                 const lessons = rawTxt.split('\n\n').filter(l => l.trim());
                 lessons.forEach(lessonStr => {
                     const lines = lessonStr.split('\n');
@@ -441,9 +492,8 @@
                         html += `<div class='lesson-item'><div class='lesson-text'>${lessonStr}</div></div>`;
                     }
                 });
-
                 if(hw) {
-                    html += `<div class='homework-block'><div class='hw-title'>Домашнее задание:</div>`;
+                    html += `<div class='homework-block'><div class='hw-title'>Задания:</div>`;
                     for(let p in hw) html += `<div class='hw-item'><b>${p} пара:</b> ${hw[p].text}</div>`;
                     html += `</div>`;
                 }
@@ -451,60 +501,10 @@
                 container.innerHTML += html;
             });
             if(hasHolidays) {
-                const b = document.createElement('div'); b.className = 'force-show-btn'; b.innerText = '👁 Показать скрытые пары';
+                const b = document.createElement('div'); b.className = 'force-show-btn'; b.innerText = '👁 Показать расписание (скрыто)';
                 b.onclick = () => { ignoreHolidays = true; renderSchedule(); }; container.appendChild(b);
             }
         }
-
-        // --- CORE ACTIONS ---
-        function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
-        function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
-        function requestData() { sendDataToBot({action:"request_schedule_link"}); }
-        function saveSession() { sendDataToBot({action:"update_session", text:document.getElementById('session-text').value, active:document.getElementById('session-active').checked}); }
-        function saveCountdown() { const a=document.getElementById('cd-active').checked, d=document.getElementById('cd-date').value; if(a&&!d)return tg.showAlert("Выберите дату!"); sendDataToBot({action:"update_countdown", active:a, title:document.getElementById('cd-title').value, date:d}); }
-        function submitGlobalNotice() { const t=document.getElementById('global-notice-input').value.trim(); if(!t)return tg.showAlert("Текст?"); sendDataToBot({action:"set_global_notice", text:t}); }
-        function deleteGlobalNotice() { if(confirm("Удалить?")) sendDataToBot({action:"delete_global_notice"}); }
-        
-        async function submitHomework() {
-            const raw = document.getElementById('hw-date').value; if(!raw) return tg.showAlert("Дата?");
-            if(isWeekend(raw)) return tg.showAlert("Нельзя на выходные!");
-            const d=getDateKey('hw-date'), p=document.getElementById('hw-pair').value, t=document.getElementById('hw-text').value.trim(), s=document.getElementById('hw-subject').value.trim();
-            if(!t)return tg.showAlert("Текст пуст!");
-            let ex=null; if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) ex=dbData.homework[d][p];
-            let ft=t; if(ex) { if(await showConfirmModal(ex.text)) ft=ex.text+"\n\n"+t; else return; }
-            sendDataToBot({action:"add_homework", date:d, pair:p, subject:s||(ex?ex.subject:""), text:ft, has_photo:false});
-        }
-        function submitAdminHw() { const raw=document.getElementById('adm-hw-date').value; if(isWeekend(raw)) return tg.showAlert("Нельзя на выходные!"); const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value, t=document.getElementById('adm-hw-text').value.trim(); if(!t)return tg.showAlert("Пусто"); sendDataToBot({action:"add_homework", date:d, pair:p, subject:document.getElementById('adm-hw-subj').value, text:t}); }
-        function deleteAdminHw() { if(confirm("Удалить?")) sendDataToBot({action:"delete_homework", date:getDateKey('adm-hw-date'), pair:document.getElementById('adm-hw-pair').value}); }
-        function submitNote() { const d=getDateKey('note-date'); if(!d) return tg.showAlert("Дата?"); sendDataToBot({action:"add_note", date:d, text:document.getElementById('note-text').value}); }
-        function submitHoliday() { const ds=getDateKey('holiday-date-start'), r=document.getElementById('holiday-reason').value.trim(); if(!ds||!r)return tg.showAlert("Заполните поля!"); const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value); dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); sendDataToBot({action:"add_holiday_batch", dates:dates, text:`🎉 ВЫХОДНОЙ\n\n📍 Причина: ${r}`}); }
-        function removeHoliday() { const ds=getDateKey('holiday-date-start'); if(!ds) return; if(!confirm("Снять?")) return; const dates=[]; let c=new Date(document.getElementById('holiday-date-start').value); dates.push(`${String(c.getDate()).padStart(2,'0')}.${String(c.getMonth()+1).padStart(2,'0')}.${c.getFullYear()}`); sendDataToBot({action:"delete_note_batch", dates:dates}); }
-        function submitBroadcast() { sendDataToBot({action:"broadcast", text:document.getElementById('bc-text').value, has_photo:document.getElementById('bc-photo').checked}); }
-        function submitEditSchedule() { sendDataToBot({ action: "edit_perm", day: document.getElementById('ed-day').value, week_type: document.getElementById('ed-week').value, text: document.getElementById('ed-text').value }); }
-        function loadDayText() { const d=document.getElementById('ed-day').value, w=document.getElementById('ed-week').value; let t=""; if(dbData.perm&&dbData.perm[d]) t=typeof dbData.perm[d]==='string'?dbData.perm[d]:(dbData.perm[d][w]||""); document.getElementById('ed-text').value=t; }
-        function setEditMode(m) { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById('tab-'+m).classList.add('active'); document.getElementById('edit-mode-full').style.display=m==='full'?'block':'none'; document.getElementById('edit-mode-pair').style.display=m==='pair'?'block':'none'; }
-        function saveSinglePair() { loadDayText(); let txt=document.getElementById('ed-text').value||"", num=document.getElementById('ed-pair-num').value, s=document.getElementById('ed-pair-subj').value.trim(); if(!s)return tg.showAlert("Предмет?"); let blk=`${PAIR_TIMES[num]}\n${num} пара\n${s}\n${document.getElementById('ed-pair-type').value}\nАуд: ${document.getElementById('ed-pair-room').value}\n${document.getElementById('ed-pair-teach').value}`; let pMap={}; txt.split('\n\n').forEach(p=>{ if(p.trim()) { const m=p.match(/(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } }); pMap[parseInt(num)]=blk; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); }
-        function deleteSinglePair() { if(!confirm("Удалить?"))return; loadDayText(); let txt=document.getElementById('ed-text').value||"", num=parseInt(document.getElementById('ed-pair-num').value); let pMap={}; txt.split('\n\n').forEach(p=>{ if(p.trim()) { const m=p.match(/(\d) пара/); if(m) pMap[parseInt(m[1])]=p.trim(); } }); if(pMap[num]) { delete pMap[num]; let res=""; Object.keys(pMap).map(Number).sort((a,b)=>a-b).forEach(k=>res+=pMap[k]+"\n\n"); document.getElementById('ed-text').value=res.trim(); submitEditSchedule(); } }
-        function switchPollTab(t) { document.getElementById('tab-poll-create').classList.remove('active'); document.getElementById('tab-poll-results').classList.remove('active'); document.getElementById('poll-create-view').style.display='none'; document.getElementById('poll-results-view').style.display='none'; document.getElementById('tab-poll-'+t).classList.add('active'); document.getElementById('poll-'+t+'-view').style.display='block'; if(t==='results')renderPolls(); }
-        function addPollOption() { const c=document.getElementById('poll-options-container'); const i=document.createElement('input'); i.type='text'; i.className='poll-option-input'; i.placeholder='Вариант ' + (c.children.length + 1); c.appendChild(i); }
-        function submitPoll() { const q=document.getElementById('poll-question').value.trim(); const o=[]; document.querySelectorAll('.poll-option-input').forEach(i=>{if(i.value.trim())o.push(i.value.trim())}); if(!q||o.length<1)return tg.showAlert("Данные?"); sendDataToBot({action:"create_poll", question:q, options:o}); }
-        function showConfirmModal(t) { return new Promise(r=>{ confirmResolve=r; document.getElementById('confirm-old-text').innerText=t; document.getElementById('confirm-modal').style.display='flex'; }); }
-        function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
-        function loadAdminHw() { const d=getDateKey('adm-hw-date'), p=document.getElementById('adm-hw-pair').value; if(dbData.homework&&dbData.homework[d]&&dbData.homework[d][p]) { const h=dbData.homework[d][p]; document.getElementById('adm-hw-subj').value=h.subject||""; document.getElementById('adm-hw-text').value=h.text||""; } else { document.getElementById('adm-hw-subj').value=""; document.getElementById('adm-hw-text').value=""; } }
-
-        function switchTab(tabId, btn) { 
-            closeAdminSection(); document.querySelectorAll('.page').forEach(el => el.classList.remove('active')); 
-            document.getElementById(tabId + '-page').classList.add('active'); 
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            const now = new Date(); document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now;
-        }
-
-        function setWeek(t) { currentWeek = t; ignoreHolidays = false; updateWeekButtons(); renderSchedule(); }
-        function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
-        function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
-        function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } if(id==='polls')switchPollTab('create'); if(id==='stats')renderStats(); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
-        function closeAdminSection() { document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); if(document.getElementById('login-screen').style.display==='none') document.getElementById('dashboard-screen').style.display='block'; }
 
         function renderStats() {
             const s=dbData.stats; if(!s) return;
@@ -514,22 +514,51 @@
             const container=document.getElementById('users-list-container'); container.innerHTML="";
             if(!s.users_list) return;
             s.users_list.forEach(u => {
-                const div=document.createElement('div'); div.className='user-item';
-                div.innerHTML=`<b>${u.name}</b><div class="last-seen">Активность: ${u.last_seen}</div>`;
-                container.appendChild(div);
+                container.innerHTML += `<div class="user-item"><b>${u.name}</b><div class="last-seen">В сети: ${u.last_seen}</div></div>`;
             });
         }
 
         function renderPolls() {
-            const c=document.getElementById('polls-list-container'); c.innerHTML=""; if(!dbData.polls) return;
+            const container=document.getElementById('polls-list-container'); container.innerHTML=""; if(!dbData.polls) return;
             dbData.polls.forEach(p => {
-                let h=`<div class='card'><div style='font-weight:900; margin-bottom:12px;'>${p.q}</div>`;
-                const v=p.v||{}, tot=Object.keys(v).length, cnt=new Array(p.o.length).fill(0);
-                for(let u in v) { if(cnt[v[u].idx]!==undefined) cnt[v[u].idx]++; }
-                p.o.forEach((o,i)=>{ const pct=tot>0?Math.round((cnt[i]/tot)*100):0; h+=`<div style='margin-bottom:12px; font-size:14px;'><div style='display:flex; justify-content:space-between'><span>${o}</span><b>${pct}%</b></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div></div>`; });
-                h+="</div>"; c.innerHTML+=h;
+                let h=`<div class='card'><div style='font-weight:900; margin-bottom:14px; font-size:16px;'>${p.q}</div>`;
+                const v=p.v||{}, total=Object.keys(v).length, counts=new Array(p.o.length).fill(0);
+                for(let u in v) { if(counts[v[u].idx]!==undefined) counts[v[u].idx]++; }
+                p.o.forEach((o,i)=>{ const pct=total>0?Math.round((counts[i]/total)*100):0; h+=`<div style='margin-bottom:14px; font-size:14px;'><div style='display:flex; justify-content:space-between; margin-bottom:4px;'><span>${o}</span><b>${pct}%</b></div><div class='poll-bar-bg'><div class='poll-bar-fill' style='width:${pct}%'></div></div></div>`; });
+                h+="</div>"; container.innerHTML+=h;
             });
         }
+
+        // --- ACTIONS ---
+        function getDateKey(id) { const v=document.getElementById(id).value; if(!v)return null; const [y,m,d]=v.split('-'); return `${d}.${m}.${y}`; }
+        function sendDataToBot(p) { tg.sendData(JSON.stringify(p)); }
+        function requestData() { sendDataToBot({action:"request_schedule_link"}); }
+        
+        async function submitHomework() {
+            const raw=document.getElementById('hw-date').value; if(!raw) return tg.showAlert("Дата?");
+            if(isWeekend(raw)) return tg.showAlert("Нельзя на выходные!");
+            const d=getDateKey('hw-date'), p=document.getElementById('hw-pair').value, t=document.getElementById('hw-text').value.trim(), s=document.getElementById('hw-subject').value.trim();
+            if(!t)return tg.showAlert("Пусто!");
+            let ex=null; if(dbData.homework && dbData.homework[d] && dbData.homework[d][p]) ex=dbData.homework[d][p];
+            let ft=t; if(ex) { if(await showConfirmModal(ex.text)) ft=ex.text+"\n\n"+t; else return; }
+            sendDataToBot({action:"add_homework", date:d, pair:p, subject:s||(ex?ex.subject:""), text:ft, has_photo:false});
+        }
+
+        function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
+        function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
+        function openAdminSection(id) { if(id==='edit-sch')loadDayText(); if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } if(id==='stats')renderStats(); document.getElementById('dashboard-screen').style.display='none'; document.getElementById('section-'+id).classList.add('active'); }
+        function closeAdminSection() { document.querySelectorAll('.modal').forEach(e=>e.classList.remove('active')); if(document.getElementById('login-screen').style.display==='none') document.getElementById('dashboard-screen').style.display='block'; }
+
+        // --- NAVIGATION ---
+        function switchTab(tabId, btn) { 
+            closeAdminSection(); document.querySelectorAll('.page').forEach(el => el.classList.remove('active')); 
+            document.getElementById(tabId + '-page').classList.add('active'); 
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            const now = new Date(); document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now;
+        }
+
+        function setWeek(t) { currentWeek = t; ignoreHolidays = false; updateWeekButtons(); renderSchedule(); }
 
         // --- INITIALIZATION ---
         window.onload = function() {
