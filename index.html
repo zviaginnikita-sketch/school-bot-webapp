@@ -23,6 +23,7 @@
             --nav-bg: rgba(255,255,255,0.9);
             --input-bg: #f2f2f7;
             --accent-soft: rgba(0, 122, 255, 0.08);
+            --lesson-bg: #f9f9f9;
         }
 
         [data-theme="dark"] {
@@ -39,37 +40,26 @@
             --shadow: 0 12px 40px rgba(0,0,0,0.6);
             --nav-bg: rgba(28,28,30,0.9);
             --input-bg: #2c2c2e;
+            --lesson-bg: #262628;
             color-scheme: dark;
         }
 
-        /* Фикс фона для iOS/Android (убирает белый низ) */
-        html {
-            background-color: var(--bg-color);
-            transition: background-color 0.4s ease;
-        }
+        html { background-color: var(--bg-color); transition: background-color 0.4s ease; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            margin: 0;
-            padding: 0 0 110px 0;
+            margin: 0; padding: 0 0 110px 0;
             -webkit-tap-highlight-color: transparent;
-            user-select: text;
-            -webkit-user-select: text;
+            user-select: text; -webkit-user-select: text;
             min-height: 100vh;
         }
 
         /* --- HEADER --- */
         .header-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: var(--bg-color);
-            position: sticky;
-            top: 0;
-            z-index: 500;
-            transition: background-color 0.4s ease;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; background: var(--bg-color);
+            position: sticky; top: 0; z-index: 500; transition: background-color 0.4s ease;
         }
         .theme-toggle {
             width: 40px; height: 40px; background: var(--card-bg); border-radius: 50%;
@@ -85,50 +75,38 @@
 
         /* --- CARDS --- */
         .card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow);
+            background: var(--card-bg); border-radius: var(--radius); padding: 20px;
+            margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
+        }
+        .section-title { font-size: 13px; text-transform: uppercase; color: var(--text-sec); margin: 24px 0 10px 8px; letter-spacing: 0.5px; font-weight: 700; }
+
+        /* --- SCHEDULE --- */
+        .today-card { border: 2px solid var(--primary); background: var(--accent-soft); }
+        .day-header { font-weight: 800; font-size: 20px; color: var(--primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .date-badge { font-size: 11px; color: var(--text-sec); background: var(--tab-bg); padding: 4px 10px; border-radius: 8px; font-weight: 600; }
+        
+        /* Улучшенный дизайн пар */
+        .lesson-item {
+            background: var(--lesson-bg);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             border: 1px solid var(--border-color);
         }
-        .section-title {
-            font-size: 13px; text-transform: uppercase; color: var(--text-sec);
-            margin: 24px 0 10px 8px; letter-spacing: 0.5px; font-weight: 700;
-        }
-
-        /* --- SCHEDULE (CLASSIC STYLE) --- */
-        .today-card { border: 2px solid var(--primary); background: var(--accent-soft); }
-        .day-header {
-            font-weight: 800; font-size: 20px; color: var(--primary);
-            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .date-badge {
-            font-size: 11px; color: var(--text-sec); background: var(--tab-bg);
-            padding: 4px 10px; border-radius: 8px; font-weight: 600;
-        }
+        .lesson-item:last-child { margin-bottom: 0; }
         
-        /* Старый добрый стиль расписания */
-        .lesson-text {
-            white-space: pre-wrap;
-            font-size: 15px;
-            line-height: 1.5;
-            color: var(--text-main);
-        }
-        /* Жирное выделение названий */
-        .lesson-name {
-            font-weight: 900;
-            display: block;
-            margin-top: 6px;
-            margin-bottom: 2px;
-            font-size: 16px;
-        }
+        .lesson-meta { font-size: 11px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; margin-bottom: 4px; display: flex; gap: 8px; }
+        .lesson-name { font-weight: 900; font-size: 17px; color: var(--text-main); display: block; margin-bottom: 4px; line-height: 1.3; }
+        .lesson-details { font-size: 14px; color: var(--text-sec); font-weight: 500; }
+
+        /* Обычный текст если парсинг не удался */
+        .lesson-text { white-space: pre-wrap; font-size: 15px; line-height: 1.5; color: var(--text-main); }
 
         .homework-block { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); }
         .hw-title { font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 6px; text-transform: uppercase; }
-        .hw-item { font-size: 14px; margin-bottom: 6px; padding: 8px 12px; background: var(--bg-color); border-radius: 8px; border-left: 3px solid var(--primary); }
+        .hw-item { font-size: 14px; margin-bottom: 6px; padding: 10px; background: var(--bg-color); border-radius: 10px; border-left: 3px solid var(--primary); }
         
-        .note-block { background: rgba(255, 204, 0, 0.15); padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; border: 1px solid rgba(255, 204, 0, 0.3); color: #B38600; font-weight: 500; }
+        .note-block { background: rgba(255, 204, 0, 0.15); padding: 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; border: 1px solid rgba(255, 204, 0, 0.3); color: #B38600; font-weight: 600; }
         [data-theme="dark"] .note-block { color: #FFD60A; }
 
         .holiday-card { background: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(52, 199, 89, 0.2) 100%); border: 2px solid var(--success); }
@@ -136,9 +114,8 @@
 
         /* --- INPUTS --- */
         input:not([type="checkbox"]), select, textarea {
-            width: 100%; padding: 14px; border: 1px solid var(--border-color);
-            background: var(--input-bg); border-radius: 12px; font-size: 16px;
-            box-sizing: border-box; margin-bottom: 12px; color: var(--text-main); outline: none;
+            width: 100%; padding: 14px; border: 1px solid var(--border-color); background: var(--input-bg);
+            border-radius: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 12px; color: var(--text-main); outline: none;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); background: var(--card-bg); }
         
@@ -153,10 +130,8 @@
         /* --- ADMIN GRID --- */
         .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .admin-tile {
-            background: var(--card-bg); padding: 20px; border-radius: 20px;
-            text-align: center; font-size: 13px; font-weight: 700; cursor: pointer;
-            box-shadow: var(--shadow); border: 1px solid var(--border-color);
-            text-transform: uppercase; letter-spacing: 0.5px;
+            background: var(--card-bg); padding: 20px; border-radius: 20px; text-align: center; font-size: 13px; font-weight: 700;
+            cursor: pointer; box-shadow: var(--shadow); border: 1px solid var(--border-color); text-transform: uppercase; letter-spacing: 0.5px;
         }
         .admin-tile svg { width: 32px; height: 32px; stroke: var(--primary); fill: none; stroke-width: 2; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto; }
 
@@ -186,6 +161,7 @@
         .modal { display: none; } .modal.open { display: block; }
         .admin-sub { display: none; }
         .back-btn { margin-bottom: 15px; display: flex; align-items: center; color: var(--primary); cursor: pointer; font-size: 16px; font-weight: 700; }
+        
         .week-toggle { display: flex; background: var(--tab-bg); border-radius: 12px; padding: 3px; margin-bottom: 20px; }
         .wt-btn { flex: 1; text-align: center; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; color: var(--text-sec); }
         .wt-btn.active { background: var(--card-bg); box-shadow: 0 2px 6px rgba(0,0,0,0.05); color: var(--text-main); }
@@ -197,9 +173,6 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
         .modal-content { background: var(--card-bg); width: 85%; max-width: 360px; padding: 28px; border-radius: 28px; text-align: center; border: 1px solid var(--border-color); }
         
-        /* Stats & Polls */
-        .stat-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 15px; }
-        .stat-val { font-weight: 800; color: var(--primary); }
         .poll-bar-bg { background: var(--tab-bg); border-radius: 6px; height: 8px; margin-top: 6px; overflow: hidden; }
         .poll-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s; }
         .user-item { padding: 14px; border-radius: 12px; background: var(--input-bg); margin-bottom: 8px; font-size: 14px; border: 1px solid var(--border-color); }
@@ -228,7 +201,7 @@
         <div id="global-notice" class="global-notice-banner"><div class="notice-text" id="global-notice-text"></div></div>
         
         <div id="countdown-banner" class="countdown-card">
-            <div id="cd-label" style="font-size: 11px; font-weight: 800; opacity: 0.6; margin-bottom: 6px; letter-spacing: 1px; text-transform:uppercase;">ДО СОБЫТИЯ:</div>
+            <div id="cd-label" style="font-size: 11px; font-weight: 900; opacity: 0.6; margin-bottom: 5px; letter-spacing: 1px;">ДО СОБЫТИЯ:</div>
             <span class="countdown-value" id="cd-days-val">0</span> <span style="font-size:18px; font-weight: 900; opacity: 0.8;">ДН.</span>
         </div>
         
@@ -247,9 +220,9 @@
     <div id="hw-page" class="page">
         <div class="section-title">Создать задание</div>
         <div class="card">
-            <label style="font-size:11px; font-weight:800; color:var(--text-sec); margin-bottom: 6px; display: block; margin-left: 4px;">ДАТА УРОКА</label>
+            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ДАТА УРОКА</label>
             <input type="date" id="hw-date">
-            <label style="font-size:11px; font-weight:800; color:var(--text-sec); margin-bottom: 6px; display: block; margin-left: 4px;">НОМЕР ПАРЫ</label>
+            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">НОМЕР ПАРЫ</label>
             <select id="hw-pair"><option value="1">1 пара (09:00)</option><option value="2">2 пара (10:45)</option><option value="3">3 пара (13:15)</option><option value="4">4 пара (15:00)</option><option value="5">5 пара (16:45)</option></select>
             <input type="text" id="hw-subject" placeholder="Название предмета">
         </div>
@@ -261,7 +234,7 @@
     <div id="session-page" class="page">
         <div class="section-title">Экзамены и зачеты</div>
         <div class="card" style="border-left: 5px solid var(--primary); background: var(--accent-soft);">
-            <div id="session-content" class="lesson-text" style="min-height: 120px; font-weight: 500;">Данные не загружены.</div>
+            <div id="session-content" class="lesson-text" style="min-height: 120px; font-weight: 500; color: var(--text-main);">Данные не загружены.</div>
         </div>
     </div>
 
@@ -273,45 +246,23 @@
             <p style="color: var(--text-sec); font-size: 15px; margin-bottom: 24px;">Введите мастер-пароль</p>
             <div class="card" style="max-width: 280px; margin: 0 auto 20px;"><input type="password" id="adm-pass" placeholder="••••" style="text-align: center; font-size: 24px; background: none; margin: 0; letter-spacing: 4px; border: none;"></div>
             <button class="btn btn-primary" style="max-width: 280px;" onclick="login()">Войти</button>
-            <p id="login-error" style="color: var(--danger); display: none; margin-top: 15px; font-weight: 900;">Доступ запрещен</p>
+            <p id="login-error" style="color: var(--danger); display: none; margin-top: 15px; font-weight: 900;">Неверно</p>
         </div>
 
         <div id="dashboard-screen" style="display: none;">
             <div class="section-title">Инструменты</div>
             <div class="admin-grid">
-                <div class="admin-tile" onclick="openAdminSection('stats')">
-                    <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('edit-sch')">
-                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Редактор
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('manage-hw')">
-                    <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ДЗ
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('edit-session')">
-                    <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Сессия
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('add-note')">
-                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Заметка
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('add-holiday')">
-                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Выходной
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('countdown-settings')">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Таймер
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('polls')">
-                    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Опросы
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('global-notice')">
-                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Инфо
-                </div>
-                <div class="admin-tile" onclick="openAdminSection('broadcast')">
-                    <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Рассылка
-                </div>
-                <div class="admin-tile" style="grid-column: span 2; border-color: var(--danger); color: var(--danger);" onclick="sendAction('reset_temp')">
-                    <svg style="stroke: var(--danger);" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Сброс данных
-                </div>
+                <div class="admin-tile" onclick="openAdminSection('stats')"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>Статистика</div>
+                <div class="admin-tile" onclick="openAdminSection('edit-sch')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Редактор</div>
+                <div class="admin-tile" onclick="openAdminSection('manage-hw')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>ДЗ</div>
+                <div class="admin-tile" onclick="openAdminSection('edit-session')"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>Сессия</div>
+                <div class="admin-tile" onclick="openAdminSection('add-note')"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Заметка</div>
+                <div class="admin-tile" onclick="openAdminSection('add-holiday')"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Выходной</div>
+                <div class="admin-tile" onclick="openAdminSection('countdown-settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Таймер</div>
+                <div class="admin-tile" onclick="openAdminSection('polls')"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Опросы</div>
+                <div class="admin-tile" onclick="openAdminSection('global-notice')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Уведомление</div>
+                <div class="admin-tile" onclick="openAdminSection('broadcast')"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Рассылка</div>
+                <div class="admin-tile" style="grid-column: span 2; border-color: var(--danger); color: var(--danger);" onclick="sendAction('reset_temp')"><svg style="stroke: var(--danger);" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Сброс данных</div>
             </div>
             <button class="btn btn-secondary" onclick="logout()" style="margin-top: 40px; opacity: 0.5;">Выход</button>
         </div>
@@ -359,10 +310,10 @@
             <div class="card"><textarea id="ed-text" rows="10"></textarea><button class="btn btn-primary" onclick="submitEditSchedule()">Сохранить день</button></div>
         </div>
 
-        <div id="section-polls" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="btn btn-secondary" onclick="addPollOption()">+ Добавить вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Запустить опрос</button><div id="polls-list-container" style="margin-top:20px"></div></div>
+        <div id="section-polls" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="poll-question" placeholder="Вопрос..."></textarea><div id="poll-options-container"><input type="text" class="poll-option-input" placeholder="Вариант 1"><input type="text" class="poll-option-input" placeholder="Вариант 2"></div><div class="btn btn-secondary" onclick="addPollOption()" style="padding:12px; font-size:14px; margin-top:8px;">+ Добавить вариант</div></div><button class="btn btn-primary" onclick="submitPoll()">Запустить опрос</button><div id="polls-list-container" style="margin-top:20px"></div></div>
         <div id="section-countdown-settings" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="cd-active"><label for="cd-active" style="font-weight:800; cursor:pointer;">Включить таймер</label></div><input type="text" id="cd-title" placeholder="Название события"><input type="date" id="cd-date"></div><button class="btn btn-primary" onclick="saveCountdown()">Сохранить настройки</button></div>
         <div id="section-global-notice" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="global-notice-input" placeholder="Текст уведомления..."></textarea></div><div style="display:flex; gap:10px;"><button class="btn btn-primary" onclick="submitGlobalNotice()">Повесить</button><button class="btn btn-danger" onclick="deleteGlobalNotice()">Снять</button></div></div>
-        <div id="section-add-note" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст изменения..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Сохранить</button></div>
+        <div id="section-add-note" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><input type="date" id="note-date"><textarea id="note-text" placeholder="Текст заметки..."></textarea></div><button class="btn btn-primary" onclick="submitNote()">Сохранить</button></div>
         <div id="section-add-holiday" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><label style="font-size:11px; font-weight:800; margin-bottom:8px; display:block;">ДАТА ВЫХОДНОГО:</label><input type="date" id="holiday-date-start"><textarea id="holiday-reason" placeholder="Причина..."></textarea></div><div style="display:flex;gap:10px"><button class="btn btn-success" onclick="submitHoliday()">Установить</button><button class="btn btn-danger" onclick="removeHoliday()">Снять</button></div></div>
         <div id="section-broadcast" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><textarea id="bc-text" placeholder="Текст рассылки..."></textarea><div class="checkbox-row"><input type="checkbox" id="bc-photo"><label for="bc-photo" style="font-weight:700">Жду картинку</label></div></div><button class="btn btn-primary" onclick="submitBroadcast()">Разослать всем</button></div>
         <div id="section-edit-session" class="page admin-sub"><div class="back-btn" onclick="closeAdminSection()">‹ Назад</div><div class="card"><div class="checkbox-row"><input type="checkbox" id="session-active"><label for="session-active" style="font-weight:700">Показывать всем</label></div><textarea id="session-text" rows="10"></textarea></div><button class="btn btn-primary" onclick="saveSession()">Сохранить сессию</button></div>
@@ -395,7 +346,10 @@
         function getWeekNumber(d) { d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); var yearStart=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-yearStart)/86400000)+1)/7); }
         function unminifyPerm(min) { const dMap=["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"]; const fp={}; for(let k in min) { fp[dMap[parseInt(k)]] = { "odd": min[k].o||"", "even": min[k].e||"" }; } return fp; }
         function isWeekend(dateStr) { if(!dateStr) return false; const parts=dateStr.split('-'); const d=new Date(parts[0],parts[1]-1,parts[2]); return (d.getDay()===0 || d.getDay()===6); }
-        function updateWeekButtons() { document.getElementById('btn-odd').className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn'; document.getElementById('btn-even').className = currentWeek === 'even' ? 'wt-btn active' : 'wt-btn'; }
+        function updateWeekButtons() { document.getElementById('btn-odd').className = currentWeek === 'odd' ? 'wt-btn active' : 'wt-btn'; document.getElementById('btn-even').className = currentWeek === 'even' ? 'wt-btn active' : 'wt-btn'; 
+            document.getElementById('btn-odd').innerText = (realCurrentWeek === 'odd') ? "Нечетная (Тек.)" : "Нечетная (След.)";
+            document.getElementById('btn-even').innerText = (realCurrentWeek === 'even') ? "Четная (Тек.)" : "Четная (След.)";
+        }
 
         function getDateForDay(idx) { 
             const d = new Date(); const realDay = d.getDay() || 7; const targetDay = (idx + 1); 
@@ -491,12 +445,15 @@
             const b = document.getElementById('countdown-banner'), d = dbData.countdown;
             if (!d || !d.active || !d.date) { b.style.display = 'none'; return; }
             
-            const target = new Date(d.date); target.setHours(0,0,0,0);
-            const today = new Date(); today.setHours(0,0,0,0);
-            const diffTime = target - today;
+            const target = new Date(d.date); 
+            // Fix timezone offset issue by treating the date string as local midnight
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const targetDay = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+            
+            const diffTime = targetDay - today;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            // Исправлен ID для вывода значения
             document.getElementById('cd-label').innerText = (d.title || "До события").toUpperCase() + ":";
             document.getElementById('cd-days-val').innerText = diffDays > 0 ? diffDays : 0;
             b.style.display = 'block';
@@ -511,15 +468,18 @@
         
         function openAdminSection(id) { 
             document.querySelectorAll('.admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); 
-            document.getElementById('section-'+id).style.display='block'; 
-            if(id==='edit-sch') loadDayText(); 
-            if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } 
-            if(id==='stats') renderStats(); 
-            if(id==='polls') renderPolls(); 
-            if(id==='countdown-settings' && dbData.countdown) {
-                document.getElementById('cd-active').checked = dbData.countdown.active;
-                document.getElementById('cd-title').value = dbData.countdown.title || "";
-                document.getElementById('cd-date').value = dbData.countdown.date || "";
+            const section = document.getElementById('section-'+id);
+            if(section) {
+                section.style.display='block';
+                if(id==='edit-sch') loadDayText(); 
+                if(id==='manage-hw'){ document.getElementById('adm-hw-date').valueAsDate=new Date(); loadAdminHw(); } 
+                if(id==='stats') renderStats(); 
+                if(id==='polls') renderPolls(); 
+                if(id==='countdown-settings' && dbData.countdown) {
+                    document.getElementById('cd-active').checked = dbData.countdown.active;
+                    document.getElementById('cd-title').value = dbData.countdown.title || "";
+                    document.getElementById('cd-date').value = dbData.countdown.date || "";
+                }
             }
         }
         function closeAdminSection() { 
