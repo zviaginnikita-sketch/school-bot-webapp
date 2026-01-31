@@ -210,7 +210,7 @@
     <div id="hw-page" class="page">
         <div class="section-title">Новое задание</div>
         <div class="card">
-            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ДАТА УРОКА</label>
+            <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ДАТА ПАРЫ</label>
             <input type="date" id="hw-date" onchange="updateHomeworkOptions()">
             <label style="font-size:11px; font-weight:900; color:var(--text-sec); margin-bottom: 8px; display: block; margin-left: 4px;">ПРЕДМЕТ И ПАРА</label>
             <select id="hw-lesson-select" onchange="checkCustomSubject()">
@@ -218,7 +218,7 @@
             </select>
             <input type="text" id="hw-custom-subject" placeholder="Введите название предмета..." style="display:none; margin-top:10px;">
         </div>
-        <div class="card"><textarea id="hw-text" placeholder="Что нужно сделать к уроку?"></textarea></div>
+        <div class="card"><textarea id="hw-text" placeholder="Что нужно сделать к паре?"></textarea></div>
         <button class="btn btn-primary" onclick="submitHomework()">Опубликовать ДЗ</button>
     </div>
 
@@ -709,4 +709,5 @@
     </script>
 </body>
 </html>
+
 
