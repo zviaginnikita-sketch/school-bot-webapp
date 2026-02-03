@@ -602,16 +602,47 @@
         function resolveConfirm(r) { document.getElementById('confirm-modal').style.display='none'; if(confirmResolve)confirmResolve(r); }
 
         function switchTab(tabId, btn) { 
-            document.querySelectorAll('.page, .admin-sub').forEach(el => el.classList.remove('active')); 
-            document.getElementById(tabId + '-page').classList.add('active'); 
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            const now = new Date(); document.getElementById('hw-date').valueAsDate = now; document.getElementById('adm-hw-date').valueAsDate = now;
+    document.querySelectorAll('.page, .admin-sub').forEach(el => el.classList.remove('active')); 
+    document.getElementById(tabId + '-page').classList.add('active'); 
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    const now = new Date(); 
+    if(document.getElementById('hw-date')) document.getElementById('hw-date').valueAsDate = now; 
+    if(document.getElementById('adm-hw-date')) document.getElementById('adm-hw-date').valueAsDate = now;
+
+    // ПРОВЕРКА АВТО-ВХОДА
+    if (tabId === 'admin') {
+        if (localStorage.getItem('school_bot_admin_logged') === 'true') {
+            showAdminDashboard();
+        }
+    }
         }
 
         function setWeek(t) { currentWeek = t; ignoreHolidays = false; updateWeekButtons(); renderSchedule(); }
-        function login() { if(document.getElementById('adm-pass').value === ADMIN_PASS) { document.getElementById('login-screen').style.display='none'; document.getElementById('dashboard-screen').style.display='block'; document.getElementById('login-error').style.display='none'; renderStats(); } else { document.getElementById('login-error').style.display='block'; } }
-        function logout() { document.getElementById('dashboard-screen').style.display='none'; document.getElementById('login-screen').style.display='block'; document.getElementById('adm-pass').value=''; }
+        function showAdminDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+    document.getElementById('login-error').style.display = 'none';
+    renderStats();
+}
+
+function login() {
+    if (document.getElementById('adm-pass').value === ADMIN_PASS) {
+        localStorage.setItem('school_bot_admin_logged', 'true');
+        showAdminDashboard();
+    } else {
+        document.getElementById('login-error').style.display = 'block';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('school_bot_admin_logged');
+    document.getElementById('dashboard-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('adm-pass').value = '';
+}
+
         function openAdminSection(id) { 
             document.querySelectorAll('.admin-sub, #dashboard-screen').forEach(el=>el.style.display='none'); 
             const section = document.getElementById('section-'+id);
@@ -709,6 +740,7 @@
     </script>
 </body>
 </html>
+
 
 
 
